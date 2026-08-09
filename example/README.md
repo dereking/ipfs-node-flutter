@@ -21,3 +21,14 @@ flutter run -d macos
 The green success state and the `IPFS_PUBLIC_TEST_PASS` log line mean that the
 SDK—not a gateway or an external Kubo process—retrieved the block from public
 IPFS.
+
+Run the Dart functionality tests without building the macOS application:
+
+```sh
+flutter test test/ipfs_node_functionality_test.dart
+IPFS_PUBLIC_INTEGRATION=1 flutter test test/ipfs_node_functionality_test.dart
+```
+
+The first command covers native lifecycle, capabilities, error mapping, and
+per-node identity isolation. The second also connects to public IPFS and
+retrieves the fixed CID through DHT and Bitswap.
