@@ -50,7 +50,11 @@ final class PrivateNodeConfig extends NodeConfig {
         _bootstrapPeers = List.unmodifiable(bootstrapPeers),
         _relayPeers = List.unmodifiable(relayPeers),
         _allowedPeerIds = Set.unmodifiable(allowedPeerIds),
-        super._();
+        super._() {
+    if (swarmKey.isEmpty) {
+      throw ArgumentError.value(swarmKey, 'swarmKey', 'must not be empty');
+    }
+  }
 
   final List<int> _swarmKey;
   final List<String> _bootstrapPeers;

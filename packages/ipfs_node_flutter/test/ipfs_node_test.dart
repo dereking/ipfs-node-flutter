@@ -58,6 +58,13 @@ void main() {
     );
   });
 
+  test('direct private configuration rejects an empty swarm key', () {
+    expect(
+      () => PrivateNodeConfig(swarmKey: []),
+      throwsArgumentError,
+    );
+  });
+
   test('configuration collection values are defensively copied', () {
     final swarmKey = [1];
     final peerIds = {'peer-a'};
