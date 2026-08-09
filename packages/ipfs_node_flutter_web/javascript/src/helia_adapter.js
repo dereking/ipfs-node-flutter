@@ -23,7 +23,7 @@ class HeliaBrowserNode {
   #libp2p
   #capabilities = []
 
-  async start () {
+  async start (bootstrapPeers = []) {
     if (this.#helia != null) return
 
     if (globalThis.indexedDB == null) {
@@ -58,6 +58,9 @@ class HeliaBrowserNode {
       })
       this.#unixfs = unixfs(this.#helia)
       this.#capabilities = capabilities
+      await Promise.all(bootstrapPeers.map(async (peer) => {
+        try { await this.#libp2p.dial(peer) } catch { /* best-effort bootstrap */ }
+      }))
     } catch (error) {
       await this.#blockstore.close()
       this.#blockstore = undefined

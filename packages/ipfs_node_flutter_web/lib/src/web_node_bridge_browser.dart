@@ -28,13 +28,18 @@ final class _JavascriptHeliaBridge implements WebNodeBridge {
   CapabilitySet get capabilities => _capabilities;
 
   @override
-  Future<void> start() async {
+  Future<void> start({required List<String> bootstrapPeers}) async {
     if (_node != null) return;
     final api = await (_adapterFuture ??= _loadAdapter());
     final node =
         await api.callMethod<JSPromise<JSObject>>('create'.toJS).toDart;
     try {
-      await node.callMethod<JSPromise<JSAny?>>('start'.toJS).toDart;
+      await node
+          .callMethod<JSPromise<JSAny?>>(
+            'start'.toJS,
+            bootstrapPeers.map((peer) => peer.toJS).toList().toJS,
+          )
+          .toDart;
       final names = await node
           .callMethod<JSPromise<JSArray<JSString>>>('capabilities'.toJS)
           .toDart;

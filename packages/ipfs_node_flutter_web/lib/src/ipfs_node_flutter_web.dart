@@ -24,12 +24,14 @@ final class IpfsNodeFlutterWeb extends IpfsNodePlatform {
   Future<void> start(NodeConfig config) async {
     if (config is PrivateNodeConfig) {
       throw UnsupportedError(
-        'Private swarm-key networks require the Helia web backend.',
+        'Private swarm-key networks are not supported by the browser backend.',
       );
     }
     _lifecycle = NodeLifecycle.starting;
     try {
-      await _runtimeBridge.start();
+      await _runtimeBridge.start(
+        bootstrapPeers: (config as PublicNodeConfig).bootstrapPeers,
+      );
       _lifecycle = NodeLifecycle.running;
     } catch (_) {
       _lifecycle = NodeLifecycle.failed;

@@ -102765,7 +102765,7 @@ ${indent}[Error list was empty]`;
     #unixfs;
     #libp2p;
     #capabilities = [];
-    async start() {
+    async start(bootstrapPeers = []) {
       if (this.#helia != null) return;
       if (globalThis.indexedDB == null) {
         throw new Error("IndexedDB is required for persistent browser IPFS storage.");
@@ -102797,6 +102797,12 @@ ${indent}[Error list was empty]`;
         });
         this.#unixfs = unixfs(this.#helia);
         this.#capabilities = capabilities;
+        await Promise.all(bootstrapPeers.map(async (peer) => {
+          try {
+            await this.#libp2p.dial(peer);
+          } catch {
+          }
+        }));
       } catch (error) {
         await this.#blockstore.close();
         this.#blockstore = void 0;
