@@ -1,8 +1,9 @@
 # ipfs-node-flutter
 
 `ipfs-node-flutter` is a Flutter IPFS node SDK workspace for Android, iOS,
-macOS, Windows, Linux, and web. This foundation phase only starts and stops a
-backend and reports its capabilities.
+macOS, Windows, Linux, and web. Its current state is a scaffold only; it does
+not yet implement backend start/stop or capability reporting. Those are the
+next foundation steps.
 
 The following capabilities are intentionally not exposed until later phases:
 
