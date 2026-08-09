@@ -53,15 +53,18 @@ stable return codes for lifecycle calls. `ipfs_node_start` receives either
 
 Run the complete foundation matrix from the repository root. The native ABI
 check builds the macOS host library, compiles a C client against the packaged
-header, and runs that client. The browser test requires Chrome to be
-available to Flutter.
+header, and runs that client. The Flutter browser test requires Chrome to be
+available to Flutter. The standalone Helia check also requires a Node.js
+Playwright installation; set `PLAYWRIGHT_NODE_PATH` to its `node_modules`
+directory before running it.
 
 ```sh
-(cd packages/ipfs_node_flutter && flutter test && flutter analyze lib test)
-(cd packages/ipfs_node_flutter_platform_interface && flutter test && flutter analyze lib test)
-(cd packages/ipfs_node_flutter_native && flutter test && flutter analyze lib test)
-(cd packages/ipfs_node_flutter_web && flutter test --platform chrome && flutter analyze lib test)
-(cd native/go && go test -race ./internal/core && make verify-abi)
+cd packages/ipfs_node_flutter && flutter test && flutter analyze lib test
+cd ../ipfs_node_flutter_platform_interface && flutter test && flutter analyze lib test
+cd ../ipfs_node_flutter_native && flutter test && flutter analyze lib test
+cd ../ipfs_node_flutter_web && flutter test --platform chrome && flutter analyze lib test
+PLAYWRIGHT_NODE_PATH=/path/to/node_modules ./tool/verify_helia_browser.sh
+cd ../../native/go && go test -race ./internal/core && make verify-abi
 ```
 
 The next feature gate is a native node that can connect to Kubo in an

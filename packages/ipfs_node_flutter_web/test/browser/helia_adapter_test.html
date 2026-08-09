@@ -1,0 +1,34 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>RUNNING: Helia browser integration</title>
+<script src="/web/helia_adapter.js"></script>
+<script>
+  const invoke = (operation) => new Promise((resolve, reject) => operation(resolve, reject))
+
+  async function verify () {
+    const node = IpfsNodeFlutterHelia.create()
+    try {
+      // A valid but intentionally unreachable local bootstrap address avoids
+      // making this local storage/lifecycle test depend on public-network DNS.
+      await invoke((resolve, reject) => IpfsNodeFlutterHelia.start(node, [
+        '/ip4/127.0.0.1/tcp/1/ws/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN'
+      ], resolve, reject))
+      const cid = await invoke((resolve, reject) =>
+        IpfsNodeFlutterHelia.addBytes(node, new Uint8Array([0, 1, 2, 255]), resolve, reject))
+      const bytes = await invoke((resolve, reject) =>
+        IpfsNodeFlutterHelia.getBytes(node, cid, resolve, reject))
+      if (bytes.length !== 4 || bytes[3] !== 255) {
+        throw new Error('Helia returned unexpected bytes')
+      }
+      await invoke((resolve, reject) => IpfsNodeFlutterHelia.stop(node, resolve, reject))
+      document.title = 'PASS: Helia browser integration'
+      document.body.textContent = document.title
+    } catch (error) {
+      try { await invoke((resolve, reject) => IpfsNodeFlutterHelia.stop(node, resolve, reject)) } catch (_) {}
+      document.title = `FAIL: Helia browser integration: ${error}`
+      document.body.textContent = document.title
+    }
+  }
+
+  verify()
+</script>

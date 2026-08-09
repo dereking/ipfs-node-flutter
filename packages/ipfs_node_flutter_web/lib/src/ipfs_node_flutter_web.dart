@@ -23,9 +23,7 @@ final class IpfsNodeFlutterWeb extends IpfsNodePlatform {
   @override
   Future<void> start(NodeConfig config) async {
     if (config is PrivateNodeConfig) {
-      throw UnsupportedError(
-        'Private swarm-key networks are not supported by the browser backend.',
-      );
+      throw UnsupportedCapabilityException(Capability.privateSwarmKey);
     }
     _lifecycle = NodeLifecycle.starting;
     try {

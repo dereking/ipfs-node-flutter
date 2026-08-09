@@ -1,8 +1,11 @@
 # Helia browser smoke test
 
-Run `flutter run -d chrome` from this directory. The page reports `PASS` only
-after the packaged Helia asset starts, writes and reads UnixFS bytes via
-IndexedDB, and stops the node.
+Run `../tool/verify_helia_browser.sh` from this directory for the automated
+browser check. It loads the packaged Helia asset, starts a browser node,
+writes and reads UnixFS bytes via IndexedDB, and stops the node.
+
+`flutter run -d chrome` remains useful for manual inspection; the page reports
+`PASS` after the same sequence.
 
 ## Getting Started
 

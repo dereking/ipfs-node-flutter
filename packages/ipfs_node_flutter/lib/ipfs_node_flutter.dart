@@ -2,11 +2,13 @@ export 'package:ipfs_node_flutter_platform_interface/ipfs_node_platform_interfac
     show
         Capability,
         CapabilitySet,
+        IpfsNodeException,
         NodeConfig,
         NodeLifecycle,
         NodeStatus,
         PrivateNodeConfig,
-        PublicNodeConfig;
+        PublicNodeConfig,
+        UnsupportedCapabilityException;
 
 export 'src/ipfs_node.dart';
 export 'src/ipfs_node_exception.dart';

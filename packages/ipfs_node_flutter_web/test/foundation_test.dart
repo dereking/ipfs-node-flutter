@@ -29,7 +29,13 @@ void main() {
 
     await expectLater(
       platform.start(NodeConfig.private(swarmKey: [1])),
-      throwsA(isA<UnsupportedError>()),
+      throwsA(
+        isA<UnsupportedCapabilityException>().having(
+          (error) => error.capability,
+          'capability',
+          Capability.privateSwarmKey,
+        ),
+      ),
     );
     expect(
       await platform.status(),

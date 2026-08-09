@@ -1,7 +1,5 @@
 import 'package:ipfs_node_flutter_platform_interface/ipfs_node_platform_interface.dart';
 
-import 'ipfs_node_exception.dart';
-
 final class IpfsNode {
   IpfsNode({IpfsNodePlatform? platform})
       : _platform = platform ?? IpfsNodePlatform.instance.create();

@@ -8,6 +8,7 @@ import 'package:web/web.dart' as web;
 import 'web_node_bridge.dart';
 
 const _adapterAssets = [
+  'web/helia_adapter.js',
   'assets/packages/ipfs_node_flutter_web/web/helia_adapter.js',
   'assets/web/helia_adapter.js',
   'packages/ipfs_node_flutter_web/web/helia_adapter.js',

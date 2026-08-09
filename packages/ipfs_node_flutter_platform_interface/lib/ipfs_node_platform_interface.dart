@@ -17,6 +17,26 @@ enum Capability {
   remotePinning,
 }
 
+/// A capability requested by the caller is unavailable on this backend.
+///
+/// This lives in the platform contract so platform packages can report the
+/// same typed failure without depending on the public facade package.
+sealed class IpfsNodeException implements Exception {
+  const IpfsNodeException(this.message);
+
+  final String message;
+
+  @override
+  String toString() => '$runtimeType: $message';
+}
+
+final class UnsupportedCapabilityException extends IpfsNodeException {
+  UnsupportedCapabilityException(this.capability)
+      : super('Unsupported capability: $capability');
+
+  final Capability capability;
+}
+
 final class CapabilitySet {
   CapabilitySet(Iterable<Capability> capabilities)
       : _capabilities = Set.unmodifiable(capabilities);
