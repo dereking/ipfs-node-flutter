@@ -11,6 +11,11 @@ dependencies:
     sdk: flutter
   ipfs_node_flutter_platform_interface:
     path: ../ipfs_node_flutter_platform_interface
+  web: ^1.1.1
+
+flutter:
+  assets:
+    - web/helia_adapter.js
 
 dev_dependencies:
   flutter_test:

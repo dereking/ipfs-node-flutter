@@ -1,13 +1,15 @@
 import 'package:ipfs_node_flutter_platform_interface/ipfs_node_platform_interface.dart';
+import 'dart:typed_data';
 
-/// Browser implementation reserved for the future Helia backend.
-///
-/// Until Helia is linked, it explicitly reports no IPFS capabilities instead
-/// of proxying requests through an HTTP gateway or advertising unsupported
-/// browser transports.
+import 'web_node_bridge.dart';
+import 'web_node_bridge_stub.dart'
+    if (dart.library.js_interop) 'web_node_bridge_browser.dart';
+
+/// Browser [IpfsNodePlatform] implementation backed by Helia and js-libp2p.
 final class IpfsNodeFlutterWeb extends IpfsNodePlatform {
-  static const _heliaRequired = 'Web IPFS support requires the Helia backend.';
+  IpfsNodeFlutterWeb({WebNodeBridge? bridge}) : _bridge = bridge;
 
+  WebNodeBridge? _bridge;
   NodeLifecycle _lifecycle = NodeLifecycle.stopped;
 
   /// Installs this backend as the default platform implementation.
@@ -25,23 +27,40 @@ final class IpfsNodeFlutterWeb extends IpfsNodePlatform {
         'Private swarm-key networks require the Helia web backend.',
       );
     }
-    _lifecycle = NodeLifecycle.degraded;
+    _lifecycle = NodeLifecycle.starting;
+    try {
+      await _runtimeBridge.start();
+      _lifecycle = NodeLifecycle.running;
+    } catch (_) {
+      _lifecycle = NodeLifecycle.failed;
+      rethrow;
+    }
   }
 
   @override
   Future<void> stop() async {
-    _lifecycle = NodeLifecycle.stopped;
+    if (_lifecycle == NodeLifecycle.stopped) return;
+    _lifecycle = NodeLifecycle.stopping;
+    try {
+      await _runtimeBridge.stop();
+    } finally {
+      _lifecycle = NodeLifecycle.stopped;
+    }
   }
 
   @override
-  Future<NodeStatus> status() async => switch (_lifecycle) {
-        NodeLifecycle.degraded => const NodeStatus(
-            lifecycle: NodeLifecycle.degraded,
-            safeDiagnostic: _heliaRequired,
-          ),
-        _ => NodeStatus(lifecycle: _lifecycle),
-      };
+  Future<NodeStatus> status() async => NodeStatus(lifecycle: _lifecycle);
 
   @override
-  Future<CapabilitySet> capabilities() async => const CapabilitySet.empty();
+  Future<CapabilitySet> capabilities() async =>
+      _bridge?.capabilities ?? const CapabilitySet.empty();
+
+  /// Stores opaque bytes as a UnixFS file in the local Helia blockstore.
+  Future<String> addBytes(List<int> bytes) =>
+      _runtimeBridge.addBytes(Uint8List.fromList(bytes));
+
+  /// Retrieves opaque bytes for a locally or network-resolvable UnixFS CID.
+  Future<List<int>> getBytes(String cid) => _runtimeBridge.getBytes(cid);
+
+  WebNodeBridge get _runtimeBridge => _bridge ??= createWebNodeBridge();
 }

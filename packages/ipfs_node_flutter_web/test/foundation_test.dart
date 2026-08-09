@@ -1,27 +1,31 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'dart:typed_data';
+
 import 'package:ipfs_node_flutter_platform_interface/ipfs_node_platform_interface.dart';
 import 'package:ipfs_node_flutter_web/ipfs_node_flutter_web.dart';
 
 void main() {
-  test('public startup reports the explicit no-Helia degraded fallback',
+  test('public startup creates a browser node and reports its transports',
       () async {
-    final platform = IpfsNodeFlutterWeb();
+    final bridge = _FakeWebNodeBridge(
+      capabilities: CapabilitySet([Capability.webRtc]),
+    );
+    final platform = IpfsNodeFlutterWeb(bridge: bridge);
 
     await platform.start(NodeConfig.public());
 
-    expect(await platform.capabilities(), const CapabilitySet.empty());
+    expect(bridge.started, isTrue);
+    expect(await platform.capabilities(), CapabilitySet([Capability.webRtc]));
     expect(
       await platform.status(),
-      const NodeStatus(
-        lifecycle: NodeLifecycle.degraded,
-        safeDiagnostic: 'Web IPFS support requires the Helia backend.',
-      ),
+      const NodeStatus.running(),
     );
   });
 
-  test('private swarm-key configurations are rejected without Helia',
+  test('private swarm-key configurations are rejected by the browser adapter',
       () async {
-    final platform = IpfsNodeFlutterWeb();
+    final bridge = _FakeWebNodeBridge();
+    final platform = IpfsNodeFlutterWeb(bridge: bridge);
 
     await expectLater(
       platform.start(NodeConfig.private(swarmKey: [1])),
@@ -31,10 +35,12 @@ void main() {
       await platform.status(),
       const NodeStatus(lifecycle: NodeLifecycle.stopped),
     );
+    expect(bridge.started, isFalse);
   });
 
-  test('stop is idempotent after the degraded fallback starts', () async {
-    final platform = IpfsNodeFlutterWeb();
+  test('stop is idempotent after the browser node starts', () async {
+    final bridge = _FakeWebNodeBridge();
+    final platform = IpfsNodeFlutterWeb(bridge: bridge);
     await platform.start(NodeConfig.public());
 
     await platform.stop();
@@ -44,6 +50,18 @@ void main() {
       await platform.status(),
       const NodeStatus(lifecycle: NodeLifecycle.stopped),
     );
+    expect(bridge.stopCalls, 1);
+  });
+
+  test('addBytes and getBytes delegate to the Helia browser node', () async {
+    final bridge = _FakeWebNodeBridge();
+    final platform = IpfsNodeFlutterWeb(bridge: bridge);
+    await platform.start(NodeConfig.public());
+
+    final cid = await platform.addBytes([1, 2, 3]);
+
+    expect(cid, 'bafy-test');
+    expect(await platform.getBytes(cid), [1, 2, 3]);
   });
 
   test('registerWith installs a web backend factory', () {
@@ -51,4 +69,29 @@ void main() {
 
     expect(IpfsNodePlatform.instance, isA<IpfsNodeFlutterWeb>());
   });
+}
+
+final class _FakeWebNodeBridge implements WebNodeBridge {
+  _FakeWebNodeBridge({this.capabilities = const CapabilitySet.empty()});
+
+  @override
+  final CapabilitySet capabilities;
+  bool started = false;
+  int stopCalls = 0;
+
+  @override
+  Future<void> start() async {
+    started = true;
+  }
+
+  @override
+  Future<void> stop() async {
+    stopCalls++;
+  }
+
+  @override
+  Future<String> addBytes(Uint8List bytes) async => 'bafy-test';
+
+  @override
+  Future<Uint8List> getBytes(String cid) async => Uint8List.fromList([1, 2, 3]);
 }
