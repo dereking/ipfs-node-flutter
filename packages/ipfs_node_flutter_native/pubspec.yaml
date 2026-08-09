@@ -9,6 +9,9 @@ resolution: workspace
 dependencies:
   flutter:
     sdk: flutter
+  ffi: ^2.1.4
+  ipfs_node_flutter_platform_interface:
+    path: ../ipfs_node_flutter_platform_interface
 
 dev_dependencies:
   flutter_test:
