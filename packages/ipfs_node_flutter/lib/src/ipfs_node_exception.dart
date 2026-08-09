@@ -1,4 +1,4 @@
-import 'capability.dart';
+import 'package:ipfs_node_flutter_platform_interface/ipfs_node_platform_interface.dart';
 
 sealed class IpfsNodeException implements Exception {
   const IpfsNodeException(this.message);

@@ -1,15 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ipfs_node_flutter/ipfs_node_flutter.dart';
+import 'package:ipfs_node_flutter_platform_interface/ipfs_node_platform_interface.dart';
 
 void main() {
-  test('start delegates the supplied configuration to its backend', () async {
-    NodeConfig? startedWith;
-    final node = IpfsNode.forTesting(
-      onStart: (config) async => startedWith = config,
-      onStop: () async {},
-      onStatus: () async => const NodeStatus.running(),
-      onCapabilities: () async => CapabilitySet([Capability.car]),
-    );
+  test('start delegates the supplied configuration to the installed platform', () async {
+    final platform =
+        _FakePlatform(availableCapabilities: CapabilitySet([Capability.car]));
+    IpfsNodePlatform.instance = platform;
+    final node = IpfsNode();
     final config = NodeConfig.private(
       swarmKey: [1, 2, 3],
       bootstrapPeers: ['peer-a'],
@@ -17,13 +15,14 @@ void main() {
 
     await node.start(config);
 
-    expect(startedWith, same(config));
+    expect(platform.startedWith, same(config));
     expect(await node.status(), const NodeStatus.running());
     expect(await node.capabilities(), CapabilitySet([Capability.car]));
   });
 
-  test('require throws a typed exception for unsupported capabilities', () {
-    final node = _nodeWithoutCapabilities();
+  test('require throws a typed exception for unsupported capabilities', () async {
+    final node = IpfsNode(platform: _FakePlatform());
+    await node.capabilities();
 
     expect(
       () => node.require(Capability.car),
@@ -82,9 +81,23 @@ void main() {
   });
 }
 
-IpfsNode _nodeWithoutCapabilities() => IpfsNode.forTesting(
-      onStart: (_) async {},
-      onStop: () async {},
-      onStatus: () async => const NodeStatus.running(),
-      onCapabilities: () async => const CapabilitySet.empty(),
-    );
+final class _FakePlatform extends IpfsNodePlatform {
+  _FakePlatform({this.availableCapabilities = const CapabilitySet.empty()});
+
+  final CapabilitySet availableCapabilities;
+  NodeConfig? startedWith;
+
+  @override
+  Future<CapabilitySet> capabilities() async => availableCapabilities;
+
+  @override
+  Future<void> start(NodeConfig config) async {
+    startedWith = config;
+  }
+
+  @override
+  Future<NodeStatus> status() async => const NodeStatus.running();
+
+  @override
+  Future<void> stop() async {}
+}

@@ -1,7 +1,12 @@
-library;
+export 'package:ipfs_node_flutter_platform_interface/ipfs_node_platform_interface.dart'
+    show
+        Capability,
+        CapabilitySet,
+        NodeConfig,
+        NodeLifecycle,
+        NodeStatus,
+        PrivateNodeConfig,
+        PublicNodeConfig;
 
-export 'src/capability.dart';
 export 'src/ipfs_node.dart';
 export 'src/ipfs_node_exception.dart';
-export 'src/node_config.dart';
-export 'src/node_status.dart';
