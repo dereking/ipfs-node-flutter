@@ -1,4 +1,3 @@
-import 'dart:ffi';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -6,43 +5,8 @@ import 'package:ipfs_node_flutter_native/ipfs_node_flutter_native.dart';
 import 'package:ipfs_node_flutter_platform_interface/ipfs_node_platform_interface.dart';
 
 void main() {
-  test('native adapter delegates lifecycle calls to the C ABI', () async {
-    final abi = _FakeNativeNodeAbi();
-    final platform = IpfsNodeFlutterNative.forTesting(abi);
-
-    await platform.start(NodeConfig.private(swarmKey: [1, 2, 3]));
-
-    expect(abi.startRequest, '{"network":"private","swarmKey":"AQID"}');
-    expect(await platform.status(), const NodeStatus.running());
-    expect(await platform.capabilities(), const CapabilitySet.empty());
-
-    await platform.stop();
-    expect(abi.stopped, isTrue);
-  });
-
-  test('native adapter maps ABI failures to a typed exception', () async {
-    final platform = IpfsNodeFlutterNative.forTesting(
-      _FakeNativeNodeAbi(startResult: NativeNodeErrorCode.invalidState),
-    );
-
-    await expectLater(
-      platform.start(NodeConfig.public()),
-      throwsA(
-        isA<NativeNodeException>()
-            .having((error) => error.operation, 'operation', 'start')
-            .having(
-              (error) => error.code,
-              'code',
-              NativeNodeErrorCode.invalidState,
-            ),
-      ),
-    );
-  });
-
-  test('registerWith installs the native implementation', () {
-    IpfsNodeFlutterNative.registerWith(
-      abi: _FakeNativeNodeAbi(),
-    );
+  test('registerWith installs a native backend factory', () {
+    IpfsNodeFlutterNative.registerWith(libraryPath: _hostLibrary.path);
 
     expect(IpfsNodePlatform.instance, isA<IpfsNodeFlutterNative>());
   });
@@ -50,9 +14,7 @@ void main() {
   test(
     'native adapter runs the packaged host ABI',
     () async {
-      final platform = IpfsNodeFlutterNative(
-        library: DynamicLibrary.open(_hostLibrary.path),
-      );
+      final platform = IpfsNodeFlutterNative(libraryPath: _hostLibrary.path);
 
       await platform.start(NodeConfig.public());
       expect(await platform.status(), const NodeStatus.running());
@@ -64,32 +26,48 @@ void main() {
     },
     skip: !_hostLibrary.existsSync(),
   );
+
+  test(
+    'disposing a native adapter maps subsequent calls to a typed handle error',
+    () async {
+      final platform = IpfsNodeFlutterNative(libraryPath: _hostLibrary.path);
+      await platform.dispose();
+
+      await expectLater(
+        platform.start(NodeConfig.public()),
+        throwsA(isA<NativeNodeInvalidHandleException>()),
+      );
+    },
+    skip: !_hostLibrary.existsSync(),
+  );
+
+  test('loading a missing native artifact reports its path', () async {
+    const artifact = 'missing/libipfs_node_core.dylib';
+
+    await expectLater(
+      IpfsNodeFlutterNative(libraryPath: artifact).status(),
+      throwsA(
+        isA<NativeNodeLoadException>()
+            .having((error) => error.artifact, 'artifact', artifact),
+      ),
+    );
+  });
+
+  test(
+    'separate native adapters own independent handles',
+    () async {
+      final first = IpfsNodeFlutterNative(libraryPath: _hostLibrary.path);
+      final second = IpfsNodeFlutterNative(libraryPath: _hostLibrary.path);
+      await first.start(NodeConfig.public());
+      await second.start(NodeConfig.public());
+
+      await first.dispose();
+
+      expect(await second.status(), const NodeStatus.running());
+      await second.dispose();
+    },
+    skip: !_hostLibrary.existsSync(),
+  );
 }
 
 final _hostLibrary = File('native/go/dist/libipfs_node_core.dylib');
-
-final class _FakeNativeNodeAbi implements NativeNodeAbi {
-  _FakeNativeNodeAbi({this.startResult = NativeNodeErrorCode.ok});
-
-  final NativeNodeErrorCode startResult;
-  String? startRequest;
-  bool stopped = false;
-
-  @override
-  NativeNodeErrorCode start(String request) {
-    startRequest = request;
-    return startResult;
-  }
-
-  @override
-  NativeNodeErrorCode stop() {
-    stopped = true;
-    return NativeNodeErrorCode.ok;
-  }
-
-  @override
-  String? status() => '{"lifecycle":"running"}';
-
-  @override
-  String? capabilities() => '[]';
-}

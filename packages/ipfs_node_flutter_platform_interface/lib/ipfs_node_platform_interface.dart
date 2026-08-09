@@ -70,7 +70,8 @@ final class PublicNodeConfig extends NodeConfig {
 
   @override
   bool operator ==(Object other) =>
-      other is PublicNodeConfig && _listsEqual(_bootstrapPeers, other._bootstrapPeers);
+      other is PublicNodeConfig &&
+      _listsEqual(_bootstrapPeers, other._bootstrapPeers);
 
   @override
   int get hashCode => Object.hashAll(_bootstrapPeers);
@@ -164,9 +165,18 @@ abstract base class IpfsNodePlatform extends PlatformInterface {
     _instance = instance;
   }
 
+  /// Creates an isolated backend for one [IpfsNode] instance.
+  ///
+  /// Stateless platform implementations may return themselves. Backends that
+  /// own native resources must override this method.
+  IpfsNodePlatform create() => this;
+
   Future<void> start(NodeConfig config);
 
   Future<void> stop();
+
+  /// Releases resources associated with this backend.
+  Future<void> dispose() => stop();
 
   Future<NodeStatus> status();
 
@@ -174,8 +184,8 @@ abstract base class IpfsNodePlatform extends PlatformInterface {
 }
 
 final class _DefaultIpfsNodePlatform extends IpfsNodePlatform {
-  Never _unimplemented(String operation) =>
-      throw UnimplementedError('IpfsNodePlatform.$operation() has not been implemented.');
+  Never _unimplemented(String operation) => throw UnimplementedError(
+      'IpfsNodePlatform.$operation() has not been implemented.');
 
   @override
   Future<CapabilitySet> capabilities() async => _unimplemented('capabilities');

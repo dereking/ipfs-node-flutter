@@ -4,7 +4,7 @@ import 'ipfs_node_exception.dart';
 
 final class IpfsNode {
   IpfsNode({IpfsNodePlatform? platform})
-      : _platform = platform ?? IpfsNodePlatform.instance;
+      : _platform = platform ?? IpfsNodePlatform.instance.create();
 
   final IpfsNodePlatform _platform;
   CapabilitySet _capabilities = const CapabilitySet.empty();
@@ -15,6 +15,8 @@ final class IpfsNode {
   }
 
   Future<void> stop() => _platform.stop();
+
+  Future<void> dispose() => _platform.dispose();
 
   Future<NodeStatus> status() => _platform.status();
 

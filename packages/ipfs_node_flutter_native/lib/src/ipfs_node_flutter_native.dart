@@ -5,121 +5,149 @@ import 'dart:io';
 import 'package:ffi/ffi.dart';
 import 'package:ipfs_node_flutter_platform_interface/ipfs_node_platform_interface.dart';
 
-/// Stable return codes from the packaged native node ABI.
-enum NativeNodeErrorCode {
-  ok(0),
-  invalidHandle(1),
-  invalidConfiguration(2),
-  invalidState(3),
-  invalidResponse(-1);
+/// Base type for errors raised by the native node adapter.
+sealed class NativeNodeException implements Exception {
+  const NativeNodeException(this.message);
 
-  const NativeNodeErrorCode(this.value);
-
-  final int value;
-
-  static NativeNodeErrorCode fromValue(int value) =>
-      NativeNodeErrorCode.values.firstWhere(
-        (code) => code.value == value,
-        orElse: () => NativeNodeErrorCode.invalidResponse,
-      );
-}
-
-/// Reports a native ABI error without exposing native implementation details.
-final class NativeNodeException implements Exception {
-  const NativeNodeException({
-    required this.operation,
-    required this.code,
-    required this.message,
-  });
-
-  final String operation;
-  final NativeNodeErrorCode code;
   final String message;
 
   @override
-  String toString() => 'NativeNodeException($operation, $code): $message';
+  String toString() => '$runtimeType: $message';
 }
 
-/// Narrow abstraction over the packaged C ABI.
-///
-/// This is public so host applications can substitute a deterministic ABI in
-/// tests without loading a platform dynamic library.
-abstract interface class NativeNodeAbi {
-  NativeNodeErrorCode start(String request);
+/// The packaged native artifact could not be loaded or did not expose its ABI.
+final class NativeNodeLoadException extends NativeNodeException {
+  const NativeNodeLoadException(
+      {required this.artifact, required String message})
+      : super(message);
 
-  NativeNodeErrorCode stop();
-
-  String? status();
-
-  String? capabilities();
+  final String artifact;
 }
 
-/// Native [IpfsNodePlatform] implementation backed by the Go C ABI.
+/// Base type for errors returned by a native node operation.
+sealed class NativeNodeOperationException extends NativeNodeException {
+  const NativeNodeOperationException({
+    required this.operation,
+    required String message,
+  }) : super(message);
+
+  final String operation;
+}
+
+final class NativeNodeInvalidHandleException
+    extends NativeNodeOperationException {
+  const NativeNodeInvalidHandleException({required super.operation})
+      : super(message: 'Native node handle is invalid.');
+}
+
+final class NativeNodeInvalidConfigurationException
+    extends NativeNodeOperationException {
+  const NativeNodeInvalidConfigurationException({required super.operation})
+      : super(message: 'Native node configuration is invalid.');
+}
+
+final class NativeNodeInvalidStateException
+    extends NativeNodeOperationException {
+  const NativeNodeInvalidStateException({required super.operation})
+      : super(message: 'Native node lifecycle state is invalid.');
+}
+
+final class NativeNodeProtocolException extends NativeNodeOperationException {
+  const NativeNodeProtocolException(
+      {required super.operation, required super.message});
+}
+
+/// Native [IpfsNodePlatform] implementation backed by the packaged Go ABI.
 final class IpfsNodeFlutterNative extends IpfsNodePlatform {
-  IpfsNodeFlutterNative({DynamicLibrary? library})
-      : _abi = _FfiNativeNodeAbi(library ?? _openLibrary());
+  /// [libraryPath] is intended for application packaging and integration tests.
+  /// Omit it to use the platform's conventional IPFS node artifact name.
+  IpfsNodeFlutterNative({String? libraryPath}) : _libraryPath = libraryPath;
 
-  IpfsNodeFlutterNative.forTesting(NativeNodeAbi abi) : _abi = abi;
+  final String? _libraryPath;
+  _FfiNativeNodeAbi? _abi;
+  bool _disposed = false;
 
-  final NativeNodeAbi _abi;
-
-  /// Installs this implementation as the active platform backend.
-  static void registerWith({DynamicLibrary? library, NativeNodeAbi? abi}) {
-    if (library != null && abi != null) {
-      throw ArgumentError('Specify either library or abi, not both.');
-    }
-    IpfsNodePlatform.instance = abi == null
-        ? IpfsNodeFlutterNative(library: library)
-        : IpfsNodeFlutterNative.forTesting(abi);
+  /// Installs a factory that gives every default [IpfsNode] its own handle.
+  static void registerWith({String? libraryPath}) {
+    IpfsNodePlatform.instance = IpfsNodeFlutterNative(libraryPath: libraryPath);
   }
 
   @override
+  IpfsNodePlatform create() => IpfsNodeFlutterNative(libraryPath: _libraryPath);
+
+  @override
   Future<void> start(NodeConfig config) async {
-    _throwForError('start', _abi.start(_encodeStartRequest(config)));
+    _throwForError('start', _backend.start(_encodeStartRequest(config)));
   }
 
   @override
   Future<void> stop() async {
-    _throwForError('stop', _abi.stop());
+    _throwForError('stop', _backend.stop());
+  }
+
+  @override
+  Future<void> dispose() async {
+    if (_disposed) return;
+    _disposed = true;
+    _abi?.dispose();
   }
 
   @override
   Future<NodeStatus> status() async {
-    final encoded = _requiredResponse('status', _abi.status());
+    final encoded = _requiredResponse('status', _backend.status());
     final map = _decodeObject('status', encoded);
     final lifecycleName = map['lifecycle'];
     if (lifecycleName is! String) {
-      throw _invalidResponse('status', 'response did not contain lifecycle');
+      throw const NativeNodeProtocolException(
+        operation: 'status',
+        message: 'Native node response did not contain lifecycle.',
+      );
     }
     final lifecycle =
         NodeLifecycle.values.where((value) => value.name == lifecycleName);
     if (lifecycle.isEmpty) {
-      throw _invalidResponse(
-          'status', 'response contained an unknown lifecycle');
+      throw const NativeNodeProtocolException(
+        operation: 'status',
+        message: 'Native node response contained an unknown lifecycle.',
+      );
     }
     final safeDiagnostic = map['safeDiagnostic'];
     if (safeDiagnostic != null && safeDiagnostic is! String) {
-      throw _invalidResponse(
-          'status', 'response contained an invalid diagnostic');
+      throw const NativeNodeProtocolException(
+        operation: 'status',
+        message: 'Native node response contained an invalid diagnostic.',
+      );
     }
     return NodeStatus(
-        lifecycle: lifecycle.single, safeDiagnostic: safeDiagnostic as String?);
+      lifecycle: lifecycle.single,
+      safeDiagnostic: safeDiagnostic as String?,
+    );
   }
 
   @override
   Future<CapabilitySet> capabilities() async {
-    final encoded = _requiredResponse('capabilities', _abi.capabilities());
+    final encoded = _requiredResponse('capabilities', _backend.capabilities());
     final decoded = _decodeJson('capabilities', encoded);
     if (decoded is! List || decoded.any((value) => value is! String)) {
-      throw _invalidResponse('capabilities', 'response was not a string array');
+      throw const NativeNodeProtocolException(
+        operation: 'capabilities',
+        message: 'Native node response was not a string array.',
+      );
     }
-    final capabilities = <Capability>{};
+    final result = <Capability>{};
     for (final name in decoded.cast<String>()) {
       for (final capability in Capability.values) {
-        if (capability.name == name) capabilities.add(capability);
+        if (capability.name == name) result.add(capability);
       }
     }
-    return CapabilitySet(capabilities);
+    return CapabilitySet(result);
+  }
+
+  _FfiNativeNodeAbi get _backend {
+    if (_disposed) {
+      throw const NativeNodeInvalidHandleException(operation: 'node operation');
+    }
+    return _abi ??= _loadAbi(_libraryPath);
   }
 }
 
@@ -131,13 +159,31 @@ String _encodeStartRequest(NodeConfig config) => switch (config) {
         }),
     };
 
+_FfiNativeNodeAbi _loadAbi(String? libraryPath) {
+  final artifact = libraryPath ?? _defaultArtifactName();
+  try {
+    final library = libraryPath == null && Platform.isIOS
+        ? DynamicLibrary.process()
+        : DynamicLibrary.open(artifact);
+    return _FfiNativeNodeAbi(library);
+  } catch (error) {
+    throw NativeNodeLoadException(
+      artifact: artifact,
+      message: 'Unable to load native IPFS node artifact: $error',
+    );
+  }
+}
+
+String _defaultArtifactName() => switch (Platform.operatingSystem) {
+      'windows' => 'ipfs_node_core.dll',
+      'linux' || 'android' => 'libipfs_node_core.so',
+      'ios' => 'iOS application process',
+      _ => 'libipfs_node_core.dylib',
+    };
+
 String _requiredResponse(String operation, String? value) {
   if (value == null) {
-    throw NativeNodeException(
-      operation: operation,
-      code: NativeNodeErrorCode.invalidHandle,
-      message: 'Native node returned no response.',
-    );
+    throw NativeNodeInvalidHandleException(operation: operation);
   }
   return value;
 }
@@ -145,7 +191,10 @@ String _requiredResponse(String operation, String? value) {
 Map<String, dynamic> _decodeObject(String operation, String encoded) {
   final decoded = _decodeJson(operation, encoded);
   if (decoded is! Map<String, dynamic>) {
-    throw _invalidResponse(operation, 'response was not an object');
+    throw NativeNodeProtocolException(
+      operation: operation,
+      message: 'Native node response was not an object.',
+    );
   }
   return decoded;
 }
@@ -154,46 +203,50 @@ dynamic _decodeJson(String operation, String encoded) {
   try {
     return jsonDecode(encoded);
   } on FormatException {
-    throw _invalidResponse(operation, 'response was not valid JSON');
+    throw NativeNodeProtocolException(
+      operation: operation,
+      message: 'Native node response was not valid JSON.',
+    );
   }
 }
 
-NativeNodeException _invalidResponse(String operation, String message) =>
-    NativeNodeException(
-      operation: operation,
-      code: NativeNodeErrorCode.invalidResponse,
-      message: message,
-    );
-
-void _throwForError(String operation, NativeNodeErrorCode code) {
-  if (code == NativeNodeErrorCode.ok) return;
-  throw NativeNodeException(
-    operation: operation,
-    code: code,
-    message: switch (code) {
-      NativeNodeErrorCode.invalidHandle => 'Native node handle is invalid.',
-      NativeNodeErrorCode.invalidConfiguration =>
-        'Native node configuration is invalid.',
-      NativeNodeErrorCode.invalidState =>
-        'Native node lifecycle state is invalid.',
-      NativeNodeErrorCode.invalidResponse =>
-        'Native node returned an unknown error.',
-      NativeNodeErrorCode.ok => '',
-    },
-  );
+void _throwForError(String operation, _NativeReturnCode code) {
+  switch (code) {
+    case _NativeReturnCode.ok:
+      return;
+    case _NativeReturnCode.invalidHandle:
+      throw NativeNodeInvalidHandleException(operation: operation);
+    case _NativeReturnCode.invalidConfiguration:
+      throw NativeNodeInvalidConfigurationException(operation: operation);
+    case _NativeReturnCode.invalidState:
+      throw NativeNodeInvalidStateException(operation: operation);
+    case _NativeReturnCode.unknown:
+      throw NativeNodeProtocolException(
+        operation: operation,
+        message: 'Native node returned an unknown error code.',
+      );
+  }
 }
 
-DynamicLibrary _openLibrary() {
-  if (Platform.isIOS) return DynamicLibrary.process();
-  final name = switch (Platform.operatingSystem) {
-    'windows' => 'ipfs_node_core.dll',
-    'linux' || 'android' => 'libipfs_node_core.so',
-    _ => 'libipfs_node_core.dylib',
-  };
-  return DynamicLibrary.open(name);
+enum _NativeReturnCode {
+  ok(0),
+  invalidHandle(1),
+  invalidConfiguration(2),
+  invalidState(3),
+  unknown(-1);
+
+  const _NativeReturnCode(this.value);
+
+  final int value;
+
+  static _NativeReturnCode fromValue(int value) =>
+      _NativeReturnCode.values.firstWhere(
+        (code) => code.value == value,
+        orElse: () => _NativeReturnCode.unknown,
+      );
 }
 
-final class _FfiNativeNodeAbi implements NativeNodeAbi {
+final class _FfiNativeNodeAbi {
   _FfiNativeNodeAbi(DynamicLibrary library)
       : _create = library
             .lookupFunction<_CreateNative, _CreateDart>('ipfs_node_create'),
@@ -214,11 +267,7 @@ final class _FfiNativeNodeAbi implements NativeNodeAbi {
         ) {
     _handle = _create();
     if (_handle == 0) {
-      throw const NativeNodeException(
-        operation: 'create',
-        code: NativeNodeErrorCode.invalidHandle,
-        message: 'Native node creation failed.',
-      );
+      throw StateError('Native node creation returned an invalid handle.');
     }
   }
 
@@ -229,25 +278,21 @@ final class _FfiNativeNodeAbi implements NativeNodeAbi {
   final _StringDart _capabilities;
   final _FreeDart _free;
   final _FreeStringDart _freeString;
-  late final int _handle;
+  late int _handle;
 
-  @override
-  NativeNodeErrorCode start(String request) {
+  _NativeReturnCode start(String request) {
     final value = request.toNativeUtf8().cast<Char>();
     try {
-      return NativeNodeErrorCode.fromValue(_start(_handle, value));
+      return _NativeReturnCode.fromValue(_start(_handle, value));
     } finally {
       calloc.free(value);
     }
   }
 
-  @override
-  NativeNodeErrorCode stop() => NativeNodeErrorCode.fromValue(_stop(_handle));
+  _NativeReturnCode stop() => _NativeReturnCode.fromValue(_stop(_handle));
 
-  @override
   String? status() => _readString(_status);
 
-  @override
   String? capabilities() => _readString(_capabilities);
 
   String? _readString(_StringDart function) {
@@ -260,7 +305,12 @@ final class _FfiNativeNodeAbi implements NativeNodeAbi {
     }
   }
 
-  void dispose() => _free(_handle);
+  void dispose() {
+    if (_handle == 0) return;
+    _stop(_handle);
+    _free(_handle);
+    _handle = 0;
+  }
 }
 
 typedef _CreateNative = UintPtr Function();

@@ -3,7 +3,8 @@ import 'package:ipfs_node_flutter/ipfs_node_flutter.dart';
 import 'package:ipfs_node_flutter_platform_interface/ipfs_node_platform_interface.dart';
 
 void main() {
-  test('start delegates the supplied configuration to the installed platform', () async {
+  test('start delegates the supplied configuration to the installed platform',
+      () async {
     final platform =
         _FakePlatform(availableCapabilities: CapabilitySet([Capability.car]));
     IpfsNodePlatform.instance = platform;
@@ -20,7 +21,23 @@ void main() {
     expect(await node.capabilities(), CapabilitySet([Capability.car]));
   });
 
-  test('require throws a typed exception for unsupported capabilities', () async {
+  test('each default node receives its own backend instance', () async {
+    final factory = _FactoryPlatform();
+    IpfsNodePlatform.instance = factory;
+    final first = IpfsNode();
+    final second = IpfsNode();
+
+    await first.start(NodeConfig.public());
+    await second.start(NodeConfig.public());
+
+    expect(factory.created, hasLength(2));
+    expect(factory.created[0].startedWith, isNotNull);
+    expect(factory.created[1].startedWith, isNotNull);
+    expect(identical(factory.created[0], factory.created[1]), isFalse);
+  });
+
+  test('require throws a typed exception for unsupported capabilities',
+      () async {
     final node = IpfsNode(platform: _FakePlatform());
     await node.capabilities();
 
@@ -113,4 +130,27 @@ final class _FakePlatform extends IpfsNodePlatform {
 
   @override
   Future<void> stop() async {}
+}
+
+final class _FactoryPlatform extends IpfsNodePlatform {
+  final List<_FakePlatform> created = [];
+
+  @override
+  IpfsNodePlatform create() {
+    final platform = _FakePlatform();
+    created.add(platform);
+    return platform;
+  }
+
+  @override
+  Future<CapabilitySet> capabilities() => throw UnimplementedError();
+
+  @override
+  Future<void> start(NodeConfig config) => throw UnimplementedError();
+
+  @override
+  Future<NodeStatus> status() => throw UnimplementedError();
+
+  @override
+  Future<void> stop() => throw UnimplementedError();
 }
