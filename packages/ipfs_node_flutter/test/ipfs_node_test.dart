@@ -1,23 +1,24 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ipfs_node_flutter/ipfs_node_flutter.dart';
-import 'package:ipfs_node_flutter/src/ipfs_node_backend.dart';
 
 void main() {
   test('start delegates the supplied configuration to its backend', () async {
     final backend = _FakeBackend();
-    final node = IpfsNode.forTesting(backend);
-    final config = NodeConfig.privateNetwork(
-      swarmKey: 'private-swarm-key',
+    final node = IpfsNode(backend: backend);
+    const config = NodeConfig.private(
+      swarmKey: [1, 2, 3],
       bootstrapPeers: ['peer-a'],
     );
 
     await node.start(config);
 
     expect(backend.startedWith, same(config));
+    expect(await node.status(), const NodeStatus.running());
+    expect(node.capabilities(), CapabilitySet([Capability.car]));
   });
 
   test('require throws a typed exception for unsupported capabilities', () {
-    final node = IpfsNode.forTesting(_FakeBackend());
+    final node = IpfsNode(backend: _FakeBackend());
 
     expect(
       () => node.require(Capability.car),
@@ -28,10 +29,20 @@ void main() {
     );
   });
 
-  test('private network requires a nonempty swarm key', () {
+  test('configuration values compare by value', () {
     expect(
-      () => NodeConfig.privateNetwork(swarmKey: ''),
-      throwsArgumentError,
+      const NodeConfig.public(bootstrapPeers: ['peer-a']),
+      const NodeConfig.public(bootstrapPeers: ['peer-a']),
+    );
+    expect(
+      const NodeConfig.private(
+        swarmKey: [1],
+        allowedPeerIds: {'peer-a'},
+      ),
+      const NodeConfig.private(
+        swarmKey: [1],
+        allowedPeerIds: {'peer-a'},
+      ),
     );
   });
 }
@@ -48,10 +59,8 @@ final class _FakeBackend implements IpfsNodeBackend {
   Future<void> stop() async {}
 
   @override
-  Future<NodeStatus> status() async => const NodeStatus(
-        lifecycle: NodeLifecycle.stopped,
-      );
+  Future<NodeStatus> status() async => const NodeStatus.running();
 
   @override
-  Future<Set<Capability>> capabilities() async => const {};
+  Future<CapabilitySet> capabilities() async => CapabilitySet([Capability.car]);
 }
