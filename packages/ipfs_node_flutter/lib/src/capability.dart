@@ -1,0 +1,15 @@
+enum Capability {
+  inboundListen,
+  tcp,
+  quic,
+  webRtc,
+  webTransport,
+  dhtRouting,
+  mdns,
+  privateSwarmKey,
+  unixfs,
+  car,
+  ipns,
+  pubsub,
+  remotePinning,
+}
