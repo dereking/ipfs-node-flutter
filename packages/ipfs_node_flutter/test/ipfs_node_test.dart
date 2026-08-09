@@ -79,6 +79,19 @@ void main() {
     expect(privateConfig.swarmKey, [1]);
     expect(privateConfig.allowedPeerIds, {'peer-a'});
   });
+
+  test('public configuration copies bootstrap peers from the caller', () {
+    final bootstrapPeers = ['peer-a'];
+    final config = NodeConfig.public(bootstrapPeers: bootstrapPeers);
+
+    bootstrapPeers.add('peer-b');
+
+    expect((config as PublicNodeConfig).bootstrapPeers, ['peer-a']);
+    expect(
+      () => config.bootstrapPeers.add('peer-c'),
+      throwsUnsupportedError,
+    );
+  });
 }
 
 final class _FakePlatform extends IpfsNodePlatform {

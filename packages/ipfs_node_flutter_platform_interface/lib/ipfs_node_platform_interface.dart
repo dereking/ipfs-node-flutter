@@ -60,13 +60,13 @@ sealed class NodeConfig {
 }
 
 final class PublicNodeConfig extends NodeConfig {
-  const PublicNodeConfig({List<String> bootstrapPeers = const []})
-      : _bootstrapPeers = bootstrapPeers,
+  PublicNodeConfig({List<String> bootstrapPeers = const []})
+      : _bootstrapPeers = List.unmodifiable(bootstrapPeers),
         super._();
 
   final List<String> _bootstrapPeers;
 
-  List<String> get bootstrapPeers => List.unmodifiable(_bootstrapPeers);
+  List<String> get bootstrapPeers => _bootstrapPeers;
 
   @override
   bool operator ==(Object other) =>
