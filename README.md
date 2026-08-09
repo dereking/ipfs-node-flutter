@@ -13,16 +13,20 @@ The following capabilities are intentionally not exposed until later phases:
 - PubSub; and
 - remote pinning.
 
-## Tests
+## Scaffold validation
 
-Run Flutter tests from each package directory:
+These commands validate the empty foundation scaffolds; production APIs will be
+added in later phases.
 
 ```sh
-flutter test
+(cd packages/ipfs_node_flutter && flutter test)
+(cd packages/ipfs_node_flutter_platform_interface && flutter test)
+(cd packages/ipfs_node_flutter_native && flutter test)
+(cd packages/ipfs_node_flutter_web && flutter test)
 ```
 
-Run the Go core tests from `native/go`:
+Run the Go core scaffold test from `native/go`:
 
 ```sh
-go test ./internal/core
+(cd native/go && go test ./internal/core)
 ```
