@@ -52,7 +52,7 @@ func ipfs_node_create() C.uintptr_t {
 
 // ipfs_node_start starts a node from a JSON request. The request is either
 // {"network":"public"} or {"network":"private","swarmKey":"<base64>"}.
-// It returns zero on success; see the err* constants for non-zero values.
+// It returns zero on success; see include/ipfs_node_core.h for stable codes.
 //
 //export ipfs_node_start
 func ipfs_node_start(handle C.uintptr_t, request *C.char) C.int {
