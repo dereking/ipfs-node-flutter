@@ -241,7 +241,7 @@ abstract base class IpfsNodePlatform extends PlatformInterface {
   /// Retrieves and verifies one raw IPFS block by CID.
   Future<Uint8List> getBlock(
     String cid, {
-    Duration timeout = const Duration(seconds: 90),
+    Duration timeout = const Duration(seconds: 180),
   }) async =>
       _unimplemented('getBlock');
 

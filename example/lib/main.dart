@@ -1,12 +1,8 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:ipfs_node_flutter/ipfs_node_flutter.dart';
 import 'package:ipfs_node_flutter_native/ipfs_node_flutter_native.dart';
 
-const documentedCid =
-    'bafkreidfdrlkeq4m4xnxuyx6iae76fdm4wgl5d4xzsb77ixhyqwumhz244';
-const documentedContent = 'Hello IPFS\n';
+import 'feature_checks.dart';
 
 void main() {
   IpfsNodeFlutterNative.registerWith();
@@ -24,165 +20,112 @@ class IpfsNodeExampleApp extends StatelessWidget {
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
           useMaterial3: true,
         ),
-        home: const PublicIpfsCheckPage(),
+        home: const IpfsFeatureLabPage(),
       );
 }
 
-class PublicIpfsCheckPage extends StatefulWidget {
-  const PublicIpfsCheckPage({super.key, this.autoStart = true});
+/// A two-tab dashboard: common IPFS feature tests and everyday node usage.
+class IpfsFeatureLabPage extends StatefulWidget {
+  const IpfsFeatureLabPage({super.key, this.autoStart = true});
 
   final bool autoStart;
 
   @override
-  State<PublicIpfsCheckPage> createState() => _PublicIpfsCheckPageState();
+  State<IpfsFeatureLabPage> createState() => _IpfsFeatureLabPageState();
 }
 
-class _PublicIpfsCheckPageState extends State<PublicIpfsCheckPage> {
-  IpfsNode? _node;
-  NodeStatus? _status;
-  String _step = '等待启动';
-  String? _content;
-  Object? _error;
-  bool _running = false;
+class _IpfsFeatureLabPageState extends State<IpfsFeatureLabPage> {
+  IpfsNode? _displayNode;
+  NodeStatus? _displayStatus;
+  Object? _displayError;
+  bool _loading = false;
+  late final IpfsNodeController _featureController;
 
   @override
   void initState() {
     super.initState();
-    if (widget.autoStart) _runCheck();
+    _featureController = IpfsNodeController();
+    if (widget.autoStart) {
+      _refreshDisplayNode();
+      _featureController.start(NodeConfig.public());
+    }
   }
 
-  Future<void> _runCheck() async {
-    if (_running) return;
+  Future<void> _refreshDisplayNode() async {
     setState(() {
-      _running = true;
-      _step = '连接公共 IPFS bootstrap peers';
-      _content = null;
-      _error = null;
-      _status = null;
+      _loading = true;
+      _displayError = null;
     });
-
-    await _node?.dispose();
+    await _displayNode?.dispose();
     final node = IpfsNode();
-    _node = node;
+    _displayNode = node;
     try {
       await node.start(NodeConfig.public());
       final status = await node.status();
       if (!mounted) return;
-      setState(() {
-        _status = status;
-        _step = '通过 DHT / Bitswap 读取固定 CID';
-      });
-
-      final bytes = await node.getBlock(documentedCid);
-      final content = utf8.decode(bytes);
-      if (content != documentedContent) {
-        throw StateError('CID 内容不匹配：$content');
-      }
-      debugPrint(
-        'IPFS_PUBLIC_TEST_PASS peer=${status.peerId} '
-        'connected=${status.connectedPeers.length} cid=$documentedCid',
-      );
+      setState(() => _displayStatus = status);
+    } catch (error) {
       if (!mounted) return;
-      setState(() {
-        _content = content;
-        _step = '验证通过：已连接公网并取回内容';
-      });
-    } catch (error, stackTrace) {
-      debugPrint('IPFS_PUBLIC_TEST_FAIL $error\n$stackTrace');
-      if (!mounted) return;
-      setState(() {
-        _error = error;
-        _step = '验证失败';
-      });
+      setState(() => _displayError = error);
     } finally {
-      if (mounted) setState(() => _running = false);
+      if (mounted) setState(() => _loading = false);
     }
   }
 
   @override
   void dispose() {
-    _node?.dispose();
+    _displayNode?.dispose();
+    _featureController.dispose();
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) {
-    final passed = _content == documentedContent;
-    return Scaffold(
-      appBar: AppBar(title: const Text('macOS 公共 IPFS 节点验证')),
-      body: ListView(
-        padding: const EdgeInsets.all(24),
-        children: [
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      if (_running)
-                        const SizedBox.square(
-                          dimension: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      else
-                        Icon(
-                          passed ? Icons.check_circle : Icons.info_outline,
-                          color: passed ? Colors.green : null,
-                        ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          _step,
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  _Value(label: 'Peer ID', value: _status?.peerId ?? '—'),
-                  _Value(
-                    label: '已连接 peers',
-                    value: '${_status?.connectedPeers.length ?? 0}',
-                  ),
-                  const _Value(label: '测试 CID', value: documentedCid),
-                  _Value(
-                    label: '返回内容',
-                    value: _content == null ? '—' : jsonEncode(_content),
-                  ),
-                  if (_error != null)
-                    SelectableText(
-                      '错误：$_error',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                    ),
-                ],
-              ),
+  Widget build(BuildContext context) => DefaultTabController(
+        length: 2,
+        child: Scaffold(
+          appBar: AppBar(
+            title: const Text('IPFS 功能验证'),
+            bottom: const TabBar(
+              tabs: [
+                Tab(text: '功能测试'),
+                Tab(text: '常用功能'),
+              ],
             ),
           ),
-          const SizedBox(height: 16),
-          FilledButton.icon(
-            onPressed: _running ? null : _runCheck,
-            icon: const Icon(Icons.refresh),
-            label: const Text('重新验证'),
+          body: TabBarView(
+            children: [
+              _buildTestTab(context),
+              _buildFeatureTab(context),
+            ],
+          ),
+        ),
+      );
+
+  Widget _buildTestTab(BuildContext context) => ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          IpfsNodeStatusPanel(
+            status: _displayStatus,
+            loading: _loading,
+            error: _displayError,
+            onRefresh: _loading ? null : _refreshDisplayNode,
+          ),
+          const SizedBox(height: 24),
+          Text('常见功能测试', style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 12),
+          IpfsFeatureCheckList(checks: commonIpfsFeatureChecks),
+        ],
+      );
+
+  Widget _buildFeatureTab(BuildContext context) => ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          IpfsNodeLifecyclePanel(controller: _featureController),
+          const SizedBox(height: 12),
+          IpfsCidFetchPanel(
+            controller: _featureController,
+            initialCid: documentedCid,
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _Value extends StatelessWidget {
-  const _Value({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(bottom: 10),
-        child: SelectableText('$label：$value'),
       );
 }

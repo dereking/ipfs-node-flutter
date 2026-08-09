@@ -66,7 +66,7 @@ final class IpfsNodeFlutterWeb extends IpfsNodePlatform {
   @override
   Future<Uint8List> getBlock(
     String cid, {
-    Duration timeout = const Duration(seconds: 90),
+    Duration timeout = const Duration(seconds: 180),
   }) =>
       _runtimeBridge.getBytes(cid).timeout(timeout);
 

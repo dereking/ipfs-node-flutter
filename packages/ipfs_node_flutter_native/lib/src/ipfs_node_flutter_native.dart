@@ -164,7 +164,7 @@ final class IpfsNodeFlutterNative extends IpfsNodePlatform {
   @override
   Future<Uint8List> getBlock(
     String cid, {
-    Duration timeout = const Duration(seconds: 90),
+    Duration timeout = const Duration(seconds: 180),
   }) async {
     final encoded = _requiredResponse(
       'getBlock',
