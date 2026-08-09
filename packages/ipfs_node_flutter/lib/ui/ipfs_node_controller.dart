@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:ipfs_node_flutter/ipfs_node_flutter.dart';
 
@@ -67,11 +69,7 @@ class IpfsNodeController extends ChangeNotifier {
 
   @override
   void dispose() {
-    try {
-      _node.dispose();
-    } catch (_) {
-      // Node disposal must not throw during controller teardown.
-    }
+    unawaited(_node.dispose().catchError((_) {}));
     super.dispose();
   }
 }
