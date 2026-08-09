@@ -8,9 +8,12 @@ package main
 import "C"
 
 import (
+	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"sync"
+	"time"
 	"unsafe"
 
 	"github.com/dereking/ipfs-node-flutter/native/go/internal/core"
@@ -33,8 +36,15 @@ var registry = struct {
 }
 
 type startRequest struct {
-	Network  string `json:"network"`
-	SwarmKey []byte `json:"swarmKey,omitempty"`
+	Network             string   `json:"network"`
+	SwarmKey            []byte   `json:"swarmKey,omitempty"`
+	BootstrapPeers      []string `json:"bootstrapPeers,omitempty"`
+	UseDefaultBootstrap bool     `json:"useDefaultBootstrap,omitempty"`
+}
+
+type blockResponse struct {
+	Data  string `json:"data,omitempty"`
+	Error string `json:"error,omitempty"`
 }
 
 // ipfs_node_create creates a stopped node and returns its opaque handle.
@@ -101,8 +111,7 @@ func ipfs_node_status(handle C.uintptr_t) *C.char {
 	return jsonString(node.Status())
 }
 
-// ipfs_node_capabilities returns a heap-allocated JSON array. Foundation
-// nodes deliberately report no transport or protocol capabilities.
+// ipfs_node_capabilities returns a heap-allocated JSON capability array.
 //
 //export ipfs_node_capabilities
 func ipfs_node_capabilities(handle C.uintptr_t) *C.char {
@@ -113,13 +122,39 @@ func ipfs_node_capabilities(handle C.uintptr_t) *C.char {
 	return jsonString(node.Capabilities())
 }
 
+// ipfs_node_get_block retrieves a verified raw IPFS block and returns a
+// heap-allocated JSON object containing base64 data or an error message.
+// Call ipfs_node_free_string exactly once for non-NULL results.
+//
+//export ipfs_node_get_block
+func ipfs_node_get_block(handle C.uintptr_t, cid *C.char, timeout_millis C.int) *C.char {
+	node, ok := lookup(handle)
+	if !ok {
+		return nil
+	}
+	if cid == nil || timeout_millis <= 0 {
+		return jsonString(blockResponse{Error: "invalid block request"})
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout_millis)*time.Millisecond)
+	defer cancel()
+	data, err := node.GetBlock(ctx, C.GoString(cid))
+	if err != nil {
+		return jsonString(blockResponse{Error: err.Error()})
+	}
+	return jsonString(blockResponse{Data: base64.StdEncoding.EncodeToString(data)})
+}
+
 // ipfs_node_free invalidates an opaque node handle. Repeated frees are safe.
 //
 //export ipfs_node_free
 func ipfs_node_free(handle C.uintptr_t) {
 	registry.Lock()
-	defer registry.Unlock()
+	node := registry.nodes[handle]
 	delete(registry.nodes, handle)
+	registry.Unlock()
+	if node != nil {
+		_ = node.Stop()
+	}
 }
 
 // ipfs_node_free_string frees strings allocated by status or capabilities.
@@ -147,7 +182,10 @@ func parseStartRequest(value *C.char) (any, error) {
 	}
 	switch request.Network {
 	case "public":
-		return core.PublicConfig{}, nil
+		if request.UseDefaultBootstrap && len(request.BootstrapPeers) == 0 {
+			request.BootstrapPeers = core.DefaultPublicBootstrapPeers()
+		}
+		return core.PublicConfig{BootstrapPeers: request.BootstrapPeers}, nil
 	case "private":
 		return core.PrivateConfig{SwarmKey: request.SwarmKey}, nil
 	default:

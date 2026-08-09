@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 /// The transport and protocol features a backend can provide.
@@ -154,22 +156,56 @@ bool _setsEqual<T>(Set<T> left, Set<T> right) =>
 enum NodeLifecycle { stopped, starting, running, degraded, stopping, failed }
 
 final class NodeStatus {
-  const NodeStatus({required this.lifecycle, this.safeDiagnostic});
+  const NodeStatus({
+    required this.lifecycle,
+    this.safeDiagnostic,
+    this.peerId,
+    this.listenAddrs = const [],
+    this.connectedPeers = const [],
+    this.bootstrapErrors = const [],
+  });
 
-  const NodeStatus.running({String? safeDiagnostic})
-      : this(lifecycle: NodeLifecycle.running, safeDiagnostic: safeDiagnostic);
+  const NodeStatus.running({
+    String? safeDiagnostic,
+    String? peerId,
+    List<String> listenAddrs = const [],
+    List<String> connectedPeers = const [],
+    List<String> bootstrapErrors = const [],
+  }) : this(
+          lifecycle: NodeLifecycle.running,
+          safeDiagnostic: safeDiagnostic,
+          peerId: peerId,
+          listenAddrs: listenAddrs,
+          connectedPeers: connectedPeers,
+          bootstrapErrors: bootstrapErrors,
+        );
 
   final NodeLifecycle lifecycle;
   final String? safeDiagnostic;
+  final String? peerId;
+  final List<String> listenAddrs;
+  final List<String> connectedPeers;
+  final List<String> bootstrapErrors;
 
   @override
   bool operator ==(Object other) =>
       other is NodeStatus &&
       lifecycle == other.lifecycle &&
-      safeDiagnostic == other.safeDiagnostic;
+      safeDiagnostic == other.safeDiagnostic &&
+      peerId == other.peerId &&
+      _listsEqual(listenAddrs, other.listenAddrs) &&
+      _listsEqual(connectedPeers, other.connectedPeers) &&
+      _listsEqual(bootstrapErrors, other.bootstrapErrors);
 
   @override
-  int get hashCode => Object.hash(lifecycle, safeDiagnostic);
+  int get hashCode => Object.hash(
+        lifecycle,
+        safeDiagnostic,
+        peerId,
+        Object.hashAll(listenAddrs),
+        Object.hashAll(connectedPeers),
+        Object.hashAll(bootstrapErrors),
+      );
 }
 
 abstract base class IpfsNodePlatform extends PlatformInterface {
@@ -201,12 +237,19 @@ abstract base class IpfsNodePlatform extends PlatformInterface {
   Future<NodeStatus> status();
 
   Future<CapabilitySet> capabilities();
+
+  /// Retrieves and verifies one raw IPFS block by CID.
+  Future<Uint8List> getBlock(
+    String cid, {
+    Duration timeout = const Duration(seconds: 90),
+  }) async =>
+      _unimplemented('getBlock');
+
+  Never _unimplemented(String operation) => throw UnimplementedError(
+      'IpfsNodePlatform.$operation() has not been implemented.');
 }
 
 final class _DefaultIpfsNodePlatform extends IpfsNodePlatform {
-  Never _unimplemented(String operation) => throw UnimplementedError(
-      'IpfsNodePlatform.$operation() has not been implemented.');
-
   @override
   Future<CapabilitySet> capabilities() async => _unimplemented('capabilities');
 

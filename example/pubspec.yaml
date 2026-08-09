@@ -1,0 +1,25 @@
+name: ipfs_node_example
+description: macOS public IPFS connectivity example for ipfs-node-flutter.
+publish_to: none
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.5.0 <4.0.0'
+
+resolution: workspace
+
+dependencies:
+  flutter:
+    sdk: flutter
+  ipfs_node_flutter:
+    path: ../packages/ipfs_node_flutter
+  ipfs_node_flutter_native:
+    path: ../packages/ipfs_node_flutter_native
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true

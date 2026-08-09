@@ -29,18 +29,29 @@ int main(void) {
   if (status == NULL || strstr(status, "\"running\"") == NULL) {
     return 5;
   }
-  if (capabilities == NULL || strcmp(capabilities, "[]") != 0) {
+  if (capabilities == NULL ||
+      strstr(capabilities, "\"inboundListen\"") == NULL ||
+      strstr(capabilities, "\"tcp\"") == NULL ||
+      strstr(capabilities, "\"quic\"") == NULL ||
+      strstr(capabilities, "\"dhtRouting\"") == NULL) {
     return 6;
   }
   ipfs_node_free_string(status);
   ipfs_node_free_string(capabilities);
 
-  if (ipfs_node_stop(handle) != IPFS_NODE_OK) {
+  char invalid_cid[] = "not-a-cid";
+  char *block = ipfs_node_get_block(handle, invalid_cid, 1000);
+  if (block == NULL || strstr(block, "\"error\"") == NULL) {
     return 7;
+  }
+  ipfs_node_free_string(block);
+
+  if (ipfs_node_stop(handle) != IPFS_NODE_OK) {
+    return 8;
   }
   ipfs_node_free(handle);
   if (ipfs_node_stop(handle) != IPFS_NODE_ERR_INVALID_HANDLE) {
-    return 8;
+    return 9;
   }
   return 0;
 }

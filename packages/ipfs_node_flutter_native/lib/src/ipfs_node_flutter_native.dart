@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:ffi/ffi.dart';
 import 'package:ipfs_node_flutter_platform_interface/ipfs_node_platform_interface.dart';
@@ -54,6 +55,12 @@ final class NativeNodeInvalidStateException
 
 final class NativeNodeProtocolException extends NativeNodeOperationException {
   const NativeNodeProtocolException(
+      {required super.operation, required super.message});
+}
+
+/// A native network request was valid but could not be completed.
+final class NativeNodeRequestException extends NativeNodeOperationException {
+  const NativeNodeRequestException(
       {required super.operation, required super.message});
 }
 
@@ -118,9 +125,20 @@ final class IpfsNodeFlutterNative extends IpfsNodePlatform {
         message: 'Native node response contained an invalid diagnostic.',
       );
     }
+    final peerId = map['peerId'];
+    if (peerId != null && peerId is! String) {
+      throw const NativeNodeProtocolException(
+        operation: 'status',
+        message: 'Native node response contained an invalid peer ID.',
+      );
+    }
     return NodeStatus(
       lifecycle: lifecycle.single,
       safeDiagnostic: safeDiagnostic as String?,
+      peerId: peerId as String?,
+      listenAddrs: _decodeStringList('status', map, 'listenAddrs'),
+      connectedPeers: _decodeStringList('status', map, 'connectedPeers'),
+      bootstrapErrors: _decodeStringList('status', map, 'bootstrapErrors'),
     );
   }
 
@@ -143,6 +161,37 @@ final class IpfsNodeFlutterNative extends IpfsNodePlatform {
     return CapabilitySet(result);
   }
 
+  @override
+  Future<Uint8List> getBlock(
+    String cid, {
+    Duration timeout = const Duration(seconds: 90),
+  }) async {
+    final encoded = _requiredResponse(
+      'getBlock',
+      _backend.getBlock(cid, timeout.inMilliseconds),
+    );
+    final map = _decodeObject('getBlock', encoded);
+    final error = map['error'];
+    if (error is String && error.isNotEmpty) {
+      throw NativeNodeRequestException(operation: 'getBlock', message: error);
+    }
+    final data = map['data'];
+    if (data is! String) {
+      throw const NativeNodeProtocolException(
+        operation: 'getBlock',
+        message: 'Native node response did not contain block data.',
+      );
+    }
+    try {
+      return base64Decode(data);
+    } on FormatException {
+      throw const NativeNodeProtocolException(
+        operation: 'getBlock',
+        message: 'Native node response contained invalid base64 block data.',
+      );
+    }
+  }
+
   _FfiNativeNodeAbi get _backend {
     if (_disposed) {
       throw const NativeNodeInvalidHandleException(operation: 'node operation');
@@ -152,12 +201,32 @@ final class IpfsNodeFlutterNative extends IpfsNodePlatform {
 }
 
 String _encodeStartRequest(NodeConfig config) => switch (config) {
-      PublicNodeConfig() => jsonEncode({'network': 'public'}),
+      PublicNodeConfig(:final bootstrapPeers) => jsonEncode({
+          'network': 'public',
+          'bootstrapPeers': bootstrapPeers,
+          'useDefaultBootstrap': bootstrapPeers.isEmpty,
+        }),
       PrivateNodeConfig(:final swarmKey) => jsonEncode({
           'network': 'private',
           'swarmKey': base64Encode(swarmKey),
         }),
     };
+
+List<String> _decodeStringList(
+  String operation,
+  Map<String, dynamic> map,
+  String key,
+) {
+  final value = map[key];
+  if (value == null) return const [];
+  if (value is! List || value.any((element) => element is! String)) {
+    throw NativeNodeProtocolException(
+      operation: operation,
+      message: 'Native node response contained an invalid $key list.',
+    );
+  }
+  return List.unmodifiable(value.cast<String>());
+}
 
 _FfiNativeNodeAbi _loadAbi(String? libraryPath) {
   final artifact = libraryPath ?? _defaultArtifactName();
@@ -178,6 +247,7 @@ String _defaultArtifactName() => switch (Platform.operatingSystem) {
       'windows' => 'ipfs_node_core.dll',
       'linux' || 'android' => 'libipfs_node_core.so',
       'ios' => 'iOS application process',
+      'macos' => '@executable_path/../Frameworks/libipfs_node_core.dylib',
       _ => 'libipfs_node_core.dylib',
     };
 
@@ -259,6 +329,9 @@ final class _FfiNativeNodeAbi {
         _capabilities = library.lookupFunction<_StringNative, _StringDart>(
           'ipfs_node_capabilities',
         ),
+        _getBlock = library.lookupFunction<_GetBlockNative, _GetBlockDart>(
+          'ipfs_node_get_block',
+        ),
         _free =
             library.lookupFunction<_FreeNative, _FreeDart>('ipfs_node_free'),
         _freeString =
@@ -276,6 +349,7 @@ final class _FfiNativeNodeAbi {
   final _StopDart _stop;
   final _StringDart _status;
   final _StringDart _capabilities;
+  final _GetBlockDart _getBlock;
   final _FreeDart _free;
   final _FreeStringDart _freeString;
   late int _handle;
@@ -294,6 +368,21 @@ final class _FfiNativeNodeAbi {
   String? status() => _readString(_status);
 
   String? capabilities() => _readString(_capabilities);
+
+  String? getBlock(String cid, int timeoutMillis) {
+    final value = cid.toNativeUtf8().cast<Char>();
+    try {
+      final response = _getBlock(_handle, value, timeoutMillis);
+      if (response == nullptr) return null;
+      try {
+        return response.cast<Utf8>().toDartString();
+      } finally {
+        _freeString(response);
+      }
+    } finally {
+      calloc.free(value);
+    }
+  }
 
   String? _readString(_StringDart function) {
     final value = function(_handle);
@@ -321,6 +410,16 @@ typedef _StopNative = Int32 Function(UintPtr handle);
 typedef _StopDart = int Function(int handle);
 typedef _StringNative = Pointer<Char> Function(UintPtr handle);
 typedef _StringDart = Pointer<Char> Function(int handle);
+typedef _GetBlockNative = Pointer<Char> Function(
+  UintPtr handle,
+  Pointer<Char> cid,
+  Int32 timeoutMillis,
+);
+typedef _GetBlockDart = Pointer<Char> Function(
+  int handle,
+  Pointer<Char> cid,
+  int timeoutMillis,
+);
 typedef _FreeNative = Void Function(UintPtr handle);
 typedef _FreeDart = void Function(int handle);
 typedef _FreeStringNative = Void Function(Pointer<Char> value);

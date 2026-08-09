@@ -13,6 +13,7 @@ for declaration in \
   'extern int ipfs_node_stop(uintptr_t handle);' \
   'extern char* ipfs_node_status(uintptr_t handle);' \
   'extern char* ipfs_node_capabilities(uintptr_t handle);' \
+  'extern char* ipfs_node_get_block(uintptr_t handle, char* cid, int timeout_millis);' \
   'extern void ipfs_node_free(uintptr_t handle);' \
   'extern void ipfs_node_free_string(char* value);'
 do

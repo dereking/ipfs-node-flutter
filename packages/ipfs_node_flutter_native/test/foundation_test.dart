@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ipfs_node_flutter_native/ipfs_node_flutter_native.dart';
@@ -27,14 +28,56 @@ void main() {
     () async {
       final platform = IpfsNodeFlutterNative(libraryPath: hostLibrary.path);
 
-      await platform.start(NodeConfig.public());
-      expect(await platform.status(), const NodeStatus.running());
-      expect(await platform.capabilities(), const CapabilitySet.empty());
+      await platform.start(_offlinePublicConfig());
+      final status = await platform.status();
+      expect(status.lifecycle, NodeLifecycle.running);
+      expect(status.peerId, isNotEmpty);
+      expect(status.listenAddrs, isNotEmpty);
+      expect(
+        await platform.capabilities(),
+        CapabilitySet([
+          Capability.inboundListen,
+          Capability.tcp,
+          Capability.quic,
+          Capability.dhtRouting,
+        ]),
+      );
 
       await platform.stop();
       expect(await platform.status(),
           const NodeStatus(lifecycle: NodeLifecycle.stopped));
     },
+  );
+
+  test('getBlock maps native retrieval failures to a typed operation error',
+      () async {
+    final platform = IpfsNodeFlutterNative(libraryPath: hostLibrary.path);
+    await platform.start(_offlinePublicConfig());
+
+    await expectLater(
+      platform.getBlock('not-a-cid'),
+      throwsA(isA<NativeNodeRequestException>()),
+    );
+    await platform.dispose();
+  });
+
+  test(
+    'native adapter retrieves the documented CID from public IPFS',
+    () async {
+      final platform = IpfsNodeFlutterNative(libraryPath: hostLibrary.path);
+      await platform.start(NodeConfig.public());
+      addTearDown(platform.dispose);
+
+      final status = await platform.status();
+      expect(status.connectedPeers, isNotEmpty);
+      final data = await platform.getBlock(
+        'bafkreidfdrlkeq4m4xnxuyx6iae76fdm4wgl5d4xzsb77ixhyqwumhz244',
+      );
+      expect(utf8.decode(data), 'Hello IPFS\n');
+    },
+    skip: Platform.environment['IPFS_PUBLIC_INTEGRATION'] == '1'
+        ? false
+        : 'set IPFS_PUBLIC_INTEGRATION=1 to use the public IPFS network',
   );
 
   test(
@@ -67,16 +110,22 @@ void main() {
     () async {
       final first = IpfsNodeFlutterNative(libraryPath: hostLibrary.path);
       final second = IpfsNodeFlutterNative(libraryPath: hostLibrary.path);
-      await first.start(NodeConfig.public());
-      await second.start(NodeConfig.public());
+      await first.start(_offlinePublicConfig());
+      await second.start(_offlinePublicConfig());
 
       await first.dispose();
 
-      expect(await second.status(), const NodeStatus.running());
+      expect((await second.status()).lifecycle, NodeLifecycle.running);
       await second.dispose();
     },
   );
 }
+
+NodeConfig _offlinePublicConfig() => NodeConfig.public(
+      bootstrapPeers: const [
+        '/ip4/127.0.0.1/tcp/1/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN',
+      ],
+    );
 
 File _packagedHostLibrary() {
   var directory = Directory.current;

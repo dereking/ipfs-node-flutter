@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ipfs_node_flutter/ipfs_node_flutter.dart';
 import 'package:ipfs_node_flutter_platform_interface/ipfs_node_platform_interface.dart';
@@ -109,13 +111,26 @@ void main() {
       throwsUnsupportedError,
     );
   });
+
+  test('getBlock delegates CID retrieval to the backend', () async {
+    final platform = _FakePlatform(block: [1, 2, 3]);
+    final node = IpfsNode(platform: platform);
+
+    expect(await node.getBlock('bafk-test'), [1, 2, 3]);
+    expect(platform.requestedCid, 'bafk-test');
+  });
 }
 
 final class _FakePlatform extends IpfsNodePlatform {
-  _FakePlatform({this.availableCapabilities = const CapabilitySet.empty()});
+  _FakePlatform({
+    this.availableCapabilities = const CapabilitySet.empty(),
+    this.block = const [],
+  });
 
   final CapabilitySet availableCapabilities;
+  final List<int> block;
   NodeConfig? startedWith;
+  String? requestedCid;
 
   @override
   Future<CapabilitySet> capabilities() async => availableCapabilities;
@@ -130,6 +145,15 @@ final class _FakePlatform extends IpfsNodePlatform {
 
   @override
   Future<void> stop() async {}
+
+  @override
+  Future<Uint8List> getBlock(
+    String cid, {
+    Duration timeout = const Duration(seconds: 90),
+  }) async {
+    requestedCid = cid;
+    return Uint8List.fromList(block);
+  }
 }
 
 final class _FactoryPlatform extends IpfsNodePlatform {
@@ -153,4 +177,11 @@ final class _FactoryPlatform extends IpfsNodePlatform {
 
   @override
   Future<void> stop() => throw UnimplementedError();
+
+  @override
+  Future<Uint8List> getBlock(
+    String cid, {
+    Duration timeout = const Duration(seconds: 90),
+  }) =>
+      throw UnimplementedError();
 }

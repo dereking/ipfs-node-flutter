@@ -63,5 +63,12 @@ final class IpfsNodeFlutterWeb extends IpfsNodePlatform {
   /// connected libp2p peer.
   Future<List<int>> getBytes(String cid) => _runtimeBridge.getBytes(cid);
 
+  @override
+  Future<Uint8List> getBlock(
+    String cid, {
+    Duration timeout = const Duration(seconds: 90),
+  }) =>
+      _runtimeBridge.getBytes(cid).timeout(timeout);
+
   WebNodeBridge get _runtimeBridge => _bridge ??= createWebNodeBridge();
 }
