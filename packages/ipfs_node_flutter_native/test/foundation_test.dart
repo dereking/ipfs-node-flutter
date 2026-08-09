@@ -5,8 +5,19 @@ import 'package:ipfs_node_flutter_native/ipfs_node_flutter_native.dart';
 import 'package:ipfs_node_flutter_platform_interface/ipfs_node_platform_interface.dart';
 
 void main() {
+  late final File hostLibrary;
+
+  setUpAll(() async {
+    hostLibrary = _packagedHostLibrary();
+    expect(
+      hostLibrary.existsSync(),
+      isTrue,
+      reason: 'Run `make build-host` in native/go before testing the adapter.',
+    );
+  });
+
   test('registerWith installs a native backend factory', () {
-    IpfsNodeFlutterNative.registerWith(libraryPath: _hostLibrary.path);
+    IpfsNodeFlutterNative.registerWith(libraryPath: hostLibrary.path);
 
     expect(IpfsNodePlatform.instance, isA<IpfsNodeFlutterNative>());
   });
@@ -14,7 +25,7 @@ void main() {
   test(
     'native adapter runs the packaged host ABI',
     () async {
-      final platform = IpfsNodeFlutterNative(libraryPath: _hostLibrary.path);
+      final platform = IpfsNodeFlutterNative(libraryPath: hostLibrary.path);
 
       await platform.start(NodeConfig.public());
       expect(await platform.status(), const NodeStatus.running());
@@ -24,13 +35,12 @@ void main() {
       expect(await platform.status(),
           const NodeStatus(lifecycle: NodeLifecycle.stopped));
     },
-    skip: !_hostLibrary.existsSync(),
   );
 
   test(
     'disposing a native adapter maps subsequent calls to a typed handle error',
     () async {
-      final platform = IpfsNodeFlutterNative(libraryPath: _hostLibrary.path);
+      final platform = IpfsNodeFlutterNative(libraryPath: hostLibrary.path);
       await platform.dispose();
 
       await expectLater(
@@ -38,7 +48,6 @@ void main() {
         throwsA(isA<NativeNodeInvalidHandleException>()),
       );
     },
-    skip: !_hostLibrary.existsSync(),
   );
 
   test('loading a missing native artifact reports its path', () async {
@@ -56,8 +65,8 @@ void main() {
   test(
     'separate native adapters own independent handles',
     () async {
-      final first = IpfsNodeFlutterNative(libraryPath: _hostLibrary.path);
-      final second = IpfsNodeFlutterNative(libraryPath: _hostLibrary.path);
+      final first = IpfsNodeFlutterNative(libraryPath: hostLibrary.path);
+      final second = IpfsNodeFlutterNative(libraryPath: hostLibrary.path);
       await first.start(NodeConfig.public());
       await second.start(NodeConfig.public());
 
@@ -66,8 +75,22 @@ void main() {
       expect(await second.status(), const NodeStatus.running());
       await second.dispose();
     },
-    skip: !_hostLibrary.existsSync(),
   );
 }
 
-final _hostLibrary = File('native/go/dist/libipfs_node_core.dylib');
+File _packagedHostLibrary() {
+  var directory = Directory.current;
+  while (true) {
+    final candidate = File(
+      '${directory.path}${Platform.pathSeparator}native${Platform.pathSeparator}go'
+      '${Platform.pathSeparator}dist${Platform.pathSeparator}libipfs_node_core.dylib',
+    );
+    if (candidate.existsSync()) return candidate;
+
+    final parent = directory.parent;
+    if (parent.path == directory.path) {
+      return candidate;
+    }
+    directory = parent;
+  }
+}
