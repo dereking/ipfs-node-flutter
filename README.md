@@ -23,10 +23,16 @@ WebRTC, WebTransport (where available), WSS, and circuit relay transports.
 Private browser networks require a later authenticated-relay design; the
 backend rejects private swarm-key configuration today.
 
-The following capabilities are intentionally not exposed from the common SDK
-API until later phases:
+The common `ipfs_node_flutter` package currently exposes only lifecycle,
+configuration, status, and capability APIs. The web implementation also has
+an **experimental backend-specific** `addBytes` / `getBytes` bridge for its
+real Helia node; it is not yet part of the common cross-platform API or a
+promise of public-CID discovery.
 
-- content add, get, and pin operations;
+The following common SDK capabilities are intentionally not exposed until
+later phases:
+
+- cross-platform content add, get, and pin operations;
 - public DHT networking;
 - private swarm-key enforcement;
 - IPNS;
@@ -45,19 +51,20 @@ stable return codes for lifecycle calls. `ipfs_node_start` receives either
 
 ## Foundation validation
 
-These commands validate the foundation contracts; protocol APIs are added in
-later phases.
+Run the complete foundation matrix from the repository root. The native ABI
+check builds the macOS host library, compiles a C client against the packaged
+header, and runs that client. The browser test requires Chrome to be
+available to Flutter.
 
 ```sh
-(cd packages/ipfs_node_flutter && flutter test)
-(cd packages/ipfs_node_flutter_platform_interface && flutter test)
-(cd packages/ipfs_node_flutter_native && flutter test)
-(cd packages/ipfs_node_flutter_web && flutter test --platform chrome)
-(cd packages/ipfs_node_flutter_web/example && flutter run -d chrome)
-```
-
-Run the Go lifecycle and ABI checks from `native/go`:
-
-```sh
+(cd packages/ipfs_node_flutter && flutter test && flutter analyze lib test)
+(cd packages/ipfs_node_flutter_platform_interface && flutter test && flutter analyze lib test)
+(cd packages/ipfs_node_flutter_native && flutter test && flutter analyze lib test)
+(cd packages/ipfs_node_flutter_web && flutter test --platform chrome && flutter analyze lib test)
 (cd native/go && go test -race ./internal/core && make verify-abi)
 ```
+
+The next feature gate is a native node that can connect to Kubo in an
+integration test. Only after that passes may the common API add `add` / `get`;
+UnixFS, CAR, local pinning, public/private routing, IPNS, PubSub, and remote
+pinning remain later work.
