@@ -3,22 +3,27 @@ import 'package:ipfs_node_flutter/ipfs_node_flutter.dart';
 
 void main() {
   test('start delegates the supplied configuration to its backend', () async {
-    final backend = _FakeBackend();
-    final node = IpfsNode(backend: backend);
-    const config = NodeConfig.private(
+    NodeConfig? startedWith;
+    final node = IpfsNode.forTesting(
+      onStart: (config) async => startedWith = config,
+      onStop: () async {},
+      onStatus: () async => const NodeStatus.running(),
+      onCapabilities: () async => CapabilitySet([Capability.car]),
+    );
+    final config = NodeConfig.private(
       swarmKey: [1, 2, 3],
       bootstrapPeers: ['peer-a'],
     );
 
     await node.start(config);
 
-    expect(backend.startedWith, same(config));
+    expect(startedWith, same(config));
     expect(await node.status(), const NodeStatus.running());
-    expect(node.capabilities(), CapabilitySet([Capability.car]));
+    expect(await node.capabilities(), CapabilitySet([Capability.car]));
   });
 
   test('require throws a typed exception for unsupported capabilities', () {
-    final node = IpfsNode(backend: _FakeBackend());
+    final node = _nodeWithoutCapabilities();
 
     expect(
       () => node.require(Capability.car),
@@ -31,36 +36,48 @@ void main() {
 
   test('configuration values compare by value', () {
     expect(
-      const NodeConfig.public(bootstrapPeers: ['peer-a']),
-      const NodeConfig.public(bootstrapPeers: ['peer-a']),
+      NodeConfig.public(bootstrapPeers: ['peer-a']),
+      NodeConfig.public(bootstrapPeers: ['peer-a']),
     );
     expect(
-      const NodeConfig.private(
+      NodeConfig.private(
         swarmKey: [1],
         allowedPeerIds: {'peer-a'},
       ),
-      const NodeConfig.private(
+      NodeConfig.private(
         swarmKey: [1],
         allowedPeerIds: {'peer-a'},
       ),
     );
   });
+
+  test('private configuration rejects an empty swarm key', () {
+    expect(
+      () => NodeConfig.private(swarmKey: []),
+      throwsArgumentError,
+    );
+  });
+
+  test('configuration collection values are defensively copied', () {
+    final swarmKey = [1];
+    final peerIds = {'peer-a'};
+    final config = NodeConfig.private(
+      swarmKey: swarmKey,
+      allowedPeerIds: peerIds,
+    );
+
+    swarmKey[0] = 2;
+    peerIds.add('peer-b');
+
+    final privateConfig = config as PrivateNodeConfig;
+    expect(privateConfig.swarmKey, [1]);
+    expect(privateConfig.allowedPeerIds, {'peer-a'});
+  });
 }
 
-final class _FakeBackend implements IpfsNodeBackend {
-  NodeConfig? startedWith;
-
-  @override
-  Future<void> start(NodeConfig config) async {
-    startedWith = config;
-  }
-
-  @override
-  Future<void> stop() async {}
-
-  @override
-  Future<NodeStatus> status() async => const NodeStatus.running();
-
-  @override
-  Future<CapabilitySet> capabilities() async => CapabilitySet([Capability.car]);
-}
+IpfsNode _nodeWithoutCapabilities() => IpfsNode.forTesting(
+      onStart: (_) async {},
+      onStop: () async {},
+      onStatus: () async => const NodeStatus.running(),
+      onCapabilities: () async => const CapabilitySet.empty(),
+    );

@@ -1,25 +1,35 @@
 sealed class NodeConfig {
   const NodeConfig._();
 
-  const factory NodeConfig.public({List<String> bootstrapPeers}) =
-      PublicNodeConfig;
+  factory NodeConfig.public({List<String> bootstrapPeers = const []}) =>
+      PublicNodeConfig(bootstrapPeers: bootstrapPeers);
 
-  const factory NodeConfig.private({
+  factory NodeConfig.private({
     required List<int> swarmKey,
-    List<String> bootstrapPeers,
-    List<String> relayPeers,
-    Set<String> allowedPeerIds,
-  }) = PrivateNodeConfig;
+    List<String> bootstrapPeers = const [],
+    List<String> relayPeers = const [],
+    Set<String> allowedPeerIds = const {},
+  }) {
+    if (swarmKey.isEmpty) {
+      throw ArgumentError.value(swarmKey, 'swarmKey', 'must not be empty');
+    }
+    return PrivateNodeConfig(
+      swarmKey: swarmKey,
+      bootstrapPeers: bootstrapPeers,
+      relayPeers: relayPeers,
+      allowedPeerIds: allowedPeerIds,
+    );
+  }
 }
 
 final class PublicNodeConfig extends NodeConfig {
-  const PublicNodeConfig({List<String> bootstrapPeers = const []})
-      : _bootstrapPeers = bootstrapPeers,
+  PublicNodeConfig({List<String> bootstrapPeers = const []})
+      : _bootstrapPeers = List.unmodifiable(bootstrapPeers),
         super._();
 
   final List<String> _bootstrapPeers;
 
-  List<String> get bootstrapPeers => List.unmodifiable(_bootstrapPeers);
+  List<String> get bootstrapPeers => _bootstrapPeers;
 
   @override
   bool operator ==(Object other) =>
@@ -31,15 +41,15 @@ final class PublicNodeConfig extends NodeConfig {
 }
 
 final class PrivateNodeConfig extends NodeConfig {
-  const PrivateNodeConfig({
+  PrivateNodeConfig({
     required List<int> swarmKey,
     List<String> bootstrapPeers = const [],
     List<String> relayPeers = const [],
     Set<String> allowedPeerIds = const {},
-  })  : _swarmKey = swarmKey,
-        _bootstrapPeers = bootstrapPeers,
-        _relayPeers = relayPeers,
-        _allowedPeerIds = allowedPeerIds,
+  })  : _swarmKey = List.unmodifiable(swarmKey),
+        _bootstrapPeers = List.unmodifiable(bootstrapPeers),
+        _relayPeers = List.unmodifiable(relayPeers),
+        _allowedPeerIds = Set.unmodifiable(allowedPeerIds),
         super._();
 
   final List<int> _swarmKey;
@@ -47,10 +57,10 @@ final class PrivateNodeConfig extends NodeConfig {
   final List<String> _relayPeers;
   final Set<String> _allowedPeerIds;
 
-  List<int> get swarmKey => List.unmodifiable(_swarmKey);
-  List<String> get bootstrapPeers => List.unmodifiable(_bootstrapPeers);
-  List<String> get relayPeers => List.unmodifiable(_relayPeers);
-  Set<String> get allowedPeerIds => Set.unmodifiable(_allowedPeerIds);
+  List<int> get swarmKey => _swarmKey;
+  List<String> get bootstrapPeers => _bootstrapPeers;
+  List<String> get relayPeers => _relayPeers;
+  Set<String> get allowedPeerIds => _allowedPeerIds;
 
   @override
   bool operator ==(Object other) =>
