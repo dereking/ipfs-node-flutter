@@ -1,0 +1,11 @@
+name: ipfs_node_flutter_workspace
+publish_to: none
+
+environment:
+  sdk: '>=3.5.0 <4.0.0'
+
+workspace:
+  - packages/ipfs_node_flutter
+  - packages/ipfs_node_flutter_platform_interface
+  - packages/ipfs_node_flutter_native
+  - packages/ipfs_node_flutter_web
