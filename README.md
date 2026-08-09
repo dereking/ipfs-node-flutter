@@ -16,9 +16,9 @@ The following capabilities are intentionally not exposed until later phases:
 
 ## Native C ABI
 
-`native/go/include/ipfs_node_core.h` is the checked-in C ABI contract. It
-defines stable return codes for lifecycle calls and declares the opaque handle
-and JSON functions. `ipfs_node_start` receives either
+`native/go/dist/libipfs_node_core.h` is the single distributed C ABI header
+created by `make build-host`. It composes cgo's generated declarations with
+stable return codes for lifecycle calls. `ipfs_node_start` receives either
 `{"network":"public"}` or
 `{"network":"private","swarmKey":"<base64>"}`. Results from
 `ipfs_node_status` and `ipfs_node_capabilities` must be released with
