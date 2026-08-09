@@ -61,7 +61,8 @@ final class IpfsNodeFlutterWeb extends IpfsNodePlatform {
   Future<String> addBytes(List<int> bytes) =>
       _runtimeBridge.addBytes(Uint8List.fromList(bytes));
 
-  /// Retrieves opaque bytes for a locally or network-resolvable UnixFS CID.
+  /// Retrieves opaque bytes for a locally stored CID or one provided by a
+  /// connected libp2p peer.
   Future<List<int>> getBytes(String cid) => _runtimeBridge.getBytes(cid);
 
   WebNodeBridge get _runtimeBridge => _bridge ??= createWebNodeBridge();

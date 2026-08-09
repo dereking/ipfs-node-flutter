@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:js_interop';
-import 'dart:js_interop_unsafe';
 import 'dart:typed_data';
 
 import 'package:ipfs_node_flutter_platform_interface/ipfs_node_platform_interface.dart';
@@ -11,17 +10,43 @@ import 'web_node_bridge.dart';
 const _adapterAssets = [
   'assets/packages/ipfs_node_flutter_web/web/helia_adapter.js',
   'assets/web/helia_adapter.js',
+  'packages/ipfs_node_flutter_web/web/helia_adapter.js',
 ];
 
 @JS('IpfsNodeFlutterHelia')
 external JSObject? get _registeredAdapter;
 
-Future<JSObject>? _adapterFuture;
+Future<void>? _adapterFuture;
 
 WebNodeBridge createWebNodeBridge() => _JavascriptHeliaBridge();
 
+@JS('IpfsNodeFlutterHelia.create')
+external _HeliaNode _createHeliaNode();
+
+extension type _HeliaNode._(JSObject _) implements JSObject {}
+
+@JS('IpfsNodeFlutterHelia.start')
+external void _startHeliaNode(
+  _HeliaNode node,
+  JSArray<JSString> peers,
+  JSFunction resolve,
+  JSFunction reject,
+);
+@JS('IpfsNodeFlutterHelia.stop')
+external void _stopHeliaNode(
+    _HeliaNode node, JSFunction resolve, JSFunction reject);
+@JS('IpfsNodeFlutterHelia.capabilities')
+external void _heliaCapabilities(
+    _HeliaNode node, JSFunction resolve, JSFunction reject);
+@JS('IpfsNodeFlutterHelia.addBytes')
+external void _addHeliaBytes(
+    _HeliaNode node, JSUint8Array bytes, JSFunction resolve, JSFunction reject);
+@JS('IpfsNodeFlutterHelia.getBytes')
+external void _getHeliaBytes(
+    _HeliaNode node, JSString cid, JSFunction resolve, JSFunction reject);
+
 final class _JavascriptHeliaBridge implements WebNodeBridge {
-  JSObject? _node;
+  _HeliaNode? _node;
   CapabilitySet _capabilities = const CapabilitySet.empty();
 
   @override
@@ -30,23 +55,21 @@ final class _JavascriptHeliaBridge implements WebNodeBridge {
   @override
   Future<void> start({required List<String> bootstrapPeers}) async {
     if (_node != null) return;
-    final api = await (_adapterFuture ??= _loadAdapter());
-    final node =
-        await api.callMethod<JSPromise<JSObject>>('create'.toJS).toDart;
+    await (_adapterFuture ??= _loadAdapter());
+    final node = _createHeliaNode();
     try {
-      await node
-          .callMethod<JSPromise<JSAny?>>(
-            'start'.toJS,
-            bootstrapPeers.map((peer) => peer.toJS).toList().toJS,
-          )
-          .toDart;
-      final names = await node
-          .callMethod<JSPromise<JSArray<JSString>>>('capabilities'.toJS)
-          .toDart;
+      await _callback((resolve, reject) => _startHeliaNode(
+          node,
+          bootstrapPeers.map((peer) => peer.toJS).toList().toJS,
+          resolve,
+          reject));
+      final names = await _callback<JSArray<JSString>>(
+          (resolve, reject) => _heliaCapabilities(node, resolve, reject));
       _capabilities = _decodeCapabilities(names);
       _node = node;
     } catch (_) {
-      await node.callMethod<JSPromise<JSAny?>>('stop'.toJS).toDart;
+      await _callback(
+          (resolve, reject) => _stopHeliaNode(node, resolve, reject));
       rethrow;
     }
   }
@@ -56,7 +79,8 @@ final class _JavascriptHeliaBridge implements WebNodeBridge {
     final node = _node;
     if (node == null) return;
     try {
-      await node.callMethod<JSPromise<JSAny?>>('stop'.toJS).toDart;
+      await _callback(
+          (resolve, reject) => _stopHeliaNode(node, resolve, reject));
     } finally {
       _node = null;
       _capabilities = const CapabilitySet.empty();
@@ -65,34 +89,43 @@ final class _JavascriptHeliaBridge implements WebNodeBridge {
 
   @override
   Future<String> addBytes(Uint8List bytes) async {
-    final cid = await _requireNode()
-        .callMethod<JSPromise<JSString>>('addBytes'.toJS, bytes.toJS)
-        .toDart;
+    final cid = await _callback<JSString>((resolve, reject) =>
+        _addHeliaBytes(_requireNode(), bytes.toJS, resolve, reject));
     return cid.toDart;
   }
 
   @override
   Future<Uint8List> getBytes(String cid) async {
-    final bytes = await _requireNode()
-        .callMethod<JSPromise<JSUint8Array>>('getBytes'.toJS, cid.toJS)
-        .toDart;
+    final bytes = await _callback<JSUint8Array>((resolve, reject) =>
+        _getHeliaBytes(_requireNode(), cid.toJS, resolve, reject));
     return bytes.toDart;
   }
 
-  JSObject _requireNode() =>
+  _HeliaNode _requireNode() =>
       _node ?? (throw StateError('The browser IPFS node has not started.'));
 }
 
-Future<JSObject> _loadAdapter() async {
+Future<T> _callback<T extends JSAny?>(
+  void Function(JSFunction resolve, JSFunction reject) invoke,
+) {
+  final completer = Completer<T>();
+  void resolve(JSAny? value) => completer.complete(value as T);
+  void reject(JSAny? error) => completer.completeError(
+      StateError(error is JSString ? error.toDart : 'Helia operation failed.'));
+  invoke(resolve.toJS, reject.toJS);
+  return completer.future;
+}
+
+Future<void> _loadAdapter() async {
   final installed = _registeredAdapter;
-  if (installed != null) return installed;
+  if (installed != null) return;
 
   Object? lastError;
   for (final asset in _adapterAssets) {
     try {
       await _loadScript(asset);
       final adapter = _registeredAdapter;
-      if (adapter != null) return adapter;
+      if (adapter != null) return;
       lastError = StateError('The Helia web adapter did not register its API.');
     } catch (error) {
       lastError = error;

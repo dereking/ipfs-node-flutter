@@ -67,7 +67,7 @@ var IpfsNodeFlutterHelia = (() => {
             dmax = "7";
           }
         }
-        const start2 = i;
+        const start3 = i;
         while (i < s2.length) {
           if ("0" <= s2[i] && s2[i] <= dmax) {
             n = n * base4 + (s2.charCodeAt(i) - chr0) >>> 0;
@@ -87,7 +87,7 @@ var IpfsNodeFlutterHelia = (() => {
           }
           i++;
         }
-        if (i === start2) {
+        if (i === start3) {
           throw new Error("empty octet");
         }
         return [n, i];
@@ -1597,20 +1597,20 @@ var IpfsNodeFlutterHelia = (() => {
         return index < max ? index : -1;
       }
       function valueSlice(str, min, max) {
-        let start2 = min;
+        let start3 = min;
         let end = max;
         do {
-          const code9 = str.charCodeAt(start2);
+          const code9 = str.charCodeAt(start3);
           if (code9 !== 32 && code9 !== 9)
             break;
-        } while (++start2 < end);
-        while (end > start2) {
+        } while (++start3 < end);
+        while (end > start3) {
           const code9 = str.charCodeAt(end - 1);
           if (code9 !== 32 && code9 !== 9)
             break;
           end--;
         }
-        return str.slice(start2, end);
+        return str.slice(start3, end);
       }
       function decode20(str) {
         if (str.indexOf("%") === -1)
@@ -1630,7 +1630,12 @@ var IpfsNodeFlutterHelia = (() => {
   // src/helia_adapter.js
   var helia_adapter_exports = {};
   __export(helia_adapter_exports, {
-    create: () => create4
+    addBytes: () => addBytes2,
+    capabilities: () => capabilities,
+    create: () => create4,
+    getBytes: () => getBytes,
+    start: () => start2,
+    stop: () => stop2
   });
 
   // node_modules/@libp2p/interface/dist/src/connection.js
@@ -3330,8 +3335,8 @@ var IpfsNodeFlutterHelia = (() => {
             bufs.push(buf);
             break;
           }
-          const start2 = beginInclusive - bufStart;
-          bufs.push(buf.subarray(start2, start2 + (endExclusive - beginInclusive)));
+          const start3 = beginInclusive - bufStart;
+          bufs.push(buf.subarray(start3, start3 + (endExclusive - beginInclusive)));
           break;
         }
         if (sliceStartInBuf) {
@@ -3930,11 +3935,11 @@ var IpfsNodeFlutterHelia = (() => {
   }
   function readInteger(buf, context) {
     const length18 = readLength(buf, context);
-    const start2 = context.offset;
+    const start3 = context.offset;
     const end = context.offset + length18;
     const vals = [];
-    for (let i = start2; i < end; i++) {
-      if (i === start2 && buf[i] === 0) {
+    for (let i = start3; i < end; i++) {
+      if (i === start3 && buf[i] === 0) {
         continue;
       }
       vals.push(buf[i]);
@@ -5854,14 +5859,14 @@ var IpfsNodeFlutterHelia = (() => {
       let f = this.BASE;
       for (let w2 = 0; w2 < windows; w2++) {
         const digit = digits[w2];
-        const start2 = w2 * half;
+        const start3 = w2 * half;
         const idx = Math.abs(digit) - 1;
-        let sel = comp[start2];
+        let sel = comp[start3];
         for (let i = 1; i < half; i++)
-          sel = i === idx ? comp[start2 + i] : sel;
+          sel = i === idx ? comp[start3 + i] : sel;
         const neg = sel.negate();
         if (digit === 0)
-          f = f.add(comp[start2]);
+          f = f.add(comp[start3]);
         else
           p = p.add(digit < 0 ? neg : sel);
       }
@@ -7409,8 +7414,8 @@ var IpfsNodeFlutterHelia = (() => {
     }
     return len;
   }
-  function read2(buffer2, start2, end) {
-    const len = end - start2;
+  function read2(buffer2, start3, end) {
+    const len = end - start3;
     if (len < 1) {
       return "";
     }
@@ -7418,18 +7423,18 @@ var IpfsNodeFlutterHelia = (() => {
     const chunk = [];
     let i = 0;
     let t;
-    while (start2 < end) {
-      t = buffer2[start2++];
+    while (start3 < end) {
+      t = buffer2[start3++];
       if (t < 128) {
         chunk[i++] = t;
       } else if (t > 191 && t < 224) {
-        chunk[i++] = (t & 31) << 6 | buffer2[start2++] & 63;
+        chunk[i++] = (t & 31) << 6 | buffer2[start3++] & 63;
       } else if (t > 239 && t < 365) {
-        t = ((t & 7) << 18 | (buffer2[start2++] & 63) << 12 | (buffer2[start2++] & 63) << 6 | buffer2[start2++] & 63) - 65536;
+        t = ((t & 7) << 18 | (buffer2[start3++] & 63) << 12 | (buffer2[start3++] & 63) << 6 | buffer2[start3++] & 63) - 65536;
         chunk[i++] = 55296 + (t >> 10);
         chunk[i++] = 56320 + (t & 1023);
       } else {
-        chunk[i++] = (t & 15) << 12 | (buffer2[start2++] & 63) << 6 | buffer2[start2++] & 63;
+        chunk[i++] = (t & 15) << 12 | (buffer2[start3++] & 63) << 6 | buffer2[start3++] & 63;
       }
       if (i > 8191) {
         (parts ?? (parts = [])).push(String.fromCharCode.apply(String, chunk));
@@ -7445,7 +7450,7 @@ var IpfsNodeFlutterHelia = (() => {
     return String.fromCharCode.apply(String, chunk.slice(0, i));
   }
   function write(string37, buffer2, offset) {
-    const start2 = offset;
+    const start3 = offset;
     let c1;
     let c2;
     for (let i = 0; i < string37.length; ++i) {
@@ -7468,7 +7473,7 @@ var IpfsNodeFlutterHelia = (() => {
         buffer2[offset++] = c1 & 63 | 128;
       }
     }
-    return offset - start2;
+    return offset - start3;
   }
 
   // node_modules/@libp2p/crypto/node_modules/protons-runtime/dist/src/utils/reader.js
@@ -7585,13 +7590,13 @@ var IpfsNodeFlutterHelia = (() => {
      */
     bytes() {
       const length18 = this.uint32();
-      const start2 = this.pos;
+      const start3 = this.pos;
       const end = this.pos + length18;
       if (end > this.len) {
         throw indexOutOfRange(this, length18);
       }
       this.pos += length18;
-      return start2 === end ? new Uint8Array(0) : this.buf.subarray(start2, end);
+      return start3 === end ? new Uint8Array(0) : this.buf.subarray(start3, end);
     }
     /**
      * Reads a string preceded by its byte length as a varint
@@ -10619,8 +10624,8 @@ var IpfsNodeFlutterHelia = (() => {
             bufs.push(buf);
             break;
           }
-          const start2 = beginInclusive - bufStart;
-          bufs.push(buf.subarray(start2, start2 + (endExclusive - beginInclusive)));
+          const start3 = beginInclusive - bufStart;
+          bufs.push(buf.subarray(start3, start3 + (endExclusive - beginInclusive)));
           break;
         }
         if (sliceStartInBuf) {
@@ -15478,11 +15483,11 @@ var IpfsNodeFlutterHelia = (() => {
      * @param {number} end
      */
     // Buffer.slice() returns a view, not a copy, so we need special handling
-    (bytes, start2, end) => {
+    (bytes, start3, end) => {
       if (isBuffer(bytes)) {
-        return new Uint8Array(bytes.subarray(start2, end));
+        return new Uint8Array(bytes.subarray(start3, end));
       }
-      return bytes.slice(start2, end);
+      return bytes.slice(start3, end);
     }
   ) : (
     // eslint-disable-line operator-linebreak
@@ -15491,8 +15496,8 @@ var IpfsNodeFlutterHelia = (() => {
      * @param {number} start
      * @param {number} end
      */
-    (bytes, start2, end) => {
-      return bytes.slice(start2, end);
+    (bytes, start3, end) => {
+      return bytes.slice(start3, end);
     }
   );
   var concat4 = useBuffer ? (
@@ -15983,20 +15988,20 @@ var IpfsNodeFlutterHelia = (() => {
   // node_modules/cborg/lib/3string.js
   var textDecoder2 = new TextDecoder();
   var ASCII_THRESHOLD = 32;
-  function toStr(bytes, start2, end) {
-    const len = end - start2;
+  function toStr(bytes, start3, end) {
+    const len = end - start3;
     if (len < ASCII_THRESHOLD) {
       let str = "";
-      for (let i = start2; i < end; i++) {
+      for (let i = start3; i < end; i++) {
         const c = bytes[i];
         if (c & 128) {
-          return textDecoder2.decode(bytes.subarray(start2, end));
+          return textDecoder2.decode(bytes.subarray(start3, end));
         }
         str += String.fromCharCode(c);
       }
       return str;
     }
-    return textDecoder2.decode(bytes.subarray(start2, end));
+    return textDecoder2.decode(bytes.subarray(start3, end));
   }
   function toToken2(data, pos, prefix, length18, options2) {
     const totLength = prefix + length18;
@@ -17528,8 +17533,8 @@ var IpfsNodeFlutterHelia = (() => {
             bufs.push(buf);
             break;
           }
-          const start2 = beginInclusive - bufStart;
-          bufs.push(buf.subarray(start2, start2 + (endExclusive - beginInclusive)));
+          const start3 = beginInclusive - bufStart;
+          bufs.push(buf.subarray(start3, start3 + (endExclusive - beginInclusive)));
           break;
         }
         if (sliceStartInBuf) {
@@ -21261,8 +21266,8 @@ ${indent}[Error list was empty]`;
             bufs.push(buf);
             break;
           }
-          const start2 = beginInclusive - bufStart;
-          bufs.push(buf.subarray(start2, start2 + (endExclusive - beginInclusive)));
+          const start3 = beginInclusive - bufStart;
+          bufs.push(buf.subarray(start3, start3 + (endExclusive - beginInclusive)));
           break;
         }
         if (sliceStartInBuf) {
@@ -22106,8 +22111,8 @@ ${indent}[Error list was empty]`;
     }
     return len;
   }
-  function read4(buffer2, start2, end) {
-    const len = end - start2;
+  function read4(buffer2, start3, end) {
+    const len = end - start3;
     if (len < 1) {
       return "";
     }
@@ -22115,18 +22120,18 @@ ${indent}[Error list was empty]`;
     const chunk = [];
     let i = 0;
     let t;
-    while (start2 < end) {
-      t = buffer2[start2++];
+    while (start3 < end) {
+      t = buffer2[start3++];
       if (t < 128) {
         chunk[i++] = t;
       } else if (t > 191 && t < 224) {
-        chunk[i++] = (t & 31) << 6 | buffer2[start2++] & 63;
+        chunk[i++] = (t & 31) << 6 | buffer2[start3++] & 63;
       } else if (t > 239 && t < 365) {
-        t = ((t & 7) << 18 | (buffer2[start2++] & 63) << 12 | (buffer2[start2++] & 63) << 6 | buffer2[start2++] & 63) - 65536;
+        t = ((t & 7) << 18 | (buffer2[start3++] & 63) << 12 | (buffer2[start3++] & 63) << 6 | buffer2[start3++] & 63) - 65536;
         chunk[i++] = 55296 + (t >> 10);
         chunk[i++] = 56320 + (t & 1023);
       } else {
-        chunk[i++] = (t & 15) << 12 | (buffer2[start2++] & 63) << 6 | buffer2[start2++] & 63;
+        chunk[i++] = (t & 15) << 12 | (buffer2[start3++] & 63) << 6 | buffer2[start3++] & 63;
       }
       if (i > 8191) {
         (parts ?? (parts = [])).push(String.fromCharCode.apply(String, chunk));
@@ -22142,7 +22147,7 @@ ${indent}[Error list was empty]`;
     return String.fromCharCode.apply(String, chunk.slice(0, i));
   }
   function write2(string37, buffer2, offset) {
-    const start2 = offset;
+    const start3 = offset;
     let c1;
     let c2;
     for (let i = 0; i < string37.length; ++i) {
@@ -22165,7 +22170,7 @@ ${indent}[Error list was empty]`;
         buffer2[offset++] = c1 & 63 | 128;
       }
     }
-    return offset - start2;
+    return offset - start3;
   }
 
   // node_modules/protons-runtime/dist/src/utils/reader.js
@@ -22282,13 +22287,13 @@ ${indent}[Error list was empty]`;
      */
     bytes() {
       const length18 = this.uint32();
-      const start2 = this.pos;
+      const start3 = this.pos;
       const end = this.pos + length18;
       if (end > this.len) {
         throw indexOutOfRange2(this, length18);
       }
       this.pos += length18;
-      return start2 === end ? new Uint8Array(0) : this.buf.subarray(start2, end);
+      return start3 === end ? new Uint8Array(0) : this.buf.subarray(start3, end);
     }
     /**
      * Reads a string preceded by its byte length as a varint
@@ -24647,8 +24652,8 @@ ${indent}[Error list was empty]`;
             bufs.push(buf);
             break;
           }
-          const start2 = beginInclusive - bufStart;
-          bufs.push(buf.subarray(start2, start2 + (endExclusive - beginInclusive)));
+          const start3 = beginInclusive - bufStart;
+          bufs.push(buf.subarray(start3, start3 + (endExclusive - beginInclusive)));
           break;
         }
         if (sliceStartInBuf) {
@@ -25869,8 +25874,8 @@ ${indent}[Error list was empty]`;
     }
     return len;
   }
-  function read5(buffer2, start2, end) {
-    const len = end - start2;
+  function read5(buffer2, start3, end) {
+    const len = end - start3;
     if (len < 1) {
       return "";
     }
@@ -25878,18 +25883,18 @@ ${indent}[Error list was empty]`;
     const chunk = [];
     let i = 0;
     let t;
-    while (start2 < end) {
-      t = buffer2[start2++];
+    while (start3 < end) {
+      t = buffer2[start3++];
       if (t < 128) {
         chunk[i++] = t;
       } else if (t > 191 && t < 224) {
-        chunk[i++] = (t & 31) << 6 | buffer2[start2++] & 63;
+        chunk[i++] = (t & 31) << 6 | buffer2[start3++] & 63;
       } else if (t > 239 && t < 365) {
-        t = ((t & 7) << 18 | (buffer2[start2++] & 63) << 12 | (buffer2[start2++] & 63) << 6 | buffer2[start2++] & 63) - 65536;
+        t = ((t & 7) << 18 | (buffer2[start3++] & 63) << 12 | (buffer2[start3++] & 63) << 6 | buffer2[start3++] & 63) - 65536;
         chunk[i++] = 55296 + (t >> 10);
         chunk[i++] = 56320 + (t & 1023);
       } else {
-        chunk[i++] = (t & 15) << 12 | (buffer2[start2++] & 63) << 6 | buffer2[start2++] & 63;
+        chunk[i++] = (t & 15) << 12 | (buffer2[start3++] & 63) << 6 | buffer2[start3++] & 63;
       }
       if (i > 8191) {
         (parts ?? (parts = [])).push(String.fromCharCode.apply(String, chunk));
@@ -25905,7 +25910,7 @@ ${indent}[Error list was empty]`;
     return String.fromCharCode.apply(String, chunk.slice(0, i));
   }
   function write3(string37, buffer2, offset) {
-    const start2 = offset;
+    const start3 = offset;
     let c1;
     let c2;
     for (let i = 0; i < string37.length; ++i) {
@@ -25928,7 +25933,7 @@ ${indent}[Error list was empty]`;
         buffer2[offset++] = c1 & 63 | 128;
       }
     }
-    return offset - start2;
+    return offset - start3;
   }
 
   // node_modules/ipfs-unixfs/node_modules/protons-runtime/dist/src/utils/reader.js
@@ -26045,13 +26050,13 @@ ${indent}[Error list was empty]`;
      */
     bytes() {
       const length18 = this.uint32();
-      const start2 = this.pos;
+      const start3 = this.pos;
       const end = this.pos + length18;
       if (end > this.len) {
         throw indexOutOfRange3(this, length18);
       }
       this.pos += length18;
-      return start2 === end ? new Uint8Array(0) : this.buf.subarray(start2, end);
+      return start3 === end ? new Uint8Array(0) : this.buf.subarray(start3, end);
     }
     /**
      * Reads a string preceded by its byte length as a varint
@@ -28978,12 +28983,12 @@ ${indent}[Error list was empty]`;
       return this._currentBytePos >= 0;
     }
   };
-  function byteBitsToInt(byte, start2, length18) {
-    const mask = maskFor(start2, length18);
-    return (byte & mask) >>> start2;
+  function byteBitsToInt(byte, start3, length18) {
+    const mask = maskFor(start3, length18);
+    return (byte & mask) >>> start3;
   }
-  function maskFor(start2, length18) {
-    return START_MASKS[start2] & STOP_MASKS[Math.min(length18 + start2 - 1, 7)];
+  function maskFor(start3, length18) {
+    return START_MASKS[start3] & STOP_MASKS[Math.min(length18 + start3 - 1, 7)];
   }
 
   // node_modules/hamt-sharding/dist/src/consumable-hash.js
@@ -30966,18 +30971,18 @@ ${indent}[Error list was empty]`;
   // node_modules/ipfs-unixfs-exporter/dist/src/exporters/utils/validate-offset-and-length.js
   var validateOffsetAndLength = (size, offset = 0, length18 = size) => {
     const fileSize = BigInt(size);
-    const start2 = BigInt(offset ?? 0);
+    const start3 = BigInt(offset ?? 0);
     let end = BigInt(length18);
     if (end !== fileSize) {
-      end = start2 + end;
+      end = start3 + end;
     }
     if (end > fileSize) {
       end = fileSize;
     }
-    if (start2 < 0n) {
+    if (start3 < 0n) {
       throw new InvalidParametersError5("Offset must be greater than or equal to 0");
     }
-    if (start2 > fileSize) {
+    if (start3 > fileSize) {
       throw new InvalidParametersError5("Offset must be less than the file size");
     }
     if (end < 0n) {
@@ -30987,7 +30992,7 @@ ${indent}[Error list was empty]`;
       throw new InvalidParametersError5("Length must be less than the file size");
     }
     return {
-      start: start2,
+      start: start3,
       end
     };
   };
@@ -30995,11 +31000,11 @@ ${indent}[Error list was empty]`;
   // node_modules/ipfs-unixfs-exporter/dist/src/exporters/utils/raw-content.js
   function rawContent(node, event) {
     async function* contentGenerator(options2 = {}) {
-      const { start: start2, end } = validateOffsetAndLength(node.length, options2.offset, options2.length);
-      const buf = extractDataFromBlock(node, 0n, start2, end);
+      const { start: start3, end } = validateOffsetAndLength(node.length, options2.offset, options2.length);
+      const buf = extractDataFromBlock(node, 0n, start3, end);
       options2.onProgress?.(new CustomProgressEvent(event, {
         bytesRead: BigInt(buf.byteLength),
-        totalBytes: end - start2,
+        totalBytes: end - start3,
         fileSize: BigInt(node.byteLength)
       }));
       yield buf;
@@ -32073,9 +32078,9 @@ ${indent}[Error list was empty]`;
   };
 
   // node_modules/ipfs-unixfs-exporter/dist/src/exporters/unixfs-v1/content/file.js
-  async function walkDAG(blockstore, node, queue, streamPosition, start2, end, options2) {
+  async function walkDAG(blockstore, node, queue, streamPosition, start3, end, options2) {
     if (node instanceof Uint8Array) {
-      const buf = extractDataFromBlock(node, streamPosition, start2, end);
+      const buf = extractDataFromBlock(node, streamPosition, start3, end);
       queue.push(buf);
       return;
     }
@@ -32090,7 +32095,7 @@ ${indent}[Error list was empty]`;
     }
     if (file.data != null) {
       const data = file.data;
-      const buf = extractDataFromBlock(data, streamPosition, start2, end);
+      const buf = extractDataFromBlock(data, streamPosition, start3, end);
       queue.push(buf);
       streamPosition += BigInt(buf.byteLength);
     }
@@ -32102,9 +32107,9 @@ ${indent}[Error list was empty]`;
       const childLink = node.Links[i];
       const childStart = streamPosition;
       const childEnd = childStart + file.blockSizes[i];
-      if (start2 >= childStart && start2 < childEnd || // child has offset byte
+      if (start3 >= childStart && start3 < childEnd || // child has offset byte
       end >= childStart && end <= childEnd || // child has end byte
-      start2 < childStart && end > childEnd) {
+      start3 < childStart && end > childEnd) {
         childOps.push({
           link: childLink,
           blockStart: streamPosition
@@ -32150,7 +32155,7 @@ ${indent}[Error list was empty]`;
           options2.onProgress?.(new CustomProgressEvent("unixfs:exporter:walk:file", {
             cid: link.Hash
           }));
-          await walkDAG(blockstore, child, queue, blockStart, start2, end, options2);
+          await walkDAG(blockstore, child, queue, blockStart, start3, end, options2);
         });
         await childQueue.onIdle();
       }
@@ -32165,17 +32170,17 @@ ${indent}[Error list was empty]`;
       if (fileSize === void 0) {
         throw new Error("File was a directory");
       }
-      const { start: start2, end } = validateOffsetAndLength(fileSize, options2.offset, options2.length);
+      const { start: start3, end } = validateOffsetAndLength(fileSize, options2.offset, options2.length);
       if (end === 0n) {
         return;
       }
       let read17 = 0n;
-      const wanted = end - start2;
+      const wanted = end - start3;
       const queue = pushable();
       options2.onProgress?.(new CustomProgressEvent("unixfs:exporter:walk:file", {
         cid
       }));
-      void walkDAG(blockstore, node, queue, 0n, start2, end, options2).catch((err) => {
+      void walkDAG(blockstore, node, queue, 0n, start3, end, options2).catch((err) => {
         queue.end(err);
       });
       for await (const buf of queue) {
@@ -32611,12 +32616,12 @@ ${indent}[Error list was empty]`;
       return this._currentBytePos >= 0;
     }
   };
-  function byteBitsToInt2(byte, start2, length18) {
-    const mask = maskFor2(start2, length18);
-    return (byte & mask) >>> start2;
+  function byteBitsToInt2(byte, start3, length18) {
+    const mask = maskFor2(start3, length18);
+    return (byte & mask) >>> start3;
   }
-  function maskFor2(start2, length18) {
-    return START_MASKS2[start2] & STOP_MASKS2[Math.min(length18 + start2 - 1, 7)];
+  function maskFor2(start3, length18) {
+    return START_MASKS2[start3] & STOP_MASKS2[Math.min(length18 + start3 - 1, 7)];
   }
 
   // node_modules/@helia/unixfs/dist/src/commands/utils/hamt-constants.js
@@ -33955,8 +33960,8 @@ ${indent}[Error list was empty]`;
             bufs.push(buf);
             break;
           }
-          const start2 = beginInclusive - bufStart;
-          bufs.push(buf.subarray(start2, start2 + (endExclusive - beginInclusive)));
+          const start3 = beginInclusive - bufStart;
+          bufs.push(buf.subarray(start3, start3 + (endExclusive - beginInclusive)));
           break;
         }
         if (sliceStartInBuf) {
@@ -34453,8 +34458,8 @@ ${indent}[Error list was empty]`;
     }
     return len;
   }
-  function read6(buffer2, start2, end) {
-    const len = end - start2;
+  function read6(buffer2, start3, end) {
+    const len = end - start3;
     if (len < 1) {
       return "";
     }
@@ -34462,18 +34467,18 @@ ${indent}[Error list was empty]`;
     const chunk = [];
     let i = 0;
     let t;
-    while (start2 < end) {
-      t = buffer2[start2++];
+    while (start3 < end) {
+      t = buffer2[start3++];
       if (t < 128) {
         chunk[i++] = t;
       } else if (t > 191 && t < 224) {
-        chunk[i++] = (t & 31) << 6 | buffer2[start2++] & 63;
+        chunk[i++] = (t & 31) << 6 | buffer2[start3++] & 63;
       } else if (t > 239 && t < 365) {
-        t = ((t & 7) << 18 | (buffer2[start2++] & 63) << 12 | (buffer2[start2++] & 63) << 6 | buffer2[start2++] & 63) - 65536;
+        t = ((t & 7) << 18 | (buffer2[start3++] & 63) << 12 | (buffer2[start3++] & 63) << 6 | buffer2[start3++] & 63) - 65536;
         chunk[i++] = 55296 + (t >> 10);
         chunk[i++] = 56320 + (t & 1023);
       } else {
-        chunk[i++] = (t & 15) << 12 | (buffer2[start2++] & 63) << 6 | buffer2[start2++] & 63;
+        chunk[i++] = (t & 15) << 12 | (buffer2[start3++] & 63) << 6 | buffer2[start3++] & 63;
       }
       if (i > 8191) {
         (parts ?? (parts = [])).push(String.fromCharCode.apply(String, chunk));
@@ -34489,7 +34494,7 @@ ${indent}[Error list was empty]`;
     return String.fromCharCode.apply(String, chunk.slice(0, i));
   }
   function write4(string37, buffer2, offset) {
-    const start2 = offset;
+    const start3 = offset;
     let c1;
     let c2;
     for (let i = 0; i < string37.length; ++i) {
@@ -34512,7 +34517,7 @@ ${indent}[Error list was empty]`;
         buffer2[offset++] = c1 & 63 | 128;
       }
     }
-    return offset - start2;
+    return offset - start3;
   }
 
   // node_modules/@libp2p/peer-record/node_modules/protons-runtime/dist/src/utils/reader.js
@@ -34629,13 +34634,13 @@ ${indent}[Error list was empty]`;
      */
     bytes() {
       const length18 = this.uint32();
-      const start2 = this.pos;
+      const start3 = this.pos;
       const end = this.pos + length18;
       if (end > this.len) {
         throw indexOutOfRange4(this, length18);
       }
       this.pos += length18;
-      return start2 === end ? new Uint8Array(0) : this.buf.subarray(start2, end);
+      return start3 === end ? new Uint8Array(0) : this.buf.subarray(start3, end);
     }
     /**
      * Reads a string preceded by its byte length as a varint
@@ -36050,8 +36055,8 @@ ${indent}[Error list was empty]`;
     }
     return len;
   }
-  function read7(buffer2, start2, end) {
-    const len = end - start2;
+  function read7(buffer2, start3, end) {
+    const len = end - start3;
     if (len < 1) {
       return "";
     }
@@ -36059,18 +36064,18 @@ ${indent}[Error list was empty]`;
     const chunk = [];
     let i = 0;
     let t;
-    while (start2 < end) {
-      t = buffer2[start2++];
+    while (start3 < end) {
+      t = buffer2[start3++];
       if (t < 128) {
         chunk[i++] = t;
       } else if (t > 191 && t < 224) {
-        chunk[i++] = (t & 31) << 6 | buffer2[start2++] & 63;
+        chunk[i++] = (t & 31) << 6 | buffer2[start3++] & 63;
       } else if (t > 239 && t < 365) {
-        t = ((t & 7) << 18 | (buffer2[start2++] & 63) << 12 | (buffer2[start2++] & 63) << 6 | buffer2[start2++] & 63) - 65536;
+        t = ((t & 7) << 18 | (buffer2[start3++] & 63) << 12 | (buffer2[start3++] & 63) << 6 | buffer2[start3++] & 63) - 65536;
         chunk[i++] = 55296 + (t >> 10);
         chunk[i++] = 56320 + (t & 1023);
       } else {
-        chunk[i++] = (t & 15) << 12 | (buffer2[start2++] & 63) << 6 | buffer2[start2++] & 63;
+        chunk[i++] = (t & 15) << 12 | (buffer2[start3++] & 63) << 6 | buffer2[start3++] & 63;
       }
       if (i > 8191) {
         (parts ?? (parts = [])).push(String.fromCharCode.apply(String, chunk));
@@ -36086,7 +36091,7 @@ ${indent}[Error list was empty]`;
     return String.fromCharCode.apply(String, chunk.slice(0, i));
   }
   function write5(string37, buffer2, offset) {
-    const start2 = offset;
+    const start3 = offset;
     let c1;
     let c2;
     for (let i = 0; i < string37.length; ++i) {
@@ -36109,7 +36114,7 @@ ${indent}[Error list was empty]`;
         buffer2[offset++] = c1 & 63 | 128;
       }
     }
-    return offset - start2;
+    return offset - start3;
   }
 
   // node_modules/@libp2p/circuit-relay-v2/node_modules/protons-runtime/dist/src/utils/reader.js
@@ -36226,13 +36231,13 @@ ${indent}[Error list was empty]`;
      */
     bytes() {
       const length18 = this.uint32();
-      const start2 = this.pos;
+      const start3 = this.pos;
       const end = this.pos + length18;
       if (end > this.len) {
         throw indexOutOfRange5(this, length18);
       }
       this.pos += length18;
-      return start2 === end ? new Uint8Array(0) : this.buf.subarray(start2, end);
+      return start3 === end ? new Uint8Array(0) : this.buf.subarray(start3, end);
     }
     /**
      * Reads a string preceded by its byte length as a varint
@@ -38531,7 +38536,7 @@ ${indent}[Error list was empty]`;
       }
       this.log.trace("try to reserve relay slot with %p", peerId);
       return this.reserveQueue.add(async () => {
-        const start2 = Date.now();
+        const start3 = Date.now();
         try {
           const existingReservation = this.reservations.get(peerId);
           if (existingReservation != null) {
@@ -38626,7 +38631,7 @@ ${indent}[Error list was empty]`;
           return result;
         } catch (err) {
           if (!(type === "discovered" && err.name === "HadEnoughRelaysError")) {
-            this.log.error("could not reserve slot on %p after %dms - %e", peerId, Date.now() - start2, err);
+            this.log.error("could not reserve slot on %p after %dms - %e", peerId, Date.now() - start3, err);
           }
           if (err.name === "DialError" || err.name === "UnsupportedProtocolError") {
             this.relayFilter.add(peerId.toMultihash().bytes);
@@ -38998,8 +39003,8 @@ ${indent}[Error list was empty]`;
             bufs.push(buf);
             break;
           }
-          const start2 = beginInclusive - bufStart;
-          bufs.push(buf.subarray(start2, start2 + (endExclusive - beginInclusive)));
+          const start3 = beginInclusive - bufStart;
+          bufs.push(buf.subarray(start3, start3 + (endExclusive - beginInclusive)));
           break;
         }
         if (sliceStartInBuf) {
@@ -39540,7 +39545,206 @@ ${indent}[Error list was empty]`;
     };
   }
 
-  // node_modules/@libp2p/webrtc/node_modules/uint8arrays/dist/src/with-array-buffer.js
+  // node_modules/@libp2p/bootstrap/dist/src/index.js
+  var DEFAULT_BOOTSTRAP_TAG_NAME = "bootstrap";
+  var DEFAULT_BOOTSTRAP_TAG_VALUE = 50;
+  var DEFAULT_BOOTSTRAP_DISCOVERY_TIMEOUT = 1e3;
+  var Bootstrap = class extends TypedEventEmitter {
+    static tag = "bootstrap";
+    log;
+    timer;
+    list;
+    timeout;
+    components;
+    _init;
+    constructor(components, options2 = { list: [] }) {
+      if (options2.list == null || options2.list.length === 0) {
+        throw new Error("Bootstrap requires a list of peer addresses");
+      }
+      super();
+      this.components = components;
+      this.log = components.logger.forComponent("libp2p:bootstrap");
+      this.timeout = options2.timeout ?? DEFAULT_BOOTSTRAP_DISCOVERY_TIMEOUT;
+      this.list = options2.list.map((str) => multiaddr(str)).filter((ma) => {
+        if (!P2P.matches(ma)) {
+          this.log.error("invalid multiaddr %a", ma);
+          return false;
+        }
+        const peerIdStr = ma.getComponents().findLast((c) => c.code === CODE_P2P)?.value;
+        if (peerIdStr == null) {
+          this.log.error("invalid bootstrap multiaddr without peer id");
+          return false;
+        }
+        return true;
+      }).map((ma) => {
+        return {
+          id: peerIdFromString(ma.getComponents().findLast((c) => c.code === CODE_P2P)?.value ?? ""),
+          multiaddrs: [ma]
+        };
+      });
+      this._init = options2;
+    }
+    [peerDiscoverySymbol] = this;
+    [Symbol.toStringTag] = "@libp2p/bootstrap";
+    [serviceCapabilities] = [
+      "@libp2p/peer-discovery"
+    ];
+    isStarted() {
+      return Boolean(this.timer);
+    }
+    /**
+     * Start emitting events
+     */
+    start() {
+      if (this.isStarted()) {
+        return;
+      }
+      this.log("Starting bootstrap node discovery, discovering peers after %s ms", this.timeout);
+      this.timer = setTimeout(() => {
+        void this._discoverBootstrapPeers().catch((err) => {
+          this.log.error("failed to discover bootstrap peers - %e", err);
+        });
+      }, this.timeout);
+    }
+    /**
+     * Emit each address in the list as a PeerInfo
+     */
+    async _discoverBootstrapPeers() {
+      if (this.timer == null) {
+        return;
+      }
+      for (const peerData of this.list) {
+        await this.components.peerStore.merge(peerData.id, {
+          tags: {
+            [this._init.tagName ?? DEFAULT_BOOTSTRAP_TAG_NAME]: {
+              value: this._init.tagValue ?? DEFAULT_BOOTSTRAP_TAG_VALUE,
+              ttl: this._init.tagTTL
+            }
+          },
+          multiaddrs: peerData.multiaddrs
+        });
+        if (this.timer == null) {
+          return;
+        }
+        this.safeDispatchEvent("peer", { detail: peerData });
+        this.components.connectionManager.openConnection(peerData.id).catch((err) => {
+          this.log.error("could not dial bootstrap peer %p - %e", peerData.id, err);
+        });
+      }
+    }
+    /**
+     * Stop emitting events
+     */
+    stop() {
+      if (this.timer != null) {
+        clearTimeout(this.timer);
+      }
+      this.timer = void 0;
+    }
+  };
+  function bootstrap(init) {
+    return (components) => new Bootstrap(components, init);
+  }
+
+  // node_modules/it-drain/dist/src/index.js
+  function isAsyncIterable11(thing) {
+    return thing[Symbol.asyncIterator] != null;
+  }
+  function drain(source) {
+    if (isAsyncIterable11(source)) {
+      return (async () => {
+        for await (const _ of source) {
+        }
+      })();
+    } else {
+      for (const _ of source) {
+      }
+    }
+  }
+  var src_default10 = drain;
+
+  // node_modules/@libp2p/identify/node_modules/uint8arrays/dist/src/alloc.js
+  function allocUnsafe15(size = 0) {
+    return new Uint8Array(size);
+  }
+
+  // node_modules/@libp2p/identify/node_modules/uint8arrays/dist/src/util/bases.js
+  function createCodec17(name10, prefix, encode19, decode20) {
+    return {
+      name: name10,
+      prefix,
+      encoder: {
+        name: name10,
+        prefix,
+        encode: encode19
+      },
+      decoder: {
+        decode: decode20
+      }
+    };
+  }
+  var string12 = createCodec17("utf8", "u", (buf) => {
+    const decoder = new TextDecoder("utf8");
+    return "u" + decoder.decode(buf);
+  }, (str) => {
+    const encoder2 = new TextEncoder();
+    return encoder2.encode(str.substring(1));
+  });
+  var ascii12 = createCodec17("ascii", "a", (buf) => {
+    let string37 = "a";
+    for (let i = 0; i < buf.length; i++) {
+      string37 += String.fromCharCode(buf[i]);
+    }
+    return string37;
+  }, (str) => {
+    str = str.substring(1);
+    const buf = allocUnsafe15(str.length);
+    for (let i = 0; i < str.length; i++) {
+      buf[i] = str.charCodeAt(i);
+    }
+    return buf;
+  });
+  var BASES12 = {
+    utf8: string12,
+    "utf-8": string12,
+    hex: bases.base16,
+    latin1: ascii12,
+    ascii: ascii12,
+    binary: ascii12,
+    ...bases
+  };
+  var bases_default12 = BASES12;
+
+  // node_modules/@libp2p/identify/node_modules/uint8arrays/dist/src/from-string.js
+  function fromString15(string37, encoding = "utf8") {
+    const base4 = bases_default12[encoding];
+    if (base4 == null) {
+      throw new Error(`Unsupported encoding "${encoding}"`);
+    }
+    return base4.decoder.decode(`${base4.prefix}${string37}`);
+  }
+
+  // node_modules/@libp2p/identify/node_modules/uint8arrays/dist/src/to-string.js
+  function toString8(array, encoding = "utf8") {
+    const base4 = bases_default12[encoding];
+    if (base4 == null) {
+      throw new Error(`Unsupported encoding "${encoding}"`);
+    }
+    return base4.encoder.encode(array).substring(1);
+  }
+
+  // node_modules/@libp2p/identify/dist/src/consts.js
+  var IDENTIFY_PROTOCOL_VERSION = "0.1.0";
+  var MULTICODEC_IDENTIFY_PROTOCOL_NAME = "id";
+  var MULTICODEC_IDENTIFY_PUSH_PROTOCOL_NAME = "id/push";
+  var MULTICODEC_IDENTIFY_PROTOCOL_VERSION = "1.0.0";
+  var MULTICODEC_IDENTIFY_PUSH_PROTOCOL_VERSION = "1.0.0";
+  var MAX_IDENTIFY_MESSAGE_SIZE = 1024 * 8;
+  var MAX_IDENTIFY_MESSAGES = 10;
+  var MAX_PUSH_CONCURRENCY = 32;
+  var PUSH_DEBOUNCE_MS = 1e3;
+
+  // node_modules/@libp2p/identify/node_modules/uint8arrays/dist/src/with-array-buffer.js
   function isArrayBufferBacked6(arr) {
     return arr.buffer instanceof ArrayBuffer;
   }
@@ -39551,7 +39755,7 @@ ${indent}[Error list was empty]`;
     return arr.slice();
   }
 
-  // node_modules/@libp2p/webrtc/node_modules/protons-runtime/dist/src/utils/float.js
+  // node_modules/@libp2p/identify/node_modules/protons-runtime/dist/src/utils/float.js
   var f326 = new Float32Array([-0]);
   var f8b6 = new Uint8Array(f326.buffer);
   function writeFloatLE6(val, buf, pos) {
@@ -39593,7 +39797,7 @@ ${indent}[Error list was empty]`;
     return f646[0];
   }
 
-  // node_modules/@libp2p/webrtc/node_modules/protons-runtime/dist/src/utils/longbits.js
+  // node_modules/@libp2p/identify/node_modules/protons-runtime/dist/src/utils/longbits.js
   var MAX_SAFE_NUMBER_INTEGER6 = BigInt(Number.MAX_SAFE_INTEGER);
   var MIN_SAFE_NUMBER_INTEGER6 = BigInt(Number.MIN_SAFE_INTEGER);
   var LongBits6 = class _LongBits {
@@ -39748,7 +39952,7 @@ ${indent}[Error list was empty]`;
   };
   var TWO_326 = 4294967296n;
 
-  // node_modules/@libp2p/webrtc/node_modules/protons-runtime/dist/src/utils/utf8.js
+  // node_modules/@libp2p/identify/node_modules/protons-runtime/dist/src/utils/utf8.js
   function length8(string37) {
     let len = 0;
     let c = 0;
@@ -39767,8 +39971,8 @@ ${indent}[Error list was empty]`;
     }
     return len;
   }
-  function read8(buffer2, start2, end) {
-    const len = end - start2;
+  function read8(buffer2, start3, end) {
+    const len = end - start3;
     if (len < 1) {
       return "";
     }
@@ -39776,18 +39980,18 @@ ${indent}[Error list was empty]`;
     const chunk = [];
     let i = 0;
     let t;
-    while (start2 < end) {
-      t = buffer2[start2++];
+    while (start3 < end) {
+      t = buffer2[start3++];
       if (t < 128) {
         chunk[i++] = t;
       } else if (t > 191 && t < 224) {
-        chunk[i++] = (t & 31) << 6 | buffer2[start2++] & 63;
+        chunk[i++] = (t & 31) << 6 | buffer2[start3++] & 63;
       } else if (t > 239 && t < 365) {
-        t = ((t & 7) << 18 | (buffer2[start2++] & 63) << 12 | (buffer2[start2++] & 63) << 6 | buffer2[start2++] & 63) - 65536;
+        t = ((t & 7) << 18 | (buffer2[start3++] & 63) << 12 | (buffer2[start3++] & 63) << 6 | buffer2[start3++] & 63) - 65536;
         chunk[i++] = 55296 + (t >> 10);
         chunk[i++] = 56320 + (t & 1023);
       } else {
-        chunk[i++] = (t & 15) << 12 | (buffer2[start2++] & 63) << 6 | buffer2[start2++] & 63;
+        chunk[i++] = (t & 15) << 12 | (buffer2[start3++] & 63) << 6 | buffer2[start3++] & 63;
       }
       if (i > 8191) {
         (parts ?? (parts = [])).push(String.fromCharCode.apply(String, chunk));
@@ -39803,7 +40007,7 @@ ${indent}[Error list was empty]`;
     return String.fromCharCode.apply(String, chunk.slice(0, i));
   }
   function write6(string37, buffer2, offset) {
-    const start2 = offset;
+    const start3 = offset;
     let c1;
     let c2;
     for (let i = 0; i < string37.length; ++i) {
@@ -39826,10 +40030,10 @@ ${indent}[Error list was empty]`;
         buffer2[offset++] = c1 & 63 | 128;
       }
     }
-    return offset - start2;
+    return offset - start3;
   }
 
-  // node_modules/@libp2p/webrtc/node_modules/protons-runtime/dist/src/utils/reader.js
+  // node_modules/@libp2p/identify/node_modules/protons-runtime/dist/src/utils/reader.js
   function indexOutOfRange6(reader, writeLength) {
     return RangeError(`index out of range: ${reader.pos} + ${writeLength ?? 1} > ${reader.len}`);
   }
@@ -39943,13 +40147,13 @@ ${indent}[Error list was empty]`;
      */
     bytes() {
       const length18 = this.uint32();
-      const start2 = this.pos;
+      const start3 = this.pos;
       const end = this.pos + length18;
       if (end > this.len) {
         throw indexOutOfRange6(this, length18);
       }
       this.pos += length18;
-      return start2 === end ? new Uint8Array(0) : this.buf.subarray(start2, end);
+      return start3 === end ? new Uint8Array(0) : this.buf.subarray(start3, end);
     }
     /**
      * Reads a string preceded by its byte length as a varint
@@ -40163,77 +40367,13 @@ ${indent}[Error list was empty]`;
     return new Uint8ArrayReader6(buf instanceof Uint8Array ? buf : buf.subarray());
   }
 
-  // node_modules/@libp2p/webrtc/node_modules/protons-runtime/dist/src/decode.js
+  // node_modules/@libp2p/identify/node_modules/protons-runtime/dist/src/decode.js
   function decodeMessage6(buf, codec, opts) {
     const reader = createReader6(buf);
     return codec.decode(reader, void 0, opts);
   }
 
-  // node_modules/@libp2p/webrtc/node_modules/uint8arrays/dist/src/alloc.js
-  function alloc15(size = 0) {
-    return new Uint8Array(size);
-  }
-  function allocUnsafe15(size = 0) {
-    return new Uint8Array(size);
-  }
-
-  // node_modules/@libp2p/webrtc/node_modules/uint8arrays/dist/src/util/bases.js
-  function createCodec17(name10, prefix, encode19, decode20) {
-    return {
-      name: name10,
-      prefix,
-      encoder: {
-        name: name10,
-        prefix,
-        encode: encode19
-      },
-      decoder: {
-        decode: decode20
-      }
-    };
-  }
-  var string12 = createCodec17("utf8", "u", (buf) => {
-    const decoder = new TextDecoder("utf8");
-    return "u" + decoder.decode(buf);
-  }, (str) => {
-    const encoder2 = new TextEncoder();
-    return encoder2.encode(str.substring(1));
-  });
-  var ascii12 = createCodec17("ascii", "a", (buf) => {
-    let string37 = "a";
-    for (let i = 0; i < buf.length; i++) {
-      string37 += String.fromCharCode(buf[i]);
-    }
-    return string37;
-  }, (str) => {
-    str = str.substring(1);
-    const buf = allocUnsafe15(str.length);
-    for (let i = 0; i < str.length; i++) {
-      buf[i] = str.charCodeAt(i);
-    }
-    return buf;
-  });
-  var BASES12 = {
-    utf8: string12,
-    "utf-8": string12,
-    hex: bases.base16,
-    latin1: ascii12,
-    ascii: ascii12,
-    binary: ascii12,
-    ...bases
-  };
-  var bases_default12 = BASES12;
-
-  // node_modules/@libp2p/webrtc/node_modules/uint8arrays/dist/src/from-string.js
-  function fromString15(string37, encoding = "utf8") {
-    const base4 = bases_default12[encoding];
-    if (base4 == null) {
-      throw new Error(`Unsupported encoding "${encoding}"`);
-    }
-    return base4.decoder.decode(`${base4.prefix}${string37}`);
-  }
-
-  // node_modules/@libp2p/webrtc/node_modules/protons-runtime/dist/src/utils/pool.js
+  // node_modules/@libp2p/identify/node_modules/protons-runtime/dist/src/utils/pool.js
   function pool6(size) {
     const SIZE = size ?? 8192;
     const MAX = SIZE >>> 1;
@@ -40255,7 +40395,7 @@ ${indent}[Error list was empty]`;
     };
   }
 
-  // node_modules/@libp2p/webrtc/node_modules/protons-runtime/dist/src/utils/writer.js
+  // node_modules/@libp2p/identify/node_modules/protons-runtime/dist/src/utils/writer.js
   var Op6 = class {
     /**
      * Function to call
@@ -40307,7 +40447,7 @@ ${indent}[Error list was empty]`;
     }
   };
   var bufferPool6 = pool6();
-  function alloc16(size) {
+  function alloc15(size) {
     if (globalThis.Buffer != null) {
       return allocUnsafe15(size);
     }
@@ -40554,7 +40694,7 @@ ${indent}[Error list was empty]`;
      */
     finish() {
       let head = this.head.next;
-      const buf = alloc16(this.len);
+      const buf = alloc15(this.len);
       let pos = 0;
       while (head != null) {
         head.fn(head.val, buf, pos);
@@ -40636,7 +40776,7 @@ ${indent}[Error list was empty]`;
     return new Uint8ArrayWriter6();
   }
 
-  // node_modules/@libp2p/webrtc/node_modules/protons-runtime/dist/src/encode.js
+  // node_modules/@libp2p/identify/node_modules/protons-runtime/dist/src/encode.js
   function encodeMessage6(message15, codec) {
     const w2 = createWriter6();
     codec.encode(message15, w2, {
@@ -40645,13 +40785,13 @@ ${indent}[Error list was empty]`;
     return w2.finish();
   }
 
-  // node_modules/@libp2p/webrtc/node_modules/protons-runtime/dist/src/stream.js
+  // node_modules/@libp2p/identify/node_modules/protons-runtime/dist/src/stream.js
   function* streamMessage5(buf, codec, opts) {
     const reader = createReader6(buf);
     yield* codec.stream(reader, void 0, "$", opts);
   }
 
-  // node_modules/@libp2p/webrtc/node_modules/protons-runtime/dist/src/codec.js
+  // node_modules/@libp2p/identify/node_modules/protons-runtime/dist/src/codec.js
   var CODEC_TYPES6 = {
     VARINT: 0,
     BIT64: 1,
@@ -40670,8 +40810,1820 @@ ${indent}[Error list was empty]`;
     };
   }
 
+  // node_modules/@libp2p/identify/node_modules/protons-runtime/dist/src/codecs/message.js
+  function message6(encode19, decode20, stream) {
+    return createCodec18("message", CODEC_TYPES6.LENGTH_DELIMITED, encode19, decode20, stream);
+  }
+
+  // node_modules/@libp2p/identify/node_modules/protons-runtime/dist/src/index.js
+  var MaxLengthError5 = class extends Error {
+    /**
+     * This will be removed in a future release
+     *
+     * @deprecated use the `.name` property instead
+     */
+    code = "ERR_MAX_LENGTH";
+    name = "MaxLengthError";
+  };
+
+  // node_modules/@libp2p/identify/dist/src/pb/message.js
+  var Identify;
+  (function(Identify3) {
+    let _codec;
+    Identify3.codec = () => {
+      if (_codec == null) {
+        _codec = message6((obj, w2, opts = {}) => {
+          if (opts.lengthDelimited !== false) {
+            w2.fork();
+          }
+          if (obj.protocolVersion != null) {
+            w2.uint32(42);
+            w2.string(obj.protocolVersion);
+          }
+          if (obj.agentVersion != null) {
+            w2.uint32(50);
+            w2.string(obj.agentVersion);
+          }
+          if (obj.publicKey != null) {
+            w2.uint32(10);
+            w2.bytes(obj.publicKey);
+          }
+          if (obj.listenAddrs != null && obj.listenAddrs.length > 0) {
+            for (const value2 of obj.listenAddrs) {
+              w2.uint32(18);
+              w2.bytes(value2);
+            }
+          }
+          if (obj.observedAddr != null) {
+            w2.uint32(34);
+            w2.bytes(obj.observedAddr);
+          }
+          if (obj.protocols != null && obj.protocols.length > 0) {
+            for (const value2 of obj.protocols) {
+              w2.uint32(26);
+              w2.string(value2);
+            }
+          }
+          if (obj.signedPeerRecord != null) {
+            w2.uint32(66);
+            w2.bytes(obj.signedPeerRecord);
+          }
+          if (opts.lengthDelimited !== false) {
+            w2.ldelim();
+          }
+        }, (reader, length18, opts = {}) => {
+          const obj = {
+            listenAddrs: [],
+            protocols: []
+          };
+          const end = length18 == null ? reader.len : reader.pos + length18;
+          while (reader.pos < end) {
+            const tag = reader.uint32();
+            switch (tag >>> 3) {
+              case 5: {
+                obj.protocolVersion = reader.string();
+                break;
+              }
+              case 6: {
+                obj.agentVersion = reader.string();
+                break;
+              }
+              case 1: {
+                obj.publicKey = reader.bytes();
+                break;
+              }
+              case 2: {
+                if (opts.limits?.listenAddrs != null && obj.listenAddrs.length === opts.limits.listenAddrs) {
+                  throw new MaxLengthError5('Decode error - repeated field "listenAddrs" had too many elements');
+                }
+                obj.listenAddrs.push(reader.bytes());
+                break;
+              }
+              case 4: {
+                obj.observedAddr = reader.bytes();
+                break;
+              }
+              case 3: {
+                if (opts.limits?.protocols != null && obj.protocols.length === opts.limits.protocols) {
+                  throw new MaxLengthError5('Decode error - repeated field "protocols" had too many elements');
+                }
+                obj.protocols.push(reader.string());
+                break;
+              }
+              case 8: {
+                obj.signedPeerRecord = reader.bytes();
+                break;
+              }
+              default: {
+                reader.skipType(tag & 7);
+                break;
+              }
+            }
+          }
+          return obj;
+        }, function* (reader, length18, prefix, opts = {}) {
+          const obj = {
+            listenAddrs: 0,
+            protocols: 0
+          };
+          const end = length18 == null ? reader.len : reader.pos + length18;
+          while (reader.pos < end) {
+            const tag = reader.uint32();
+            switch (tag >>> 3) {
+              case 5: {
+                yield {
+                  field: `${prefix}.protocolVersion`,
+                  value: reader.string()
+                };
+                break;
+              }
+              case 6: {
+                yield {
+                  field: `${prefix}.agentVersion`,
+                  value: reader.string()
+                };
+                break;
+              }
+              case 1: {
+                yield {
+                  field: `${prefix}.publicKey`,
+                  value: reader.bytes()
+                };
+                break;
+              }
+              case 2: {
+                if (opts.limits?.listenAddrs != null && obj.listenAddrs === opts.limits.listenAddrs) {
+                  throw new MaxLengthError5('Streaming decode error - repeated field "listenAddrs" had too many elements');
+                }
+                yield {
+                  field: `${prefix}.listenAddrs[]`,
+                  index: obj.listenAddrs,
+                  value: reader.bytes()
+                };
+                obj.listenAddrs++;
+                break;
+              }
+              case 4: {
+                yield {
+                  field: `${prefix}.observedAddr`,
+                  value: reader.bytes()
+                };
+                break;
+              }
+              case 3: {
+                if (opts.limits?.protocols != null && obj.protocols === opts.limits.protocols) {
+                  throw new MaxLengthError5('Streaming decode error - repeated field "protocols" had too many elements');
+                }
+                yield {
+                  field: `${prefix}.protocols[]`,
+                  index: obj.protocols,
+                  value: reader.string()
+                };
+                obj.protocols++;
+                break;
+              }
+              case 8: {
+                yield {
+                  field: `${prefix}.signedPeerRecord`,
+                  value: reader.bytes()
+                };
+                break;
+              }
+              default: {
+                reader.skipType(tag & 7);
+                break;
+              }
+            }
+          }
+        });
+      }
+      return _codec;
+    };
+    function encode19(obj) {
+      return encodeMessage6(obj, Identify3.codec());
+    }
+    Identify3.encode = encode19;
+    function decode20(buf, opts) {
+      return decodeMessage6(buf, Identify3.codec(), opts);
+    }
+    Identify3.decode = decode20;
+    function stream(buf, opts) {
+      return streamMessage5(buf, Identify3.codec(), opts);
+    }
+    Identify3.stream = stream;
+  })(Identify || (Identify = {}));
+
+  // node_modules/@libp2p/identify/dist/src/utils.js
+  var defaultValues = {
+    protocolPrefix: "ipfs",
+    timeout: 5e3,
+    maxInboundStreams: 1,
+    maxOutboundStreams: 1,
+    maxObservedAddresses: 10,
+    maxMessageSize: MAX_IDENTIFY_MESSAGE_SIZE,
+    runOnConnectionOpen: true,
+    runOnSelfUpdate: true,
+    runOnLimitedConnection: true,
+    concurrency: MAX_PUSH_CONCURRENCY
+  };
+  function isEmptyMultiaddr(addr) {
+    return addr.bytes.length === 0;
+  }
+  function getCleanMultiaddr(addr) {
+    if (addr != null && addr.length > 0) {
+      try {
+        const ma = multiaddr(addr);
+        if (!isEmptyMultiaddr(ma)) {
+          return ma;
+        }
+      } catch {
+      }
+    }
+  }
+  async function consumeIdentifyMessage(peerStore, events, log14, connection, message15) {
+    log14("received identify from %p", connection.remotePeer);
+    if (message15 == null) {
+      throw new InvalidMessageError("message was null or undefined");
+    }
+    const peer = {};
+    const listenAddrs = message15.listenAddrs.map(getCleanMultiaddr).filter((addr) => addr != null);
+    if (message15.listenAddrs.length > 0) {
+      peer.addresses = listenAddrs.map((multiaddr2) => ({
+        isCertified: false,
+        multiaddr: multiaddr2
+      }));
+    }
+    if (message15.protocols.length > 0) {
+      peer.protocols = message15.protocols;
+    }
+    if (message15.publicKey != null) {
+      const publicKey2 = publicKeyFromProtobuf(message15.publicKey);
+      const peerId = peerIdFromPublicKey(publicKey2);
+      if (!peerId.equals(connection.remotePeer)) {
+        throw new InvalidMessageError("public key did not match remote PeerId");
+      }
+      peer.publicKey = publicKey2;
+    }
+    let output;
+    if (message15.signedPeerRecord != null) {
+      log14.trace("received signedPeerRecord from %p", connection.remotePeer);
+      let peerRecordEnvelope2 = message15.signedPeerRecord;
+      const envelope = await RecordEnvelope.openAndCertify(peerRecordEnvelope2, PeerRecord2.DOMAIN);
+      let peerRecord = PeerRecord2.createFromProtobuf(envelope.payload);
+      const envelopePeer = peerIdFromCID(envelope.publicKey.toCID());
+      if (!peerRecord.peerId.equals(envelopePeer)) {
+        throw new InvalidMessageError("signing key does not match PeerId in the PeerRecord");
+      }
+      if (!connection.remotePeer.equals(peerRecord.peerId)) {
+        throw new InvalidMessageError("signing key does not match remote PeerId");
+      }
+      let existingPeer;
+      try {
+        existingPeer = await peerStore.get(peerRecord.peerId);
+      } catch (err) {
+        if (err.name !== "NotFoundError") {
+          throw err;
+        }
+      }
+      if (existingPeer != null) {
+        peer.metadata = existingPeer.metadata;
+        if (existingPeer.peerRecordEnvelope != null) {
+          const storedEnvelope = RecordEnvelope.createFromProtobuf(existingPeer.peerRecordEnvelope);
+          const storedRecord = PeerRecord2.createFromProtobuf(storedEnvelope.payload);
+          if (storedRecord.seqNumber >= peerRecord.seqNumber) {
+            log14("sequence number was lower or equal to existing sequence number - stored: %d received: %d", storedRecord.seqNumber, peerRecord.seqNumber);
+            peerRecord = storedRecord;
+            peerRecordEnvelope2 = existingPeer.peerRecordEnvelope;
+          }
+        }
+      }
+      peer.peerRecordEnvelope = peerRecordEnvelope2;
+      const peerRecordMultiaddrs = peerRecord.multiaddrs.filter((addr) => !isEmptyMultiaddr(addr));
+      peer.addresses = peerRecordMultiaddrs.map((multiaddr2) => ({
+        isCertified: true,
+        multiaddr: multiaddr2
+      }));
+      output = {
+        seq: peerRecord.seqNumber,
+        addresses: peerRecordMultiaddrs
+      };
+    } else {
+      log14("%p did not send a signed peer record", connection.remotePeer);
+    }
+    log14.trace("patching %p with", connection.remotePeer, peer);
+    await peerStore.patch(connection.remotePeer, peer);
+    if (message15.agentVersion != null || message15.protocolVersion != null) {
+      const metadata = {};
+      if (message15.agentVersion != null) {
+        metadata.AgentVersion = fromString15(message15.agentVersion);
+      }
+      if (message15.protocolVersion != null) {
+        metadata.ProtocolVersion = fromString15(message15.protocolVersion);
+      }
+      log14.trace("merging %p metadata", connection.remotePeer, metadata);
+      await peerStore.merge(connection.remotePeer, {
+        metadata
+      });
+    }
+    const result = {
+      peerId: connection.remotePeer,
+      protocolVersion: message15.protocolVersion,
+      agentVersion: message15.agentVersion,
+      publicKey: message15.publicKey,
+      listenAddrs,
+      observedAddr: message15.observedAddr == null ? void 0 : multiaddr(message15.observedAddr),
+      protocols: message15.protocols,
+      signedPeerRecord: output,
+      connection
+    };
+    events.safeDispatchEvent("peer:identify", { detail: result });
+    return result;
+  }
+  function mergeIdentifyMessages(messages2) {
+    const merged = { ...messages2[0] };
+    for (const msg of messages2.slice(1)) {
+      if (msg.protocolVersion != null) {
+        merged.protocolVersion = msg.protocolVersion;
+      }
+      if (msg.agentVersion != null) {
+        merged.agentVersion = msg.agentVersion;
+      }
+      if (msg.publicKey != null) {
+        merged.publicKey = msg.publicKey;
+      }
+      if (msg.observedAddr != null) {
+        merged.observedAddr = msg.observedAddr;
+      }
+      if (msg.signedPeerRecord != null) {
+        merged.signedPeerRecord = msg.signedPeerRecord;
+      }
+      merged.listenAddrs = [...merged.listenAddrs, ...msg.listenAddrs];
+      merged.protocols = [.../* @__PURE__ */ new Set([...merged.protocols, ...msg.protocols])];
+    }
+    return merged;
+  }
+  async function readIdentifyMessages(stream, maxMessageSize, options2, log14) {
+    const pb = pbStream(stream, {
+      maxDataLength: maxMessageSize
+    }).pb(Identify);
+    const messages2 = [];
+    for (let i = 0; i < MAX_IDENTIFY_MESSAGES; i++) {
+      try {
+        messages2.push(await pb.read(options2));
+      } catch (err) {
+        if (messages2.length === 0) {
+          throw err;
+        }
+        log14.trace("stopped reading identify - %e", err);
+        break;
+      }
+    }
+    if (messages2.length >= MAX_IDENTIFY_MESSAGES) {
+      log14("reached MAX_IDENTIFY_MESSAGES, returning truncated identify");
+    }
+    try {
+      await stream.close(options2);
+    } catch (err) {
+      log14.trace("error closing identify stream after read - %e", err);
+      stream.abort(err);
+    }
+    return messages2;
+  }
+  var AbstractIdentify = class {
+    host;
+    components;
+    protocol;
+    started;
+    timeout;
+    maxInboundStreams;
+    maxOutboundStreams;
+    maxMessageSize;
+    maxObservedAddresses;
+    runOnLimitedConnection;
+    log;
+    constructor(components, init) {
+      this.protocol = init.protocol;
+      this.started = false;
+      this.components = components;
+      this.log = init.log;
+      this.timeout = init.timeout ?? defaultValues.timeout;
+      this.maxInboundStreams = init.maxInboundStreams ?? defaultValues.maxInboundStreams;
+      this.maxOutboundStreams = init.maxOutboundStreams ?? defaultValues.maxOutboundStreams;
+      this.maxMessageSize = init.maxMessageSize ?? defaultValues.maxMessageSize;
+      this.maxObservedAddresses = init.maxObservedAddresses ?? defaultValues.maxObservedAddresses;
+      this.runOnLimitedConnection = init.runOnLimitedConnection ?? defaultValues.runOnLimitedConnection;
+      this.host = {
+        protocolVersion: `${init.protocolPrefix ?? defaultValues.protocolPrefix}/${IDENTIFY_PROTOCOL_VERSION}`,
+        agentVersion: components.nodeInfo.userAgent
+      };
+      this.handleProtocol = this.handleProtocol.bind(this);
+    }
+    isStarted() {
+      return this.started;
+    }
+    async start() {
+      if (this.started) {
+        return;
+      }
+      await this.components.peerStore.merge(this.components.peerId, {
+        metadata: {
+          AgentVersion: fromString15(this.host.agentVersion),
+          ProtocolVersion: fromString15(this.host.protocolVersion)
+        }
+      });
+      await this.components.registrar.handle(this.protocol, this.handleProtocol, {
+        maxInboundStreams: this.maxInboundStreams,
+        maxOutboundStreams: this.maxOutboundStreams,
+        runOnLimitedConnection: this.runOnLimitedConnection
+      });
+      this.started = true;
+    }
+    async stop() {
+      await this.components.registrar.unhandle(this.protocol);
+      this.started = false;
+    }
+  };
+
+  // node_modules/@libp2p/identify/dist/src/identify-push.js
+  var IdentifyPush = class extends AbstractIdentify {
+    connectionManager;
+    concurrency;
+    _push;
+    constructor(components, init = {}) {
+      super(components, {
+        ...init,
+        protocol: `/${init.protocolPrefix ?? defaultValues.protocolPrefix}/${MULTICODEC_IDENTIFY_PUSH_PROTOCOL_NAME}/${MULTICODEC_IDENTIFY_PUSH_PROTOCOL_VERSION}`,
+        log: components.logger.forComponent("libp2p:identify-push")
+      });
+      this.connectionManager = components.connectionManager;
+      this.concurrency = init.concurrency ?? defaultValues.concurrency;
+      this._push = debounce(this.sendPushMessage.bind(this), init.debounce ?? PUSH_DEBOUNCE_MS);
+      if (init.runOnSelfUpdate ?? defaultValues.runOnSelfUpdate) {
+        components.events.addEventListener("self:peer:update", (evt) => {
+          this.push().catch((err) => {
+            this.log.error("error pushing updates to peers - %e", err);
+          });
+        });
+      }
+    }
+    [serviceCapabilities] = [
+      "@libp2p/identify-push"
+    ];
+    /**
+     * Calls `push` on all peer connections
+     */
+    async push() {
+      this._push();
+    }
+    async sendPushMessage() {
+      if (!this.isStarted()) {
+        return;
+      }
+      try {
+        const listenAddresses = this.components.addressManager.getAddresses().map((ma) => ma.decapsulateCode(CODE_P2P));
+        const peerRecord = new PeerRecord2({
+          peerId: this.components.peerId,
+          multiaddrs: listenAddresses
+        });
+        const signedPeerRecord = await RecordEnvelope.seal(peerRecord, this.components.privateKey);
+        const supportedProtocols = this.components.registrar.getProtocols();
+        const peer = await this.components.peerStore.get(this.components.peerId);
+        const agentVersion = toString8(peer.metadata.get("AgentVersion") ?? fromString15(this.host.agentVersion));
+        const protocolVersion = toString8(peer.metadata.get("ProtocolVersion") ?? fromString15(this.host.protocolVersion));
+        const self = this;
+        async function* pushToConnections() {
+          for (const connection of self.connectionManager.getConnections()) {
+            const peer2 = await self.components.peerStore.get(connection.remotePeer);
+            if (!peer2.protocols.includes(self.protocol)) {
+              continue;
+            }
+            yield async () => {
+              let stream;
+              const signal = AbortSignal.timeout(self.timeout);
+              setMaxListeners(Infinity, signal);
+              try {
+                stream = await connection.newStream(self.protocol, {
+                  signal,
+                  runOnLimitedConnection: self.runOnLimitedConnection
+                });
+                const pb = pbStream(stream, {
+                  maxDataLength: self.maxMessageSize
+                }).pb(Identify);
+                await pb.write({
+                  listenAddrs: listenAddresses.map((ma) => ma.bytes),
+                  signedPeerRecord: signedPeerRecord.marshal(),
+                  protocols: supportedProtocols,
+                  agentVersion,
+                  protocolVersion
+                }, {
+                  signal
+                });
+                await stream.close({
+                  signal
+                });
+              } catch (err) {
+                const log14 = stream?.log.newScope("identify-push");
+                log14?.error("could not push identify update to peer", err);
+                stream?.abort(err);
+              }
+            };
+          }
+        }
+        await src_default10(parallel(pushToConnections(), {
+          concurrency: this.concurrency
+        }));
+      } catch (err) {
+        this.log.error("error pushing updates to peers - %e", err);
+      }
+    }
+    /**
+     * Reads the Identify Push message from the given `connection`
+     */
+    async handleProtocol(stream, connection) {
+      const log14 = stream.log.newScope("identify-push");
+      if (this.components.peerId.equals(connection.remotePeer)) {
+        throw new Error("received push from ourselves?");
+      }
+      const options2 = {
+        signal: AbortSignal.timeout(this.timeout)
+      };
+      const messages2 = await readIdentifyMessages(stream, this.maxMessageSize, options2, log14);
+      await consumeIdentifyMessage(this.components.peerStore, this.components.events, log14, connection, mergeIdentifyMessages(messages2));
+      log14.trace("handled push from %p", connection.remotePeer);
+    }
+  };
+
+  // node_modules/@libp2p/identify/dist/src/identify.js
+  var Identify2 = class extends AbstractIdentify {
+    constructor(components, init = {}) {
+      super(components, {
+        ...init,
+        protocol: `/${init.protocolPrefix ?? defaultValues.protocolPrefix}/${MULTICODEC_IDENTIFY_PROTOCOL_NAME}/${MULTICODEC_IDENTIFY_PROTOCOL_VERSION}`,
+        log: components.logger.forComponent("libp2p:identify")
+      });
+      if (init.runOnConnectionOpen ?? defaultValues.runOnConnectionOpen) {
+        components.events.addEventListener("connection:open", (evt) => {
+          const connection = evt.detail;
+          this.identify(connection).catch(() => {
+          });
+        });
+      }
+    }
+    [serviceCapabilities] = [
+      "@libp2p/identify"
+    ];
+    async _identify(connection, options2 = {}) {
+      let stream;
+      let log14;
+      if (options2.signal == null) {
+        const signal = AbortSignal.timeout(this.timeout);
+        setMaxListeners(Infinity, signal);
+        options2 = {
+          ...options2,
+          signal
+        };
+      }
+      this.log("run identify on new connection %a", connection.remoteAddr);
+      try {
+        stream = await connection.newStream(this.protocol, {
+          ...options2,
+          runOnLimitedConnection: this.runOnLimitedConnection
+        });
+        log14 = stream.log.newScope("identify");
+        const messages2 = await readIdentifyMessages(stream, this.maxMessageSize, options2, log14);
+        return mergeIdentifyMessages(messages2);
+      } catch (err) {
+        log14?.error("identify failed - %e", err);
+        stream?.abort(err);
+        throw err;
+      }
+    }
+    async identify(connection, options2 = {}) {
+      const message15 = await this._identify(connection, options2);
+      const { publicKey: publicKey2, protocols, observedAddr } = message15;
+      if (publicKey2 == null) {
+        throw new InvalidMessageError("Public key was missing from identify message");
+      }
+      const key = publicKeyFromProtobuf(publicKey2);
+      const id = peerIdFromCID(key.toCID());
+      if (!connection.remotePeer.equals(id)) {
+        throw new InvalidMessageError("Identified peer does not match the expected peer");
+      }
+      if (this.components.peerId.equals(id)) {
+        throw new InvalidMessageError("Identified peer is our own peer id?");
+      }
+      this.maybeAddObservedAddress(observedAddr);
+      this.log("completed for peer %p and protocols %o", id, protocols);
+      return consumeIdentifyMessage(this.components.peerStore, this.components.events, this.log, connection, message15);
+    }
+    maybeAddObservedAddress(observedAddr) {
+      const cleanObservedAddr = getCleanMultiaddr(observedAddr);
+      if (cleanObservedAddr == null) {
+        return;
+      }
+      this.log.trace("our observed address was %a", cleanObservedAddr);
+      if (isPrivate(cleanObservedAddr)) {
+        return;
+      }
+      const tuples = cleanObservedAddr.getComponents();
+      if ((tuples[0].code === CODE_IP6 || tuples[0].code === CODE_IP6ZONE && tuples[1].code === CODE_IP6) && !isGlobalUnicast(cleanObservedAddr)) {
+        this.log.trace("our observed address was IPv6 but not a global unicast address");
+        return;
+      }
+      if (TCP.exactMatch(cleanObservedAddr)) {
+        return;
+      }
+      this.log.trace("storing the observed address");
+      this.components.addressManager.addObservedAddr(cleanObservedAddr);
+    }
+    /**
+     * Sends the `Identify` response with the Signed Peer Record
+     * to the requesting peer over the given `connection`
+     */
+    async handleProtocol(stream, connection) {
+      const log14 = stream.log.newScope("identify");
+      log14("responding to identify");
+      const signal = AbortSignal.timeout(this.timeout);
+      setMaxListeners(Infinity, signal);
+      const peerData = await this.components.peerStore.get(this.components.peerId, {
+        signal
+      });
+      const multiaddrs = this.components.addressManager.getAddresses().map((ma) => ma.decapsulateCode(CODE_P2P));
+      let signedPeerRecord = peerData.peerRecordEnvelope;
+      if (multiaddrs.length > 0 && signedPeerRecord == null) {
+        const peerRecord = new PeerRecord2({
+          peerId: this.components.peerId,
+          multiaddrs
+        });
+        const envelope = await RecordEnvelope.seal(peerRecord, this.components.privateKey, {
+          signal
+        });
+        signedPeerRecord = envelope.marshal().subarray();
+      }
+      let observedAddr = connection.remoteAddr.bytes;
+      if (!IP_OR_DOMAIN.matches(connection.remoteAddr)) {
+        observedAddr = void 0;
+      }
+      const pb = pbStream(stream).pb(Identify);
+      log14("send response");
+      await pb.write({
+        protocolVersion: this.host.protocolVersion,
+        agentVersion: this.host.agentVersion,
+        publicKey: publicKeyToProtobuf(this.components.privateKey.publicKey),
+        listenAddrs: multiaddrs.map((addr) => addr.bytes),
+        signedPeerRecord,
+        observedAddr,
+        protocols: peerData.protocols
+      }, {
+        signal
+      });
+      log14("close write");
+      await pb.unwrap().unwrap().close({
+        signal
+      });
+    }
+  };
+
+  // node_modules/@libp2p/identify/dist/src/index.js
+  function identify(init = {}) {
+    return (components) => new Identify2(components, init);
+  }
+  function identifyPush(init = {}) {
+    return (components) => new IdentifyPush(components, init);
+  }
+
+  // node_modules/@libp2p/webrtc/node_modules/uint8arrays/dist/src/with-array-buffer.js
+  function isArrayBufferBacked7(arr) {
+    return arr.buffer instanceof ArrayBuffer;
+  }
+  function withArrayBuffer7(arr) {
+    if (isArrayBufferBacked7(arr)) {
+      return arr;
+    }
+    return arr.slice();
+  }
+
+  // node_modules/@libp2p/webrtc/node_modules/protons-runtime/dist/src/utils/float.js
+  var f327 = new Float32Array([-0]);
+  var f8b7 = new Uint8Array(f327.buffer);
+  function writeFloatLE7(val, buf, pos) {
+    f327[0] = val;
+    buf[pos] = f8b7[0];
+    buf[pos + 1] = f8b7[1];
+    buf[pos + 2] = f8b7[2];
+    buf[pos + 3] = f8b7[3];
+  }
+  function readFloatLE7(buf, pos) {
+    f8b7[0] = buf[pos];
+    f8b7[1] = buf[pos + 1];
+    f8b7[2] = buf[pos + 2];
+    f8b7[3] = buf[pos + 3];
+    return f327[0];
+  }
+  var f647 = new Float64Array([-0]);
+  var d8b7 = new Uint8Array(f647.buffer);
+  function writeDoubleLE7(val, buf, pos) {
+    f647[0] = val;
+    buf[pos] = d8b7[0];
+    buf[pos + 1] = d8b7[1];
+    buf[pos + 2] = d8b7[2];
+    buf[pos + 3] = d8b7[3];
+    buf[pos + 4] = d8b7[4];
+    buf[pos + 5] = d8b7[5];
+    buf[pos + 6] = d8b7[6];
+    buf[pos + 7] = d8b7[7];
+  }
+  function readDoubleLE7(buf, pos) {
+    d8b7[0] = buf[pos];
+    d8b7[1] = buf[pos + 1];
+    d8b7[2] = buf[pos + 2];
+    d8b7[3] = buf[pos + 3];
+    d8b7[4] = buf[pos + 4];
+    d8b7[5] = buf[pos + 5];
+    d8b7[6] = buf[pos + 6];
+    d8b7[7] = buf[pos + 7];
+    return f647[0];
+  }
+
+  // node_modules/@libp2p/webrtc/node_modules/protons-runtime/dist/src/utils/longbits.js
+  var MAX_SAFE_NUMBER_INTEGER7 = BigInt(Number.MAX_SAFE_INTEGER);
+  var MIN_SAFE_NUMBER_INTEGER7 = BigInt(Number.MIN_SAFE_INTEGER);
+  var LongBits7 = class _LongBits {
+    lo;
+    hi;
+    constructor(lo, hi) {
+      this.lo = lo | 0;
+      this.hi = hi | 0;
+    }
+    /**
+     * Converts this long bits to a possibly unsafe JavaScript number
+     */
+    toNumber(unsigned = false) {
+      if (!unsigned && this.hi >>> 31 > 0) {
+        const lo = ~this.lo + 1 >>> 0;
+        let hi = ~this.hi >>> 0;
+        if (lo === 0) {
+          hi = hi + 1 >>> 0;
+        }
+        return -(lo + hi * 4294967296);
+      }
+      return this.lo + this.hi * 4294967296;
+    }
+    /**
+     * Converts this long bits to a bigint
+     */
+    toBigInt(unsigned = false) {
+      if (unsigned) {
+        return BigInt(this.lo >>> 0) + (BigInt(this.hi >>> 0) << 32n);
+      }
+      if (this.hi >>> 31 !== 0) {
+        const lo = ~this.lo + 1 >>> 0;
+        let hi = ~this.hi >>> 0;
+        if (lo === 0) {
+          hi = hi + 1 >>> 0;
+        }
+        return -(BigInt(lo) + (BigInt(hi) << 32n));
+      }
+      return BigInt(this.lo >>> 0) + (BigInt(this.hi >>> 0) << 32n);
+    }
+    /**
+     * Converts this long bits to a string
+     */
+    toString(unsigned = false) {
+      return this.toBigInt(unsigned).toString();
+    }
+    /**
+     * Zig-zag encodes this long bits
+     */
+    zzEncode() {
+      const mask = this.hi >> 31;
+      this.hi = ((this.hi << 1 | this.lo >>> 31) ^ mask) >>> 0;
+      this.lo = (this.lo << 1 ^ mask) >>> 0;
+      return this;
+    }
+    /**
+     * Zig-zag decodes this long bits
+     */
+    zzDecode() {
+      const mask = -(this.lo & 1);
+      this.lo = ((this.lo >>> 1 | this.hi << 31) ^ mask) >>> 0;
+      this.hi = (this.hi >>> 1 ^ mask) >>> 0;
+      return this;
+    }
+    /**
+     * Calculates the length of this longbits when encoded as a varint.
+     */
+    length() {
+      const part0 = this.lo;
+      const part1 = (this.lo >>> 28 | this.hi << 4) >>> 0;
+      const part2 = this.hi >>> 24;
+      return part2 === 0 ? part1 === 0 ? part0 < 16384 ? part0 < 128 ? 1 : 2 : part0 < 2097152 ? 3 : 4 : part1 < 16384 ? part1 < 128 ? 5 : 6 : part1 < 2097152 ? 7 : 8 : part2 < 128 ? 9 : 10;
+    }
+    /**
+     * Constructs new long bits from the specified number
+     */
+    static fromBigInt(value2) {
+      if (value2 === 0n) {
+        return zero7;
+      }
+      if (value2 < MAX_SAFE_NUMBER_INTEGER7 && value2 > MIN_SAFE_NUMBER_INTEGER7) {
+        return this.fromNumber(Number(value2));
+      }
+      const negative = value2 < 0n;
+      if (negative) {
+        value2 = -value2;
+      }
+      let hi = value2 >> 32n;
+      let lo = value2 - (hi << 32n);
+      if (negative) {
+        hi = ~hi | 0n;
+        lo = ~lo | 0n;
+        if (++lo > TWO_327) {
+          lo = 0n;
+          if (++hi > TWO_327) {
+            hi = 0n;
+          }
+        }
+      }
+      return new _LongBits(Number(lo), Number(hi));
+    }
+    /**
+     * Constructs new long bits from the specified number
+     */
+    static fromNumber(value2) {
+      if (value2 === 0) {
+        return zero7;
+      }
+      const sign = value2 < 0;
+      if (sign) {
+        value2 = -value2;
+      }
+      let lo = value2 >>> 0;
+      let hi = (value2 - lo) / 4294967296 >>> 0;
+      if (sign) {
+        hi = ~hi >>> 0;
+        lo = ~lo >>> 0;
+        if (++lo > 4294967295) {
+          lo = 0;
+          if (++hi > 4294967295) {
+            hi = 0;
+          }
+        }
+      }
+      return new _LongBits(lo, hi);
+    }
+    /**
+     * Constructs new long bits from a number, long or string
+     */
+    static from(value2) {
+      if (typeof value2 === "number") {
+        return _LongBits.fromNumber(value2);
+      }
+      if (typeof value2 === "bigint") {
+        return _LongBits.fromBigInt(value2);
+      }
+      if (typeof value2 === "string") {
+        return _LongBits.fromBigInt(BigInt(value2));
+      }
+      return value2.low != null || value2.high != null ? new _LongBits(value2.low >>> 0, value2.high >>> 0) : zero7;
+    }
+  };
+  var zero7 = new LongBits7(0, 0);
+  zero7.toBigInt = function() {
+    return 0n;
+  };
+  zero7.zzEncode = zero7.zzDecode = function() {
+    return this;
+  };
+  zero7.length = function() {
+    return 1;
+  };
+  var TWO_327 = 4294967296n;
+
+  // node_modules/@libp2p/webrtc/node_modules/protons-runtime/dist/src/utils/utf8.js
+  function length9(string37) {
+    let len = 0;
+    let c = 0;
+    for (let i = 0; i < string37.length; ++i) {
+      c = string37.charCodeAt(i);
+      if (c < 128) {
+        len += 1;
+      } else if (c < 2048) {
+        len += 2;
+      } else if ((c & 64512) === 55296 && (string37.charCodeAt(i + 1) & 64512) === 56320) {
+        ++i;
+        len += 4;
+      } else {
+        len += 3;
+      }
+    }
+    return len;
+  }
+  function read9(buffer2, start3, end) {
+    const len = end - start3;
+    if (len < 1) {
+      return "";
+    }
+    let parts;
+    const chunk = [];
+    let i = 0;
+    let t;
+    while (start3 < end) {
+      t = buffer2[start3++];
+      if (t < 128) {
+        chunk[i++] = t;
+      } else if (t > 191 && t < 224) {
+        chunk[i++] = (t & 31) << 6 | buffer2[start3++] & 63;
+      } else if (t > 239 && t < 365) {
+        t = ((t & 7) << 18 | (buffer2[start3++] & 63) << 12 | (buffer2[start3++] & 63) << 6 | buffer2[start3++] & 63) - 65536;
+        chunk[i++] = 55296 + (t >> 10);
+        chunk[i++] = 56320 + (t & 1023);
+      } else {
+        chunk[i++] = (t & 15) << 12 | (buffer2[start3++] & 63) << 6 | buffer2[start3++] & 63;
+      }
+      if (i > 8191) {
+        (parts ?? (parts = [])).push(String.fromCharCode.apply(String, chunk));
+        i = 0;
+      }
+    }
+    if (parts != null) {
+      if (i > 0) {
+        parts.push(String.fromCharCode.apply(String, chunk.slice(0, i)));
+      }
+      return parts.join("");
+    }
+    return String.fromCharCode.apply(String, chunk.slice(0, i));
+  }
+  function write7(string37, buffer2, offset) {
+    const start3 = offset;
+    let c1;
+    let c2;
+    for (let i = 0; i < string37.length; ++i) {
+      c1 = string37.charCodeAt(i);
+      if (c1 < 128) {
+        buffer2[offset++] = c1;
+      } else if (c1 < 2048) {
+        buffer2[offset++] = c1 >> 6 | 192;
+        buffer2[offset++] = c1 & 63 | 128;
+      } else if ((c1 & 64512) === 55296 && ((c2 = string37.charCodeAt(i + 1)) & 64512) === 56320) {
+        c1 = 65536 + ((c1 & 1023) << 10) + (c2 & 1023);
+        ++i;
+        buffer2[offset++] = c1 >> 18 | 240;
+        buffer2[offset++] = c1 >> 12 & 63 | 128;
+        buffer2[offset++] = c1 >> 6 & 63 | 128;
+        buffer2[offset++] = c1 & 63 | 128;
+      } else {
+        buffer2[offset++] = c1 >> 12 | 224;
+        buffer2[offset++] = c1 >> 6 & 63 | 128;
+        buffer2[offset++] = c1 & 63 | 128;
+      }
+    }
+    return offset - start3;
+  }
+
+  // node_modules/@libp2p/webrtc/node_modules/protons-runtime/dist/src/utils/reader.js
+  function indexOutOfRange7(reader, writeLength) {
+    return RangeError(`index out of range: ${reader.pos} + ${writeLength ?? 1} > ${reader.len}`);
+  }
+  function readFixed32End7(buf, end) {
+    return (buf[end - 4] | buf[end - 3] << 8 | buf[end - 2] << 16 | buf[end - 1] << 24) >>> 0;
+  }
+  var Uint8ArrayReader7 = class {
+    buf;
+    pos;
+    len;
+    _slice = Uint8Array.prototype.subarray;
+    constructor(buffer2) {
+      this.buf = withArrayBuffer7(buffer2);
+      this.pos = 0;
+      this.len = buffer2.length;
+    }
+    /**
+     * Reads a varint as an unsigned 32 bit value
+     */
+    uint32() {
+      let value2 = 4294967295;
+      value2 = (this.buf[this.pos] & 127) >>> 0;
+      if (this.buf[this.pos++] < 128) {
+        return value2;
+      }
+      value2 = (value2 | (this.buf[this.pos] & 127) << 7) >>> 0;
+      if (this.buf[this.pos++] < 128) {
+        return value2;
+      }
+      value2 = (value2 | (this.buf[this.pos] & 127) << 14) >>> 0;
+      if (this.buf[this.pos++] < 128) {
+        return value2;
+      }
+      value2 = (value2 | (this.buf[this.pos] & 127) << 21) >>> 0;
+      if (this.buf[this.pos++] < 128) {
+        return value2;
+      }
+      value2 = (value2 | (this.buf[this.pos] & 15) << 28) >>> 0;
+      if (this.buf[this.pos++] < 128) {
+        return value2;
+      }
+      if ((this.pos += 5) > this.len) {
+        this.pos = this.len;
+        throw indexOutOfRange7(this, 10);
+      }
+      return value2;
+    }
+    /**
+     * Reads a varint as a signed 32 bit value
+     */
+    int32() {
+      return this.uint32() | 0;
+    }
+    /**
+     * Reads a zig-zag encoded varint as a signed 32 bit value
+     */
+    sint32() {
+      const value2 = this.uint32();
+      return value2 >>> 1 ^ -(value2 & 1) | 0;
+    }
+    /**
+     * Reads a varint as a boolean
+     */
+    bool() {
+      return this.uint32() !== 0;
+    }
+    /**
+     * Reads fixed 32 bits as an unsigned 32 bit integer
+     */
+    fixed32() {
+      if (this.pos + 4 > this.len) {
+        throw indexOutOfRange7(this, 4);
+      }
+      const res = readFixed32End7(this.buf, this.pos += 4);
+      return res;
+    }
+    /**
+     * Reads fixed 32 bits as a signed 32 bit integer
+     */
+    sfixed32() {
+      if (this.pos + 4 > this.len) {
+        throw indexOutOfRange7(this, 4);
+      }
+      const res = readFixed32End7(this.buf, this.pos += 4) | 0;
+      return res;
+    }
+    /**
+     * Reads a float (32 bit) as a number
+     */
+    float() {
+      if (this.pos + 4 > this.len) {
+        throw indexOutOfRange7(this, 4);
+      }
+      const value2 = readFloatLE7(this.buf, this.pos);
+      this.pos += 4;
+      return value2;
+    }
+    /**
+     * Reads a double (64 bit float) as a number
+     */
+    double() {
+      if (this.pos + 8 > this.len) {
+        throw indexOutOfRange7(this, 4);
+      }
+      const value2 = readDoubleLE7(this.buf, this.pos);
+      this.pos += 8;
+      return value2;
+    }
+    /**
+     * Reads a sequence of bytes preceded by its length as a varint
+     */
+    bytes() {
+      const length18 = this.uint32();
+      const start3 = this.pos;
+      const end = this.pos + length18;
+      if (end > this.len) {
+        throw indexOutOfRange7(this, length18);
+      }
+      this.pos += length18;
+      return start3 === end ? new Uint8Array(0) : this.buf.subarray(start3, end);
+    }
+    /**
+     * Reads a string preceded by its byte length as a varint
+     */
+    string() {
+      const bytes = this.bytes();
+      return read9(bytes, 0, bytes.length);
+    }
+    /**
+     * Skips the specified number of bytes if specified, otherwise skips a varint
+     */
+    skip(length18) {
+      if (typeof length18 === "number") {
+        if (this.pos + length18 > this.len) {
+          throw indexOutOfRange7(this, length18);
+        }
+        this.pos += length18;
+      } else {
+        do {
+          if (this.pos >= this.len) {
+            throw indexOutOfRange7(this);
+          }
+        } while ((this.buf[this.pos++] & 128) !== 0);
+      }
+      return this;
+    }
+    /**
+     * Skips the next element of the specified wire type
+     */
+    skipType(wireType) {
+      switch (wireType) {
+        case 0:
+          this.skip();
+          break;
+        case 1:
+          this.skip(8);
+          break;
+        case 2:
+          this.skip(this.uint32());
+          break;
+        case 3:
+          while ((wireType = this.uint32() & 7) !== 4) {
+            this.skipType(wireType);
+          }
+          break;
+        case 5:
+          this.skip(4);
+          break;
+        /* istanbul ignore next */
+        default:
+          throw Error(`invalid wire type ${wireType} at offset ${this.pos}`);
+      }
+      return this;
+    }
+    readLongVarint() {
+      const bits = new LongBits7(0, 0);
+      let i = 0;
+      if (this.len - this.pos > 4) {
+        for (; i < 4; ++i) {
+          bits.lo = (bits.lo | (this.buf[this.pos] & 127) << i * 7) >>> 0;
+          if (this.buf[this.pos++] < 128) {
+            return bits;
+          }
+        }
+        bits.lo = (bits.lo | (this.buf[this.pos] & 127) << 28) >>> 0;
+        bits.hi = (bits.hi | (this.buf[this.pos] & 127) >> 4) >>> 0;
+        if (this.buf[this.pos++] < 128) {
+          return bits;
+        }
+        i = 0;
+      } else {
+        for (; i < 3; ++i) {
+          if (this.pos >= this.len) {
+            throw indexOutOfRange7(this);
+          }
+          bits.lo = (bits.lo | (this.buf[this.pos] & 127) << i * 7) >>> 0;
+          if (this.buf[this.pos++] < 128) {
+            return bits;
+          }
+        }
+        bits.lo = (bits.lo | (this.buf[this.pos++] & 127) << i * 7) >>> 0;
+        return bits;
+      }
+      if (this.len - this.pos > 4) {
+        for (; i < 5; ++i) {
+          bits.hi = (bits.hi | (this.buf[this.pos] & 127) << i * 7 + 3) >>> 0;
+          if (this.buf[this.pos++] < 128) {
+            return bits;
+          }
+        }
+      } else {
+        for (; i < 5; ++i) {
+          if (this.pos >= this.len) {
+            throw indexOutOfRange7(this);
+          }
+          bits.hi = (bits.hi | (this.buf[this.pos] & 127) << i * 7 + 3) >>> 0;
+          if (this.buf[this.pos++] < 128) {
+            return bits;
+          }
+        }
+      }
+      throw Error("invalid varint encoding");
+    }
+    readFixed64() {
+      if (this.pos + 8 > this.len) {
+        throw indexOutOfRange7(this, 8);
+      }
+      const lo = readFixed32End7(this.buf, this.pos += 4);
+      const hi = readFixed32End7(this.buf, this.pos += 4);
+      return new LongBits7(lo, hi);
+    }
+    /**
+     * Reads a varint as a signed 64 bit value
+     */
+    int64() {
+      return this.readLongVarint().toBigInt();
+    }
+    /**
+     * Reads a varint as a signed 64 bit value returned as a possibly unsafe
+     * JavaScript number
+     */
+    int64Number() {
+      return this.readLongVarint().toNumber();
+    }
+    /**
+     * Reads a varint as a signed 64 bit value returned as a string
+     */
+    int64String() {
+      return this.readLongVarint().toString();
+    }
+    /**
+     * Reads a varint as an unsigned 64 bit value
+     */
+    uint64() {
+      return this.readLongVarint().toBigInt(true);
+    }
+    /**
+     * Reads a varint as an unsigned 64 bit value returned as a possibly unsafe
+     * JavaScript number
+     */
+    uint64Number() {
+      const value2 = decodeUint8Array(this.buf, this.pos);
+      this.pos += encodingLength2(value2);
+      return value2;
+    }
+    /**
+     * Reads a varint as an unsigned 64 bit value returned as a string
+     */
+    uint64String() {
+      return this.readLongVarint().toString(true);
+    }
+    /**
+     * Reads a zig-zag encoded varint as a signed 64 bit value
+     */
+    sint64() {
+      return this.readLongVarint().zzDecode().toBigInt();
+    }
+    /**
+     * Reads a zig-zag encoded varint as a signed 64 bit value returned as a
+     * possibly unsafe JavaScript number
+     */
+    sint64Number() {
+      return this.readLongVarint().zzDecode().toNumber();
+    }
+    /**
+     * Reads a zig-zag encoded varint as a signed 64 bit value returned as a
+     * string
+     */
+    sint64String() {
+      return this.readLongVarint().zzDecode().toString();
+    }
+    /**
+     * Reads fixed 64 bits
+     */
+    fixed64() {
+      return this.readFixed64().toBigInt();
+    }
+    /**
+     * Reads fixed 64 bits returned as a possibly unsafe JavaScript number
+     */
+    fixed64Number() {
+      return this.readFixed64().toNumber();
+    }
+    /**
+     * Reads fixed 64 bits returned as a string
+     */
+    fixed64String() {
+      return this.readFixed64().toString();
+    }
+    /**
+     * Reads zig-zag encoded fixed 64 bits
+     */
+    sfixed64() {
+      return this.readFixed64().toBigInt();
+    }
+    /**
+     * Reads zig-zag encoded fixed 64 bits returned as a possibly unsafe
+     * JavaScript number
+     */
+    sfixed64Number() {
+      return this.readFixed64().toNumber();
+    }
+    /**
+     * Reads zig-zag encoded fixed 64 bits returned as a string
+     */
+    sfixed64String() {
+      return this.readFixed64().toString();
+    }
+  };
+  function createReader7(buf) {
+    return new Uint8ArrayReader7(buf instanceof Uint8Array ? buf : buf.subarray());
+  }
+
+  // node_modules/@libp2p/webrtc/node_modules/protons-runtime/dist/src/decode.js
+  function decodeMessage7(buf, codec, opts) {
+    const reader = createReader7(buf);
+    return codec.decode(reader, void 0, opts);
+  }
+
+  // node_modules/@libp2p/webrtc/node_modules/uint8arrays/dist/src/alloc.js
+  function alloc16(size = 0) {
+    return new Uint8Array(size);
+  }
+  function allocUnsafe16(size = 0) {
+    return new Uint8Array(size);
+  }
+
+  // node_modules/@libp2p/webrtc/node_modules/uint8arrays/dist/src/util/bases.js
+  function createCodec19(name10, prefix, encode19, decode20) {
+    return {
+      name: name10,
+      prefix,
+      encoder: {
+        name: name10,
+        prefix,
+        encode: encode19
+      },
+      decoder: {
+        decode: decode20
+      }
+    };
+  }
+  var string13 = createCodec19("utf8", "u", (buf) => {
+    const decoder = new TextDecoder("utf8");
+    return "u" + decoder.decode(buf);
+  }, (str) => {
+    const encoder2 = new TextEncoder();
+    return encoder2.encode(str.substring(1));
+  });
+  var ascii13 = createCodec19("ascii", "a", (buf) => {
+    let string37 = "a";
+    for (let i = 0; i < buf.length; i++) {
+      string37 += String.fromCharCode(buf[i]);
+    }
+    return string37;
+  }, (str) => {
+    str = str.substring(1);
+    const buf = allocUnsafe16(str.length);
+    for (let i = 0; i < str.length; i++) {
+      buf[i] = str.charCodeAt(i);
+    }
+    return buf;
+  });
+  var BASES13 = {
+    utf8: string13,
+    "utf-8": string13,
+    hex: bases.base16,
+    latin1: ascii13,
+    ascii: ascii13,
+    binary: ascii13,
+    ...bases
+  };
+  var bases_default13 = BASES13;
+
+  // node_modules/@libp2p/webrtc/node_modules/uint8arrays/dist/src/from-string.js
+  function fromString16(string37, encoding = "utf8") {
+    const base4 = bases_default13[encoding];
+    if (base4 == null) {
+      throw new Error(`Unsupported encoding "${encoding}"`);
+    }
+    return base4.decoder.decode(`${base4.prefix}${string37}`);
+  }
+
+  // node_modules/@libp2p/webrtc/node_modules/protons-runtime/dist/src/utils/pool.js
+  function pool7(size) {
+    const SIZE = size ?? 8192;
+    const MAX = SIZE >>> 1;
+    let slab;
+    let offset = SIZE;
+    return function poolAlloc(size2) {
+      if (size2 < 1 || size2 > MAX) {
+        return allocUnsafe16(size2);
+      }
+      if (offset + size2 > SIZE) {
+        slab = allocUnsafe16(SIZE);
+        offset = 0;
+      }
+      const buf = slab.subarray(offset, offset += size2);
+      if ((offset & 7) !== 0) {
+        offset = (offset | 7) + 1;
+      }
+      return buf;
+    };
+  }
+
+  // node_modules/@libp2p/webrtc/node_modules/protons-runtime/dist/src/utils/writer.js
+  var Op7 = class {
+    /**
+     * Function to call
+     */
+    fn;
+    /**
+     * Value byte length
+     */
+    len;
+    /**
+     * Next operation
+     */
+    next;
+    /**
+     * Value to write
+     */
+    val;
+    constructor(fn, len, val) {
+      this.fn = fn;
+      this.len = len;
+      this.next = void 0;
+      this.val = val;
+    }
+  };
+  function noop7() {
+  }
+  var State7 = class {
+    /**
+     * Current head
+     */
+    head;
+    /**
+     * Current tail
+     */
+    tail;
+    /**
+     * Current buffer length
+     */
+    len;
+    /**
+     * Next state
+     */
+    next;
+    constructor(writer) {
+      this.head = writer.head;
+      this.tail = writer.tail;
+      this.len = writer.len;
+      this.next = writer.states;
+    }
+  };
+  var bufferPool7 = pool7();
+  function alloc17(size) {
+    if (globalThis.Buffer != null) {
+      return allocUnsafe16(size);
+    }
+    return bufferPool7(size);
+  }
+  var Uint8ArrayWriter7 = class {
+    /**
+     * Current length
+     */
+    len;
+    /**
+     * Operations head
+     */
+    head;
+    /**
+     * Operations tail
+     */
+    tail;
+    /**
+     * Linked forked states
+     */
+    states;
+    constructor() {
+      this.len = 0;
+      this.head = new Op7(noop7, 0, 0);
+      this.tail = this.head;
+      this.states = null;
+    }
+    /**
+     * Pushes a new operation to the queue
+     */
+    _push(fn, len, val) {
+      this.tail = this.tail.next = new Op7(fn, len, val);
+      this.len += len;
+      return this;
+    }
+    /**
+     * Writes an unsigned 32 bit value as a varint
+     */
+    uint32(value2) {
+      this.len += (this.tail = this.tail.next = new VarintOp7((value2 = value2 >>> 0) < 128 ? 1 : value2 < 16384 ? 2 : value2 < 2097152 ? 3 : value2 < 268435456 ? 4 : 5, value2)).len;
+      return this;
+    }
+    /**
+     * Writes a signed 32 bit value as a varint`
+     */
+    int32(value2) {
+      return value2 < 0 ? this._push(writeVarint647, 10, LongBits7.fromNumber(value2)) : this.uint32(value2);
+    }
+    /**
+     * Writes a 32 bit value as a varint, zig-zag encoded
+     */
+    sint32(value2) {
+      return this.uint32((value2 << 1 ^ value2 >> 31) >>> 0);
+    }
+    /**
+     * Writes an unsigned 64 bit value as a varint
+     */
+    uint64(value2) {
+      const bits = LongBits7.fromBigInt(value2);
+      return this._push(writeVarint647, bits.length(), bits);
+    }
+    /**
+     * Writes an unsigned 64 bit value as a varint
+     */
+    uint64Number(value2) {
+      return this._push(encodeUint8Array, encodingLength2(value2), value2);
+    }
+    /**
+     * Writes an unsigned 64 bit value as a varint
+     */
+    uint64String(value2) {
+      return this.uint64(BigInt(value2));
+    }
+    /**
+     * Writes a signed 64 bit value as a varint
+     */
+    int64(value2) {
+      return this.uint64(value2);
+    }
+    /**
+     * Writes a signed 64 bit value as a varint
+     */
+    int64Number(value2) {
+      return this.uint64Number(value2);
+    }
+    /**
+     * Writes a signed 64 bit value as a varint
+     */
+    int64String(value2) {
+      return this.uint64String(value2);
+    }
+    /**
+     * Writes a signed 64 bit value as a varint, zig-zag encoded
+     */
+    sint64(value2) {
+      const bits = LongBits7.fromBigInt(value2).zzEncode();
+      return this._push(writeVarint647, bits.length(), bits);
+    }
+    /**
+     * Writes a signed 64 bit value as a varint, zig-zag encoded
+     */
+    sint64Number(value2) {
+      const bits = LongBits7.fromNumber(value2).zzEncode();
+      return this._push(writeVarint647, bits.length(), bits);
+    }
+    /**
+     * Writes a signed 64 bit value as a varint, zig-zag encoded
+     */
+    sint64String(value2) {
+      return this.sint64(BigInt(value2));
+    }
+    /**
+     * Writes a boolish value as a varint
+     */
+    bool(value2) {
+      return this._push(writeByte7, 1, value2 ? 1 : 0);
+    }
+    /**
+     * Writes an unsigned 32 bit value as fixed 32 bits
+     */
+    fixed32(value2) {
+      return this._push(writeFixed327, 4, value2 >>> 0);
+    }
+    /**
+     * Writes a signed 32 bit value as fixed 32 bits
+     */
+    sfixed32(value2) {
+      return this.fixed32(value2);
+    }
+    /**
+     * Writes an unsigned 64 bit value as fixed 64 bits
+     */
+    fixed64(value2) {
+      const bits = LongBits7.fromBigInt(value2);
+      return this._push(writeFixed327, 4, bits.lo)._push(writeFixed327, 4, bits.hi);
+    }
+    /**
+     * Writes an unsigned 64 bit value as fixed 64 bits
+     */
+    fixed64Number(value2) {
+      const bits = LongBits7.fromNumber(value2);
+      return this._push(writeFixed327, 4, bits.lo)._push(writeFixed327, 4, bits.hi);
+    }
+    /**
+     * Writes an unsigned 64 bit value as fixed 64 bits
+     */
+    fixed64String(value2) {
+      return this.fixed64(BigInt(value2));
+    }
+    /**
+     * Writes a signed 64 bit value as fixed 64 bits
+     */
+    sfixed64(value2) {
+      return this.fixed64(value2);
+    }
+    /**
+     * Writes a signed 64 bit value as fixed 64 bits
+     */
+    sfixed64Number(value2) {
+      return this.fixed64Number(value2);
+    }
+    /**
+     * Writes a signed 64 bit value as fixed 64 bits
+     */
+    sfixed64String(value2) {
+      return this.fixed64String(value2);
+    }
+    /**
+     * Writes a float (32 bit)
+     */
+    float(value2) {
+      return this._push(writeFloatLE7, 4, value2);
+    }
+    /**
+     * Writes a double (64 bit float).
+     *
+     * @function
+     * @param {number} value - Value to write
+     * @returns {Writer} `this`
+     */
+    double(value2) {
+      return this._push(writeDoubleLE7, 8, value2);
+    }
+    /**
+     * Writes a sequence of bytes
+     */
+    bytes(value2) {
+      const len = value2.length >>> 0;
+      if (len === 0) {
+        return this._push(writeByte7, 1, 0);
+      }
+      return this.uint32(len)._push(writeBytes7, len, value2);
+    }
+    /**
+     * Writes a string
+     */
+    string(value2) {
+      const len = length9(value2);
+      return len !== 0 ? this.uint32(len)._push(write7, len, value2) : this._push(writeByte7, 1, 0);
+    }
+    /**
+     * Forks this writer's state by pushing it to a stack.
+     * Calling {@link Writer#reset|reset} or {@link Writer#ldelim|ldelim} resets the writer to the previous state.
+     */
+    fork() {
+      this.states = new State7(this);
+      this.head = this.tail = new Op7(noop7, 0, 0);
+      this.len = 0;
+      return this;
+    }
+    /**
+     * Resets this instance to the last state
+     */
+    reset() {
+      if (this.states != null) {
+        this.head = this.states.head;
+        this.tail = this.states.tail;
+        this.len = this.states.len;
+        this.states = this.states.next;
+      } else {
+        this.head = this.tail = new Op7(noop7, 0, 0);
+        this.len = 0;
+      }
+      return this;
+    }
+    /**
+     * Resets to the last state and appends the fork state's current write length as a varint followed by its operations.
+     */
+    ldelim() {
+      const head = this.head;
+      const tail = this.tail;
+      const len = this.len;
+      this.reset().uint32(len);
+      if (len !== 0) {
+        this.tail.next = head.next;
+        this.tail = tail;
+        this.len += len;
+      }
+      return this;
+    }
+    /**
+     * Finishes the write operation
+     */
+    finish() {
+      let head = this.head.next;
+      const buf = alloc17(this.len);
+      let pos = 0;
+      while (head != null) {
+        head.fn(head.val, buf, pos);
+        pos += head.len;
+        head = head.next;
+      }
+      return buf;
+    }
+  };
+  function writeByte7(val, buf, pos) {
+    buf[pos] = val & 255;
+  }
+  function writeVarint327(val, buf, pos) {
+    while (val > 127) {
+      buf[pos++] = val & 127 | 128;
+      val >>>= 7;
+    }
+    buf[pos] = val;
+  }
+  var VarintOp7 = class extends Op7 {
+    next;
+    constructor(len, val) {
+      super(writeVarint327, len, val);
+      this.next = void 0;
+    }
+  };
+  function writeVarint647(val, buf, pos) {
+    while (val.hi !== 0) {
+      buf[pos++] = val.lo & 127 | 128;
+      val.lo = (val.lo >>> 7 | val.hi << 25) >>> 0;
+      val.hi >>>= 7;
+    }
+    while (val.lo > 127) {
+      buf[pos++] = val.lo & 127 | 128;
+      val.lo = val.lo >>> 7;
+    }
+    buf[pos++] = val.lo;
+  }
+  function writeFixed327(val, buf, pos) {
+    buf[pos] = val & 255;
+    buf[pos + 1] = val >>> 8 & 255;
+    buf[pos + 2] = val >>> 16 & 255;
+    buf[pos + 3] = val >>> 24;
+  }
+  function writeBytes7(val, buf, pos) {
+    buf.set(val, pos);
+  }
+  if (globalThis.Buffer != null) {
+    Uint8ArrayWriter7.prototype.bytes = function(value2) {
+      const len = value2.length >>> 0;
+      this.uint32(len);
+      if (len > 0) {
+        this._push(writeBytesBuffer7, len, value2);
+      }
+      return this;
+    };
+    Uint8ArrayWriter7.prototype.string = function(value2) {
+      const len = globalThis.Buffer.byteLength(value2);
+      this.uint32(len);
+      if (len > 0) {
+        this._push(writeStringBuffer7, len, value2);
+      }
+      return this;
+    };
+  }
+  function writeBytesBuffer7(val, buf, pos) {
+    buf.set(val, pos);
+  }
+  function writeStringBuffer7(val, buf, pos) {
+    if (val.length < 40) {
+      write7(val, buf, pos);
+    } else if (buf.utf8Write != null) {
+      buf.utf8Write(val, pos);
+    } else {
+      buf.set(fromString16(val), pos);
+    }
+  }
+  function createWriter7() {
+    return new Uint8ArrayWriter7();
+  }
+
+  // node_modules/@libp2p/webrtc/node_modules/protons-runtime/dist/src/encode.js
+  function encodeMessage7(message15, codec) {
+    const w2 = createWriter7();
+    codec.encode(message15, w2, {
+      lengthDelimited: false
+    });
+    return w2.finish();
+  }
+
+  // node_modules/@libp2p/webrtc/node_modules/protons-runtime/dist/src/stream.js
+  function* streamMessage6(buf, codec, opts) {
+    const reader = createReader7(buf);
+    yield* codec.stream(reader, void 0, "$", opts);
+  }
+
+  // node_modules/@libp2p/webrtc/node_modules/protons-runtime/dist/src/codec.js
+  var CODEC_TYPES7 = {
+    VARINT: 0,
+    BIT64: 1,
+    LENGTH_DELIMITED: 2,
+    START_GROUP: 3,
+    END_GROUP: 4,
+    BIT32: 5
+  };
+  function createCodec20(name10, type, encode19, decode20, stream) {
+    return {
+      name: name10,
+      type,
+      encode: encode19,
+      decode: decode20,
+      stream
+    };
+  }
+
   // node_modules/@libp2p/webrtc/node_modules/protons-runtime/dist/src/codecs/enum.js
-  function enumeration6(v) {
+  function enumeration7(v) {
     function findValue(val) {
       if (v[val.toString()] == null) {
         throw new Error("Invalid enum value");
@@ -40690,12 +42642,12 @@ ${indent}[Error list was empty]`;
       const val = reader.int32();
       yield findValue(val);
     };
-    return createCodec18("enum", CODEC_TYPES6.VARINT, encode19, decode20, stream);
+    return createCodec20("enum", CODEC_TYPES7.VARINT, encode19, decode20, stream);
   }
 
   // node_modules/@libp2p/webrtc/node_modules/protons-runtime/dist/src/codecs/message.js
-  function message6(encode19, decode20, stream) {
-    return createCodec18("message", CODEC_TYPES6.LENGTH_DELIMITED, encode19, decode20, stream);
+  function message7(encode19, decode20, stream) {
+    return createCodec20("message", CODEC_TYPES7.LENGTH_DELIMITED, encode19, decode20, stream);
   }
 
   // node_modules/@libp2p/webrtc/dist/src/private-to-public/pb/message.js
@@ -40717,13 +42669,13 @@ ${indent}[Error list was empty]`;
     })(__FlagValues || (__FlagValues = {}));
     (function(Flag3) {
       Flag3.codec = () => {
-        return enumeration6(__FlagValues);
+        return enumeration7(__FlagValues);
       };
     })(Flag2 = Message5.Flag || (Message5.Flag = {}));
     let _codec;
     Message5.codec = () => {
       if (_codec == null) {
-        _codec = message6((obj, w2, opts = {}) => {
+        _codec = message7((obj, w2, opts = {}) => {
           if (opts.lengthDelimited !== false) {
             w2.fork();
           }
@@ -40789,15 +42741,15 @@ ${indent}[Error list was empty]`;
       return _codec;
     };
     function encode19(obj) {
-      return encodeMessage6(obj, Message5.codec());
+      return encodeMessage7(obj, Message5.codec());
     }
     Message5.encode = encode19;
     function decode20(buf, opts) {
-      return decodeMessage6(buf, Message5.codec(), opts);
+      return decodeMessage7(buf, Message5.codec(), opts);
     }
     Message5.decode = decode20;
     function stream(buf, opts) {
-      return streamMessage5(buf, Message5.codec(), opts);
+      return streamMessage6(buf, Message5.codec(), opts);
     }
     Message5.stream = stream;
   })(Message || (Message = {}));
@@ -40846,7 +42798,7 @@ ${indent}[Error list was empty]`;
     if (length18 == null) {
       length18 = arrays.reduce((acc, curr) => acc + curr.length, 0);
     }
-    const output = allocUnsafe15(length18);
+    const output = allocUnsafe16(length18);
     let offset = 0;
     for (const arr of arrays) {
       output.set(arr, offset);
@@ -41085,8 +43037,8 @@ ${indent}[Error list was empty]`;
             bufs.push(buf);
             break;
           }
-          const start2 = beginInclusive - bufStart;
-          bufs.push(buf.subarray(start2, start2 + (endExclusive - beginInclusive)));
+          const start3 = beginInclusive - bufStart;
+          bufs.push(buf.subarray(start3, start3 + (endExclusive - beginInclusive)));
           break;
         }
         if (sliceStartInBuf) {
@@ -41164,7 +43116,7 @@ ${indent}[Error list was empty]`;
       return view.getInt8(0);
     }
     setInt8(byteOffset, value2) {
-      const buf = allocUnsafe15(1);
+      const buf = allocUnsafe16(1);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setInt8(0, value2);
       this.write(buf, byteOffset);
@@ -41175,7 +43127,7 @@ ${indent}[Error list was empty]`;
       return view.getInt16(0, littleEndian);
     }
     setInt16(byteOffset, value2, littleEndian) {
-      const buf = alloc15(2);
+      const buf = alloc16(2);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setInt16(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -41186,7 +43138,7 @@ ${indent}[Error list was empty]`;
       return view.getInt32(0, littleEndian);
     }
     setInt32(byteOffset, value2, littleEndian) {
-      const buf = alloc15(4);
+      const buf = alloc16(4);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setInt32(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -41197,7 +43149,7 @@ ${indent}[Error list was empty]`;
       return view.getBigInt64(0, littleEndian);
     }
     setBigInt64(byteOffset, value2, littleEndian) {
-      const buf = alloc15(8);
+      const buf = alloc16(8);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setBigInt64(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -41208,7 +43160,7 @@ ${indent}[Error list was empty]`;
       return view.getUint8(0);
     }
     setUint8(byteOffset, value2) {
-      const buf = allocUnsafe15(1);
+      const buf = allocUnsafe16(1);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setUint8(0, value2);
       this.write(buf, byteOffset);
@@ -41219,7 +43171,7 @@ ${indent}[Error list was empty]`;
       return view.getUint16(0, littleEndian);
     }
     setUint16(byteOffset, value2, littleEndian) {
-      const buf = alloc15(2);
+      const buf = alloc16(2);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setUint16(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -41230,7 +43182,7 @@ ${indent}[Error list was empty]`;
       return view.getUint32(0, littleEndian);
     }
     setUint32(byteOffset, value2, littleEndian) {
-      const buf = alloc15(4);
+      const buf = alloc16(4);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setUint32(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -41241,7 +43193,7 @@ ${indent}[Error list was empty]`;
       return view.getBigUint64(0, littleEndian);
     }
     setBigUint64(byteOffset, value2, littleEndian) {
-      const buf = alloc15(8);
+      const buf = alloc16(8);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setBigUint64(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -41252,7 +43204,7 @@ ${indent}[Error list was empty]`;
       return view.getFloat32(0, littleEndian);
     }
     setFloat32(byteOffset, value2, littleEndian) {
-      const buf = alloc15(4);
+      const buf = alloc16(4);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setFloat32(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -41263,7 +43215,7 @@ ${indent}[Error list was empty]`;
       return view.getFloat64(0, littleEndian);
     }
     setFloat64(byteOffset, value2, littleEndian) {
-      const buf = alloc15(8);
+      const buf = alloc16(8);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setFloat64(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -41386,7 +43338,7 @@ ${indent}[Error list was empty]`;
       this.log.trace('sending message, channel state "%s"', this.channel.readyState);
       try {
         for (const buf of data) {
-          this.channel.send(withArrayBuffer6(buf));
+          this.channel.send(withArrayBuffer7(buf));
         }
       } catch (err) {
         this.log.error("error sending datachannel message - %e", err);
@@ -41781,13 +43733,13 @@ ${indent}[Error list was empty]`;
     })(__TypeValues || (__TypeValues = {}));
     (function(Type3) {
       Type3.codec = () => {
-        return enumeration6(__TypeValues);
+        return enumeration7(__TypeValues);
       };
     })(Type2 = Message5.Type || (Message5.Type = {}));
     let _codec;
     Message5.codec = () => {
       if (_codec == null) {
-        _codec = message6((obj, w2, opts = {}) => {
+        _codec = message7((obj, w2, opts = {}) => {
           if (opts.lengthDelimited !== false) {
             w2.fork();
           }
@@ -41853,15 +43805,15 @@ ${indent}[Error list was empty]`;
       return _codec;
     };
     function encode19(obj) {
-      return encodeMessage6(obj, Message5.codec());
+      return encodeMessage7(obj, Message5.codec());
     }
     Message5.encode = encode19;
     function decode20(buf, opts) {
-      return decodeMessage6(buf, Message5.codec(), opts);
+      return decodeMessage7(buf, Message5.codec(), opts);
     }
     Message5.decode = decode20;
     function stream(buf, opts) {
-      return streamMessage5(buf, Message5.codec(), opts);
+      return streamMessage6(buf, Message5.codec(), opts);
     }
     Message5.stream = stream;
   })(Message2 || (Message2 = {}));
@@ -42506,10 +44458,10 @@ a=end-of-candidates
   }
 
   // node_modules/@libp2p/webrtc/dist/src/private-to-public/utils/generate-noise-prologue.js
-  var PREFIX = fromString15("libp2p-webrtc-noise:");
+  var PREFIX = fromString16("libp2p-webrtc-noise:");
   function generateNoisePrologue(localFingerprint, remoteAddr, role) {
     const localFpString = localFingerprint.trim().toLowerCase().replaceAll(":", "");
-    const localFpArray = fromString15(localFpString, "hex");
+    const localFpArray = fromString16(localFpString, "hex");
     const local = create(sha256.code, localFpArray);
     const remote = multibaseDecoder.decode(certhash(remoteAddr));
     const byteLength = PREFIX.byteLength + local.bytes.byteLength + remote.byteLength;
@@ -42935,10 +44887,10 @@ a=end-of-candidates
   }
 
   // node_modules/@libp2p/websockets/node_modules/uint8arrays/dist/src/alloc.js
-  function alloc17(size = 0) {
+  function alloc18(size = 0) {
     return new Uint8Array(size);
   }
-  function allocUnsafe16(size = 0) {
+  function allocUnsafe17(size = 0) {
     return new Uint8Array(size);
   }
 
@@ -42959,7 +44911,7 @@ a=end-of-candidates
     if (length18 == null) {
       length18 = arrays.reduce((acc, curr) => acc + curr.length, 0);
     }
-    const output = allocUnsafe16(length18);
+    const output = allocUnsafe17(length18);
     let offset = 0;
     for (const arr of arrays) {
       output.set(arr, offset);
@@ -43198,8 +45150,8 @@ a=end-of-candidates
             bufs.push(buf);
             break;
           }
-          const start2 = beginInclusive - bufStart;
-          bufs.push(buf.subarray(start2, start2 + (endExclusive - beginInclusive)));
+          const start3 = beginInclusive - bufStart;
+          bufs.push(buf.subarray(start3, start3 + (endExclusive - beginInclusive)));
           break;
         }
         if (sliceStartInBuf) {
@@ -43277,7 +45229,7 @@ a=end-of-candidates
       return view.getInt8(0);
     }
     setInt8(byteOffset, value2) {
-      const buf = allocUnsafe16(1);
+      const buf = allocUnsafe17(1);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setInt8(0, value2);
       this.write(buf, byteOffset);
@@ -43288,7 +45240,7 @@ a=end-of-candidates
       return view.getInt16(0, littleEndian);
     }
     setInt16(byteOffset, value2, littleEndian) {
-      const buf = alloc17(2);
+      const buf = alloc18(2);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setInt16(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -43299,7 +45251,7 @@ a=end-of-candidates
       return view.getInt32(0, littleEndian);
     }
     setInt32(byteOffset, value2, littleEndian) {
-      const buf = alloc17(4);
+      const buf = alloc18(4);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setInt32(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -43310,7 +45262,7 @@ a=end-of-candidates
       return view.getBigInt64(0, littleEndian);
     }
     setBigInt64(byteOffset, value2, littleEndian) {
-      const buf = alloc17(8);
+      const buf = alloc18(8);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setBigInt64(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -43321,7 +45273,7 @@ a=end-of-candidates
       return view.getUint8(0);
     }
     setUint8(byteOffset, value2) {
-      const buf = allocUnsafe16(1);
+      const buf = allocUnsafe17(1);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setUint8(0, value2);
       this.write(buf, byteOffset);
@@ -43332,7 +45284,7 @@ a=end-of-candidates
       return view.getUint16(0, littleEndian);
     }
     setUint16(byteOffset, value2, littleEndian) {
-      const buf = alloc17(2);
+      const buf = alloc18(2);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setUint16(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -43343,7 +45295,7 @@ a=end-of-candidates
       return view.getUint32(0, littleEndian);
     }
     setUint32(byteOffset, value2, littleEndian) {
-      const buf = alloc17(4);
+      const buf = alloc18(4);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setUint32(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -43354,7 +45306,7 @@ a=end-of-candidates
       return view.getBigUint64(0, littleEndian);
     }
     setBigUint64(byteOffset, value2, littleEndian) {
-      const buf = alloc17(8);
+      const buf = alloc18(8);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setBigUint64(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -43365,7 +45317,7 @@ a=end-of-candidates
       return view.getFloat32(0, littleEndian);
     }
     setFloat32(byteOffset, value2, littleEndian) {
-      const buf = alloc17(4);
+      const buf = alloc18(4);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setFloat32(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -43376,7 +45328,7 @@ a=end-of-candidates
       return view.getFloat64(0, littleEndian);
     }
     setFloat64(byteOffset, value2, littleEndian) {
-      const buf = alloc17(8);
+      const buf = alloc18(8);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setFloat64(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -43414,7 +45366,7 @@ a=end-of-candidates
   };
 
   // node_modules/@libp2p/websockets/node_modules/uint8arrays/dist/src/util/bases.js
-  function createCodec19(name10, prefix, encode19, decode20) {
+  function createCodec21(name10, prefix, encode19, decode20) {
     return {
       name: name10,
       prefix,
@@ -43428,14 +45380,14 @@ a=end-of-candidates
       }
     };
   }
-  var string13 = createCodec19("utf8", "u", (buf) => {
+  var string14 = createCodec21("utf8", "u", (buf) => {
     const decoder = new TextDecoder("utf8");
     return "u" + decoder.decode(buf);
   }, (str) => {
     const encoder2 = new TextEncoder();
     return encoder2.encode(str.substring(1));
   });
-  var ascii13 = createCodec19("ascii", "a", (buf) => {
+  var ascii14 = createCodec21("ascii", "a", (buf) => {
     let string37 = "a";
     for (let i = 0; i < buf.length; i++) {
       string37 += String.fromCharCode(buf[i]);
@@ -43443,26 +45395,26 @@ a=end-of-candidates
     return string37;
   }, (str) => {
     str = str.substring(1);
-    const buf = allocUnsafe16(str.length);
+    const buf = allocUnsafe17(str.length);
     for (let i = 0; i < str.length; i++) {
       buf[i] = str.charCodeAt(i);
     }
     return buf;
   });
-  var BASES13 = {
-    utf8: string13,
-    "utf-8": string13,
+  var BASES14 = {
+    utf8: string14,
+    "utf-8": string14,
     hex: bases.base16,
-    latin1: ascii13,
-    ascii: ascii13,
-    binary: ascii13,
+    latin1: ascii14,
+    ascii: ascii14,
+    binary: ascii14,
     ...bases
   };
-  var bases_default13 = BASES13;
+  var bases_default14 = BASES14;
 
   // node_modules/@libp2p/websockets/node_modules/uint8arrays/dist/src/from-string.js
-  function fromString16(string37, encoding = "utf8") {
-    const base4 = bases_default13[encoding];
+  function fromString17(string37, encoding = "utf8") {
+    const base4 = bases_default14[encoding];
     if (base4 == null) {
       throw new Error(`Unsupported encoding "${encoding}"`);
     }
@@ -43470,11 +45422,11 @@ a=end-of-candidates
   }
 
   // node_modules/@libp2p/websockets/node_modules/uint8arrays/dist/src/with-array-buffer.js
-  function isArrayBufferBacked7(arr) {
+  function isArrayBufferBacked8(arr) {
     return arr.buffer instanceof ArrayBuffer;
   }
-  function withArrayBuffer7(arr) {
-    if (isArrayBufferBacked7(arr)) {
+  function withArrayBuffer8(arr) {
+    if (isArrayBufferBacked8(arr)) {
       return arr;
     }
     return arr.slice();
@@ -43505,7 +45457,7 @@ a=end-of-candidates
         try {
           let buf;
           if (typeof evt.data === "string") {
-            buf = fromString16(evt.data);
+            buf = fromString17(evt.data);
           } else if (evt.data instanceof ArrayBuffer) {
             buf = new Uint8Array(evt.data, 0, evt.data.byteLength);
           } else {
@@ -43520,7 +45472,7 @@ a=end-of-candidates
     }
     sendData(data) {
       for (const buf of data) {
-        this.websocket.send(withArrayBuffer7(buf));
+        this.websocket.send(withArrayBuffer8(buf));
       }
       const canSendMore = this.websocket.bufferedAmount < this.maxBufferedAmount;
       if (!canSendMore) {
@@ -43652,11 +45604,11 @@ a=end-of-candidates
   }
 
   // node_modules/@libp2p/webtransport/node_modules/uint8arrays/dist/src/with-array-buffer.js
-  function isArrayBufferBacked8(arr) {
+  function isArrayBufferBacked9(arr) {
     return arr.buffer instanceof ArrayBuffer;
   }
-  function withArrayBuffer8(arr) {
-    if (isArrayBufferBacked8(arr)) {
+  function withArrayBuffer9(arr) {
+    if (isArrayBufferBacked9(arr)) {
       return arr;
     }
     return arr.slice();
@@ -43992,7 +45944,7 @@ a=end-of-candidates
         const wt = new webtransport_browser_default(`${url}/.well-known/libp2p-webtransport?type=noise`, {
           serverCertificateHashes: certhashes.map((certhash2) => ({
             algorithm: "sha-256",
-            value: withArrayBuffer8(certhash2.digest)
+            value: withArrayBuffer9(certhash2.digest)
           }))
         });
         cleanUpWTSession = (metric) => {
@@ -44198,12 +46150,12 @@ a=end-of-candidates
   };
 
   // node_modules/it-filter/dist/src/index.js
-  function isAsyncIterable11(thing) {
+  function isAsyncIterable12(thing) {
     return thing[Symbol.asyncIterator] != null;
   }
   function filter(source, fn) {
     let index = 0;
-    if (isAsyncIterable11(source)) {
+    if (isAsyncIterable12(source)) {
       return (async function* () {
         for await (const entry of source) {
           if (await fn(entry, index++)) {
@@ -44243,7 +46195,7 @@ a=end-of-candidates
       }
     })();
   }
-  var src_default10 = filter;
+  var src_default11 = filter;
 
   // node_modules/blockstore-core/dist/src/tiered.js
   var log12 = logger("blockstore:core:tiered");
@@ -44605,10 +46557,10 @@ a=end-of-candidates
   };
 
   // node_modules/@ipshipyard/crypto/node_modules/uint8arrays/dist/src/alloc.js
-  function alloc18(size = 0) {
+  function alloc19(size = 0) {
     return new Uint8Array(size);
   }
-  function allocUnsafe17(size = 0) {
+  function allocUnsafe18(size = 0) {
     return new Uint8Array(size);
   }
 
@@ -44629,7 +46581,7 @@ a=end-of-candidates
     if (length18 == null) {
       length18 = arrays.reduce((acc, curr) => acc + curr.length, 0);
     }
-    const output = allocUnsafe17(length18);
+    const output = allocUnsafe18(length18);
     let offset = 0;
     for (const arr of arrays) {
       output.set(arr, offset);
@@ -44868,8 +46820,8 @@ a=end-of-candidates
             bufs.push(buf);
             break;
           }
-          const start2 = beginInclusive - bufStart;
-          bufs.push(buf.subarray(start2, start2 + (endExclusive - beginInclusive)));
+          const start3 = beginInclusive - bufStart;
+          bufs.push(buf.subarray(start3, start3 + (endExclusive - beginInclusive)));
           break;
         }
         if (sliceStartInBuf) {
@@ -44947,7 +46899,7 @@ a=end-of-candidates
       return view.getInt8(0);
     }
     setInt8(byteOffset, value2) {
-      const buf = allocUnsafe17(1);
+      const buf = allocUnsafe18(1);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setInt8(0, value2);
       this.write(buf, byteOffset);
@@ -44958,7 +46910,7 @@ a=end-of-candidates
       return view.getInt16(0, littleEndian);
     }
     setInt16(byteOffset, value2, littleEndian) {
-      const buf = alloc18(2);
+      const buf = alloc19(2);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setInt16(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -44969,7 +46921,7 @@ a=end-of-candidates
       return view.getInt32(0, littleEndian);
     }
     setInt32(byteOffset, value2, littleEndian) {
-      const buf = alloc18(4);
+      const buf = alloc19(4);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setInt32(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -44980,7 +46932,7 @@ a=end-of-candidates
       return view.getBigInt64(0, littleEndian);
     }
     setBigInt64(byteOffset, value2, littleEndian) {
-      const buf = alloc18(8);
+      const buf = alloc19(8);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setBigInt64(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -44991,7 +46943,7 @@ a=end-of-candidates
       return view.getUint8(0);
     }
     setUint8(byteOffset, value2) {
-      const buf = allocUnsafe17(1);
+      const buf = allocUnsafe18(1);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setUint8(0, value2);
       this.write(buf, byteOffset);
@@ -45002,7 +46954,7 @@ a=end-of-candidates
       return view.getUint16(0, littleEndian);
     }
     setUint16(byteOffset, value2, littleEndian) {
-      const buf = alloc18(2);
+      const buf = alloc19(2);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setUint16(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -45013,7 +46965,7 @@ a=end-of-candidates
       return view.getUint32(0, littleEndian);
     }
     setUint32(byteOffset, value2, littleEndian) {
-      const buf = alloc18(4);
+      const buf = alloc19(4);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setUint32(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -45024,7 +46976,7 @@ a=end-of-candidates
       return view.getBigUint64(0, littleEndian);
     }
     setBigUint64(byteOffset, value2, littleEndian) {
-      const buf = alloc18(8);
+      const buf = alloc19(8);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setBigUint64(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -45035,7 +46987,7 @@ a=end-of-candidates
       return view.getFloat32(0, littleEndian);
     }
     setFloat32(byteOffset, value2, littleEndian) {
-      const buf = alloc18(4);
+      const buf = alloc19(4);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setFloat32(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -45046,7 +46998,7 @@ a=end-of-candidates
       return view.getFloat64(0, littleEndian);
     }
     setFloat64(byteOffset, value2, littleEndian) {
-      const buf = alloc18(8);
+      const buf = alloc19(8);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setFloat64(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -45084,11 +47036,11 @@ a=end-of-candidates
   };
 
   // node_modules/@ipshipyard/crypto/node_modules/uint8arrays/dist/src/with-array-buffer.js
-  function isArrayBufferBacked9(arr) {
+  function isArrayBufferBacked10(arr) {
     return arr.buffer instanceof ArrayBuffer;
   }
-  function withArrayBuffer9(arr) {
-    if (isArrayBufferBacked9(arr)) {
+  function withArrayBuffer10(arr) {
+    if (isArrayBufferBacked10(arr)) {
       return arr;
     }
     return arr.slice();
@@ -45151,11 +47103,11 @@ a=end-of-candidates
   }
   function readInteger2(buf, context) {
     const length18 = readLength2(buf, context);
-    const start2 = context.offset;
+    const start3 = context.offset;
     const end = context.offset + length18;
     const vals = [];
-    for (let i = start2; i < end; i++) {
-      if (i === start2 && buf[i] === 0) {
+    for (let i = start3; i < end; i++) {
+      if (i === start3 && buf[i] === 0) {
         continue;
       }
       vals.push(buf[i]);
@@ -45260,7 +47212,7 @@ a=end-of-candidates
   function encodeSequence2(values, tag = 48) {
     const output = new Uint8ArrayList10();
     for (const buf of values) {
-      output.append(withArrayBuffer9(buf.subarray()));
+      output.append(withArrayBuffer10(buf.subarray()));
     }
     return new Uint8ArrayList10(Uint8Array.from([tag]), encodeLength2(output), output);
   }
@@ -45272,51 +47224,51 @@ a=end-of-candidates
   };
 
   // node_modules/@ipshipyard/crypto/node_modules/protons-runtime/dist/src/utils/float.js
-  var f327 = new Float32Array([-0]);
-  var f8b7 = new Uint8Array(f327.buffer);
-  function writeFloatLE7(val, buf, pos) {
-    f327[0] = val;
-    buf[pos] = f8b7[0];
-    buf[pos + 1] = f8b7[1];
-    buf[pos + 2] = f8b7[2];
-    buf[pos + 3] = f8b7[3];
+  var f328 = new Float32Array([-0]);
+  var f8b8 = new Uint8Array(f328.buffer);
+  function writeFloatLE8(val, buf, pos) {
+    f328[0] = val;
+    buf[pos] = f8b8[0];
+    buf[pos + 1] = f8b8[1];
+    buf[pos + 2] = f8b8[2];
+    buf[pos + 3] = f8b8[3];
   }
-  function readFloatLE7(buf, pos) {
-    f8b7[0] = buf[pos];
-    f8b7[1] = buf[pos + 1];
-    f8b7[2] = buf[pos + 2];
-    f8b7[3] = buf[pos + 3];
-    return f327[0];
+  function readFloatLE8(buf, pos) {
+    f8b8[0] = buf[pos];
+    f8b8[1] = buf[pos + 1];
+    f8b8[2] = buf[pos + 2];
+    f8b8[3] = buf[pos + 3];
+    return f328[0];
   }
-  var f647 = new Float64Array([-0]);
-  var d8b7 = new Uint8Array(f647.buffer);
-  function writeDoubleLE7(val, buf, pos) {
-    f647[0] = val;
-    buf[pos] = d8b7[0];
-    buf[pos + 1] = d8b7[1];
-    buf[pos + 2] = d8b7[2];
-    buf[pos + 3] = d8b7[3];
-    buf[pos + 4] = d8b7[4];
-    buf[pos + 5] = d8b7[5];
-    buf[pos + 6] = d8b7[6];
-    buf[pos + 7] = d8b7[7];
+  var f648 = new Float64Array([-0]);
+  var d8b8 = new Uint8Array(f648.buffer);
+  function writeDoubleLE8(val, buf, pos) {
+    f648[0] = val;
+    buf[pos] = d8b8[0];
+    buf[pos + 1] = d8b8[1];
+    buf[pos + 2] = d8b8[2];
+    buf[pos + 3] = d8b8[3];
+    buf[pos + 4] = d8b8[4];
+    buf[pos + 5] = d8b8[5];
+    buf[pos + 6] = d8b8[6];
+    buf[pos + 7] = d8b8[7];
   }
-  function readDoubleLE7(buf, pos) {
-    d8b7[0] = buf[pos];
-    d8b7[1] = buf[pos + 1];
-    d8b7[2] = buf[pos + 2];
-    d8b7[3] = buf[pos + 3];
-    d8b7[4] = buf[pos + 4];
-    d8b7[5] = buf[pos + 5];
-    d8b7[6] = buf[pos + 6];
-    d8b7[7] = buf[pos + 7];
-    return f647[0];
+  function readDoubleLE8(buf, pos) {
+    d8b8[0] = buf[pos];
+    d8b8[1] = buf[pos + 1];
+    d8b8[2] = buf[pos + 2];
+    d8b8[3] = buf[pos + 3];
+    d8b8[4] = buf[pos + 4];
+    d8b8[5] = buf[pos + 5];
+    d8b8[6] = buf[pos + 6];
+    d8b8[7] = buf[pos + 7];
+    return f648[0];
   }
 
   // node_modules/@ipshipyard/crypto/node_modules/protons-runtime/dist/src/utils/longbits.js
-  var MAX_SAFE_NUMBER_INTEGER7 = BigInt(Number.MAX_SAFE_INTEGER);
-  var MIN_SAFE_NUMBER_INTEGER7 = BigInt(Number.MIN_SAFE_INTEGER);
-  var LongBits7 = class _LongBits {
+  var MAX_SAFE_NUMBER_INTEGER8 = BigInt(Number.MAX_SAFE_INTEGER);
+  var MIN_SAFE_NUMBER_INTEGER8 = BigInt(Number.MIN_SAFE_INTEGER);
+  var LongBits8 = class _LongBits {
     lo;
     hi;
     constructor(lo, hi) {
@@ -45392,9 +47344,9 @@ a=end-of-candidates
      */
     static fromBigInt(value2) {
       if (value2 === 0n) {
-        return zero7;
+        return zero8;
       }
-      if (value2 < MAX_SAFE_NUMBER_INTEGER7 && value2 > MIN_SAFE_NUMBER_INTEGER7) {
+      if (value2 < MAX_SAFE_NUMBER_INTEGER8 && value2 > MIN_SAFE_NUMBER_INTEGER8) {
         return this.fromNumber(Number(value2));
       }
       const negative = value2 < 0n;
@@ -45406,9 +47358,9 @@ a=end-of-candidates
       if (negative) {
         hi = ~hi | 0n;
         lo = ~lo | 0n;
-        if (++lo > TWO_327) {
+        if (++lo > TWO_328) {
           lo = 0n;
-          if (++hi > TWO_327) {
+          if (++hi > TWO_328) {
             hi = 0n;
           }
         }
@@ -45420,7 +47372,7 @@ a=end-of-candidates
      */
     static fromNumber(value2) {
       if (value2 === 0) {
-        return zero7;
+        return zero8;
       }
       const sign = value2 < 0;
       if (sign) {
@@ -45453,23 +47405,23 @@ a=end-of-candidates
       if (typeof value2 === "string") {
         return _LongBits.fromBigInt(BigInt(value2));
       }
-      return value2.low != null || value2.high != null ? new _LongBits(value2.low >>> 0, value2.high >>> 0) : zero7;
+      return value2.low != null || value2.high != null ? new _LongBits(value2.low >>> 0, value2.high >>> 0) : zero8;
     }
   };
-  var zero7 = new LongBits7(0, 0);
-  zero7.toBigInt = function() {
+  var zero8 = new LongBits8(0, 0);
+  zero8.toBigInt = function() {
     return 0n;
   };
-  zero7.zzEncode = zero7.zzDecode = function() {
+  zero8.zzEncode = zero8.zzDecode = function() {
     return this;
   };
-  zero7.length = function() {
+  zero8.length = function() {
     return 1;
   };
-  var TWO_327 = 4294967296n;
+  var TWO_328 = 4294967296n;
 
   // node_modules/@ipshipyard/crypto/node_modules/protons-runtime/dist/src/utils/utf8.js
-  function length9(string37) {
+  function length10(string37) {
     let len = 0;
     let c = 0;
     for (let i = 0; i < string37.length; ++i) {
@@ -45487,8 +47439,8 @@ a=end-of-candidates
     }
     return len;
   }
-  function read9(buffer2, start2, end) {
-    const len = end - start2;
+  function read10(buffer2, start3, end) {
+    const len = end - start3;
     if (len < 1) {
       return "";
     }
@@ -45496,18 +47448,18 @@ a=end-of-candidates
     const chunk = [];
     let i = 0;
     let t;
-    while (start2 < end) {
-      t = buffer2[start2++];
+    while (start3 < end) {
+      t = buffer2[start3++];
       if (t < 128) {
         chunk[i++] = t;
       } else if (t > 191 && t < 224) {
-        chunk[i++] = (t & 31) << 6 | buffer2[start2++] & 63;
+        chunk[i++] = (t & 31) << 6 | buffer2[start3++] & 63;
       } else if (t > 239 && t < 365) {
-        t = ((t & 7) << 18 | (buffer2[start2++] & 63) << 12 | (buffer2[start2++] & 63) << 6 | buffer2[start2++] & 63) - 65536;
+        t = ((t & 7) << 18 | (buffer2[start3++] & 63) << 12 | (buffer2[start3++] & 63) << 6 | buffer2[start3++] & 63) - 65536;
         chunk[i++] = 55296 + (t >> 10);
         chunk[i++] = 56320 + (t & 1023);
       } else {
-        chunk[i++] = (t & 15) << 12 | (buffer2[start2++] & 63) << 6 | buffer2[start2++] & 63;
+        chunk[i++] = (t & 15) << 12 | (buffer2[start3++] & 63) << 6 | buffer2[start3++] & 63;
       }
       if (i > 8191) {
         (parts ?? (parts = [])).push(String.fromCharCode.apply(String, chunk));
@@ -45522,8 +47474,8 @@ a=end-of-candidates
     }
     return String.fromCharCode.apply(String, chunk.slice(0, i));
   }
-  function write7(string37, buffer2, offset) {
-    const start2 = offset;
+  function write8(string37, buffer2, offset) {
+    const start3 = offset;
     let c1;
     let c2;
     for (let i = 0; i < string37.length; ++i) {
@@ -45546,23 +47498,23 @@ a=end-of-candidates
         buffer2[offset++] = c1 & 63 | 128;
       }
     }
-    return offset - start2;
+    return offset - start3;
   }
 
   // node_modules/@ipshipyard/crypto/node_modules/protons-runtime/dist/src/utils/reader.js
-  function indexOutOfRange7(reader, writeLength) {
+  function indexOutOfRange8(reader, writeLength) {
     return RangeError(`index out of range: ${reader.pos} + ${writeLength ?? 1} > ${reader.len}`);
   }
-  function readFixed32End7(buf, end) {
+  function readFixed32End8(buf, end) {
     return (buf[end - 4] | buf[end - 3] << 8 | buf[end - 2] << 16 | buf[end - 1] << 24) >>> 0;
   }
-  var Uint8ArrayReader7 = class {
+  var Uint8ArrayReader8 = class {
     buf;
     pos;
     len;
     _slice = Uint8Array.prototype.subarray;
     constructor(buffer2) {
-      this.buf = withArrayBuffer9(buffer2);
+      this.buf = withArrayBuffer10(buffer2);
       this.pos = 0;
       this.len = buffer2.length;
     }
@@ -45593,7 +47545,7 @@ a=end-of-candidates
       }
       if ((this.pos += 5) > this.len) {
         this.pos = this.len;
-        throw indexOutOfRange7(this, 10);
+        throw indexOutOfRange8(this, 10);
       }
       return value2;
     }
@@ -45621,9 +47573,9 @@ a=end-of-candidates
      */
     fixed32() {
       if (this.pos + 4 > this.len) {
-        throw indexOutOfRange7(this, 4);
+        throw indexOutOfRange8(this, 4);
       }
-      const res = readFixed32End7(this.buf, this.pos += 4);
+      const res = readFixed32End8(this.buf, this.pos += 4);
       return res;
     }
     /**
@@ -45631,9 +47583,9 @@ a=end-of-candidates
      */
     sfixed32() {
       if (this.pos + 4 > this.len) {
-        throw indexOutOfRange7(this, 4);
+        throw indexOutOfRange8(this, 4);
       }
-      const res = readFixed32End7(this.buf, this.pos += 4) | 0;
+      const res = readFixed32End8(this.buf, this.pos += 4) | 0;
       return res;
     }
     /**
@@ -45641,9 +47593,9 @@ a=end-of-candidates
      */
     float() {
       if (this.pos + 4 > this.len) {
-        throw indexOutOfRange7(this, 4);
+        throw indexOutOfRange8(this, 4);
       }
-      const value2 = readFloatLE7(this.buf, this.pos);
+      const value2 = readFloatLE8(this.buf, this.pos);
       this.pos += 4;
       return value2;
     }
@@ -45652,9 +47604,9 @@ a=end-of-candidates
      */
     double() {
       if (this.pos + 8 > this.len) {
-        throw indexOutOfRange7(this, 4);
+        throw indexOutOfRange8(this, 4);
       }
-      const value2 = readDoubleLE7(this.buf, this.pos);
+      const value2 = readDoubleLE8(this.buf, this.pos);
       this.pos += 8;
       return value2;
     }
@@ -45663,20 +47615,20 @@ a=end-of-candidates
      */
     bytes() {
       const length18 = this.uint32();
-      const start2 = this.pos;
+      const start3 = this.pos;
       const end = this.pos + length18;
       if (end > this.len) {
-        throw indexOutOfRange7(this, length18);
+        throw indexOutOfRange8(this, length18);
       }
       this.pos += length18;
-      return start2 === end ? new Uint8Array(0) : this.buf.subarray(start2, end);
+      return start3 === end ? new Uint8Array(0) : this.buf.subarray(start3, end);
     }
     /**
      * Reads a string preceded by its byte length as a varint
      */
     string() {
       const bytes = this.bytes();
-      return read9(bytes, 0, bytes.length);
+      return read10(bytes, 0, bytes.length);
     }
     /**
      * Skips the specified number of bytes if specified, otherwise skips a varint
@@ -45684,13 +47636,13 @@ a=end-of-candidates
     skip(length18) {
       if (typeof length18 === "number") {
         if (this.pos + length18 > this.len) {
-          throw indexOutOfRange7(this, length18);
+          throw indexOutOfRange8(this, length18);
         }
         this.pos += length18;
       } else {
         do {
           if (this.pos >= this.len) {
-            throw indexOutOfRange7(this);
+            throw indexOutOfRange8(this);
           }
         } while ((this.buf[this.pos++] & 128) !== 0);
       }
@@ -45725,7 +47677,7 @@ a=end-of-candidates
       return this;
     }
     readLongVarint() {
-      const bits = new LongBits7(0, 0);
+      const bits = new LongBits8(0, 0);
       let i = 0;
       if (this.len - this.pos > 4) {
         for (; i < 4; ++i) {
@@ -45743,7 +47695,7 @@ a=end-of-candidates
       } else {
         for (; i < 3; ++i) {
           if (this.pos >= this.len) {
-            throw indexOutOfRange7(this);
+            throw indexOutOfRange8(this);
           }
           bits.lo = (bits.lo | (this.buf[this.pos] & 127) << i * 7) >>> 0;
           if (this.buf[this.pos++] < 128) {
@@ -45763,7 +47715,7 @@ a=end-of-candidates
       } else {
         for (; i < 5; ++i) {
           if (this.pos >= this.len) {
-            throw indexOutOfRange7(this);
+            throw indexOutOfRange8(this);
           }
           bits.hi = (bits.hi | (this.buf[this.pos] & 127) << i * 7 + 3) >>> 0;
           if (this.buf[this.pos++] < 128) {
@@ -45775,11 +47727,11 @@ a=end-of-candidates
     }
     readFixed64() {
       if (this.pos + 8 > this.len) {
-        throw indexOutOfRange7(this, 8);
+        throw indexOutOfRange8(this, 8);
       }
-      const lo = readFixed32End7(this.buf, this.pos += 4);
-      const hi = readFixed32End7(this.buf, this.pos += 4);
-      return new LongBits7(lo, hi);
+      const lo = readFixed32End8(this.buf, this.pos += 4);
+      const hi = readFixed32End8(this.buf, this.pos += 4);
+      return new LongBits8(lo, hi);
     }
     /**
      * Reads a varint as a signed 64 bit value
@@ -45879,18 +47831,18 @@ a=end-of-candidates
       return this.readFixed64().toString();
     }
   };
-  function createReader7(buf) {
-    return new Uint8ArrayReader7(buf instanceof Uint8Array ? buf : buf.subarray());
+  function createReader8(buf) {
+    return new Uint8ArrayReader8(buf instanceof Uint8Array ? buf : buf.subarray());
   }
 
   // node_modules/@ipshipyard/crypto/node_modules/protons-runtime/dist/src/decode.js
-  function decodeMessage7(buf, codec, opts) {
-    const reader = createReader7(buf);
+  function decodeMessage8(buf, codec, opts) {
+    const reader = createReader8(buf);
     return codec.decode(reader, void 0, opts);
   }
 
   // node_modules/@ipshipyard/crypto/node_modules/uint8arrays/dist/src/util/bases.js
-  function createCodec20(name10, prefix, encode19, decode20) {
+  function createCodec22(name10, prefix, encode19, decode20) {
     return {
       name: name10,
       prefix,
@@ -45904,14 +47856,14 @@ a=end-of-candidates
       }
     };
   }
-  var string14 = createCodec20("utf8", "u", (buf) => {
+  var string15 = createCodec22("utf8", "u", (buf) => {
     const decoder = new TextDecoder("utf8");
     return "u" + decoder.decode(buf);
   }, (str) => {
     const encoder2 = new TextEncoder();
     return encoder2.encode(str.substring(1));
   });
-  var ascii14 = createCodec20("ascii", "a", (buf) => {
+  var ascii15 = createCodec22("ascii", "a", (buf) => {
     let string37 = "a";
     for (let i = 0; i < buf.length; i++) {
       string37 += String.fromCharCode(buf[i]);
@@ -45919,26 +47871,26 @@ a=end-of-candidates
     return string37;
   }, (str) => {
     str = str.substring(1);
-    const buf = allocUnsafe17(str.length);
+    const buf = allocUnsafe18(str.length);
     for (let i = 0; i < str.length; i++) {
       buf[i] = str.charCodeAt(i);
     }
     return buf;
   });
-  var BASES14 = {
-    utf8: string14,
-    "utf-8": string14,
+  var BASES15 = {
+    utf8: string15,
+    "utf-8": string15,
     hex: bases.base16,
-    latin1: ascii14,
-    ascii: ascii14,
-    binary: ascii14,
+    latin1: ascii15,
+    ascii: ascii15,
+    binary: ascii15,
     ...bases
   };
-  var bases_default14 = BASES14;
+  var bases_default15 = BASES15;
 
   // node_modules/@ipshipyard/crypto/node_modules/uint8arrays/dist/src/from-string.js
-  function fromString17(string37, encoding = "utf8") {
-    const base4 = bases_default14[encoding];
+  function fromString18(string37, encoding = "utf8") {
+    const base4 = bases_default15[encoding];
     if (base4 == null) {
       throw new Error(`Unsupported encoding "${encoding}"`);
     }
@@ -45946,17 +47898,17 @@ a=end-of-candidates
   }
 
   // node_modules/@ipshipyard/crypto/node_modules/protons-runtime/dist/src/utils/pool.js
-  function pool7(size) {
+  function pool8(size) {
     const SIZE = size ?? 8192;
     const MAX = SIZE >>> 1;
     let slab;
     let offset = SIZE;
     return function poolAlloc(size2) {
       if (size2 < 1 || size2 > MAX) {
-        return allocUnsafe17(size2);
+        return allocUnsafe18(size2);
       }
       if (offset + size2 > SIZE) {
-        slab = allocUnsafe17(SIZE);
+        slab = allocUnsafe18(SIZE);
         offset = 0;
       }
       const buf = slab.subarray(offset, offset += size2);
@@ -45968,7 +47920,7 @@ a=end-of-candidates
   }
 
   // node_modules/@ipshipyard/crypto/node_modules/protons-runtime/dist/src/utils/writer.js
-  var Op7 = class {
+  var Op8 = class {
     /**
      * Function to call
      */
@@ -45992,9 +47944,9 @@ a=end-of-candidates
       this.val = val;
     }
   };
-  function noop7() {
+  function noop8() {
   }
-  var State7 = class {
+  var State8 = class {
     /**
      * Current head
      */
@@ -46018,14 +47970,14 @@ a=end-of-candidates
       this.next = writer.states;
     }
   };
-  var bufferPool7 = pool7();
-  function alloc19(size) {
+  var bufferPool8 = pool8();
+  function alloc20(size) {
     if (globalThis.Buffer != null) {
-      return allocUnsafe17(size);
+      return allocUnsafe18(size);
     }
-    return bufferPool7(size);
+    return bufferPool8(size);
   }
-  var Uint8ArrayWriter7 = class {
+  var Uint8ArrayWriter8 = class {
     /**
      * Current length
      */
@@ -46044,7 +47996,7 @@ a=end-of-candidates
     states;
     constructor() {
       this.len = 0;
-      this.head = new Op7(noop7, 0, 0);
+      this.head = new Op8(noop8, 0, 0);
       this.tail = this.head;
       this.states = null;
     }
@@ -46052,7 +48004,7 @@ a=end-of-candidates
      * Pushes a new operation to the queue
      */
     _push(fn, len, val) {
-      this.tail = this.tail.next = new Op7(fn, len, val);
+      this.tail = this.tail.next = new Op8(fn, len, val);
       this.len += len;
       return this;
     }
@@ -46060,14 +48012,14 @@ a=end-of-candidates
      * Writes an unsigned 32 bit value as a varint
      */
     uint32(value2) {
-      this.len += (this.tail = this.tail.next = new VarintOp7((value2 = value2 >>> 0) < 128 ? 1 : value2 < 16384 ? 2 : value2 < 2097152 ? 3 : value2 < 268435456 ? 4 : 5, value2)).len;
+      this.len += (this.tail = this.tail.next = new VarintOp8((value2 = value2 >>> 0) < 128 ? 1 : value2 < 16384 ? 2 : value2 < 2097152 ? 3 : value2 < 268435456 ? 4 : 5, value2)).len;
       return this;
     }
     /**
      * Writes a signed 32 bit value as a varint`
      */
     int32(value2) {
-      return value2 < 0 ? this._push(writeVarint647, 10, LongBits7.fromNumber(value2)) : this.uint32(value2);
+      return value2 < 0 ? this._push(writeVarint648, 10, LongBits8.fromNumber(value2)) : this.uint32(value2);
     }
     /**
      * Writes a 32 bit value as a varint, zig-zag encoded
@@ -46079,8 +48031,8 @@ a=end-of-candidates
      * Writes an unsigned 64 bit value as a varint
      */
     uint64(value2) {
-      const bits = LongBits7.fromBigInt(value2);
-      return this._push(writeVarint647, bits.length(), bits);
+      const bits = LongBits8.fromBigInt(value2);
+      return this._push(writeVarint648, bits.length(), bits);
     }
     /**
      * Writes an unsigned 64 bit value as a varint
@@ -46116,15 +48068,15 @@ a=end-of-candidates
      * Writes a signed 64 bit value as a varint, zig-zag encoded
      */
     sint64(value2) {
-      const bits = LongBits7.fromBigInt(value2).zzEncode();
-      return this._push(writeVarint647, bits.length(), bits);
+      const bits = LongBits8.fromBigInt(value2).zzEncode();
+      return this._push(writeVarint648, bits.length(), bits);
     }
     /**
      * Writes a signed 64 bit value as a varint, zig-zag encoded
      */
     sint64Number(value2) {
-      const bits = LongBits7.fromNumber(value2).zzEncode();
-      return this._push(writeVarint647, bits.length(), bits);
+      const bits = LongBits8.fromNumber(value2).zzEncode();
+      return this._push(writeVarint648, bits.length(), bits);
     }
     /**
      * Writes a signed 64 bit value as a varint, zig-zag encoded
@@ -46136,13 +48088,13 @@ a=end-of-candidates
      * Writes a boolish value as a varint
      */
     bool(value2) {
-      return this._push(writeByte7, 1, value2 ? 1 : 0);
+      return this._push(writeByte8, 1, value2 ? 1 : 0);
     }
     /**
      * Writes an unsigned 32 bit value as fixed 32 bits
      */
     fixed32(value2) {
-      return this._push(writeFixed327, 4, value2 >>> 0);
+      return this._push(writeFixed328, 4, value2 >>> 0);
     }
     /**
      * Writes a signed 32 bit value as fixed 32 bits
@@ -46154,15 +48106,15 @@ a=end-of-candidates
      * Writes an unsigned 64 bit value as fixed 64 bits
      */
     fixed64(value2) {
-      const bits = LongBits7.fromBigInt(value2);
-      return this._push(writeFixed327, 4, bits.lo)._push(writeFixed327, 4, bits.hi);
+      const bits = LongBits8.fromBigInt(value2);
+      return this._push(writeFixed328, 4, bits.lo)._push(writeFixed328, 4, bits.hi);
     }
     /**
      * Writes an unsigned 64 bit value as fixed 64 bits
      */
     fixed64Number(value2) {
-      const bits = LongBits7.fromNumber(value2);
-      return this._push(writeFixed327, 4, bits.lo)._push(writeFixed327, 4, bits.hi);
+      const bits = LongBits8.fromNumber(value2);
+      return this._push(writeFixed328, 4, bits.lo)._push(writeFixed328, 4, bits.hi);
     }
     /**
      * Writes an unsigned 64 bit value as fixed 64 bits
@@ -46192,7 +48144,7 @@ a=end-of-candidates
      * Writes a float (32 bit)
      */
     float(value2) {
-      return this._push(writeFloatLE7, 4, value2);
+      return this._push(writeFloatLE8, 4, value2);
     }
     /**
      * Writes a double (64 bit float).
@@ -46202,7 +48154,7 @@ a=end-of-candidates
      * @returns {Writer} `this`
      */
     double(value2) {
-      return this._push(writeDoubleLE7, 8, value2);
+      return this._push(writeDoubleLE8, 8, value2);
     }
     /**
      * Writes a sequence of bytes
@@ -46210,24 +48162,24 @@ a=end-of-candidates
     bytes(value2) {
       const len = value2.length >>> 0;
       if (len === 0) {
-        return this._push(writeByte7, 1, 0);
+        return this._push(writeByte8, 1, 0);
       }
-      return this.uint32(len)._push(writeBytes7, len, value2);
+      return this.uint32(len)._push(writeBytes8, len, value2);
     }
     /**
      * Writes a string
      */
     string(value2) {
-      const len = length9(value2);
-      return len !== 0 ? this.uint32(len)._push(write7, len, value2) : this._push(writeByte7, 1, 0);
+      const len = length10(value2);
+      return len !== 0 ? this.uint32(len)._push(write8, len, value2) : this._push(writeByte8, 1, 0);
     }
     /**
      * Forks this writer's state by pushing it to a stack.
      * Calling {@link Writer#reset|reset} or {@link Writer#ldelim|ldelim} resets the writer to the previous state.
      */
     fork() {
-      this.states = new State7(this);
-      this.head = this.tail = new Op7(noop7, 0, 0);
+      this.states = new State8(this);
+      this.head = this.tail = new Op8(noop8, 0, 0);
       this.len = 0;
       return this;
     }
@@ -46241,7 +48193,7 @@ a=end-of-candidates
         this.len = this.states.len;
         this.states = this.states.next;
       } else {
-        this.head = this.tail = new Op7(noop7, 0, 0);
+        this.head = this.tail = new Op8(noop8, 0, 0);
         this.len = 0;
       }
       return this;
@@ -46266,7 +48218,7 @@ a=end-of-candidates
      */
     finish() {
       let head = this.head.next;
-      const buf = alloc19(this.len);
+      const buf = alloc20(this.len);
       let pos = 0;
       while (head != null) {
         head.fn(head.val, buf, pos);
@@ -46276,24 +48228,24 @@ a=end-of-candidates
       return buf;
     }
   };
-  function writeByte7(val, buf, pos) {
+  function writeByte8(val, buf, pos) {
     buf[pos] = val & 255;
   }
-  function writeVarint327(val, buf, pos) {
+  function writeVarint328(val, buf, pos) {
     while (val > 127) {
       buf[pos++] = val & 127 | 128;
       val >>>= 7;
     }
     buf[pos] = val;
   }
-  var VarintOp7 = class extends Op7 {
+  var VarintOp8 = class extends Op8 {
     next;
     constructor(len, val) {
-      super(writeVarint327, len, val);
+      super(writeVarint328, len, val);
       this.next = void 0;
     }
   };
-  function writeVarint647(val, buf, pos) {
+  function writeVarint648(val, buf, pos) {
     while (val.hi !== 0) {
       buf[pos++] = val.lo & 127 | 128;
       val.lo = (val.lo >>> 7 | val.hi << 25) >>> 0;
@@ -46305,52 +48257,52 @@ a=end-of-candidates
     }
     buf[pos++] = val.lo;
   }
-  function writeFixed327(val, buf, pos) {
+  function writeFixed328(val, buf, pos) {
     buf[pos] = val & 255;
     buf[pos + 1] = val >>> 8 & 255;
     buf[pos + 2] = val >>> 16 & 255;
     buf[pos + 3] = val >>> 24;
   }
-  function writeBytes7(val, buf, pos) {
+  function writeBytes8(val, buf, pos) {
     buf.set(val, pos);
   }
   if (globalThis.Buffer != null) {
-    Uint8ArrayWriter7.prototype.bytes = function(value2) {
+    Uint8ArrayWriter8.prototype.bytes = function(value2) {
       const len = value2.length >>> 0;
       this.uint32(len);
       if (len > 0) {
-        this._push(writeBytesBuffer7, len, value2);
+        this._push(writeBytesBuffer8, len, value2);
       }
       return this;
     };
-    Uint8ArrayWriter7.prototype.string = function(value2) {
+    Uint8ArrayWriter8.prototype.string = function(value2) {
       const len = globalThis.Buffer.byteLength(value2);
       this.uint32(len);
       if (len > 0) {
-        this._push(writeStringBuffer7, len, value2);
+        this._push(writeStringBuffer8, len, value2);
       }
       return this;
     };
   }
-  function writeBytesBuffer7(val, buf, pos) {
+  function writeBytesBuffer8(val, buf, pos) {
     buf.set(val, pos);
   }
-  function writeStringBuffer7(val, buf, pos) {
+  function writeStringBuffer8(val, buf, pos) {
     if (val.length < 40) {
-      write7(val, buf, pos);
+      write8(val, buf, pos);
     } else if (buf.utf8Write != null) {
       buf.utf8Write(val, pos);
     } else {
-      buf.set(fromString17(val), pos);
+      buf.set(fromString18(val), pos);
     }
   }
-  function createWriter7() {
-    return new Uint8ArrayWriter7();
+  function createWriter8() {
+    return new Uint8ArrayWriter8();
   }
 
   // node_modules/@ipshipyard/crypto/node_modules/protons-runtime/dist/src/encode.js
-  function encodeMessage7(message15, codec) {
-    const w2 = createWriter7();
+  function encodeMessage8(message15, codec) {
+    const w2 = createWriter8();
     codec.encode(message15, w2, {
       lengthDelimited: false
     });
@@ -46358,13 +48310,13 @@ a=end-of-candidates
   }
 
   // node_modules/@ipshipyard/crypto/node_modules/protons-runtime/dist/src/stream.js
-  function* streamMessage6(buf, codec, opts) {
-    const reader = createReader7(buf);
+  function* streamMessage7(buf, codec, opts) {
+    const reader = createReader8(buf);
     yield* codec.stream(reader, void 0, "$", opts);
   }
 
   // node_modules/@ipshipyard/crypto/node_modules/protons-runtime/dist/src/codec.js
-  var CODEC_TYPES7 = {
+  var CODEC_TYPES8 = {
     VARINT: 0,
     BIT64: 1,
     LENGTH_DELIMITED: 2,
@@ -46372,7 +48324,7 @@ a=end-of-candidates
     END_GROUP: 4,
     BIT32: 5
   };
-  function createCodec21(name10, type, encode19, decode20, stream) {
+  function createCodec23(name10, type, encode19, decode20, stream) {
     return {
       name: name10,
       type,
@@ -46383,7 +48335,7 @@ a=end-of-candidates
   }
 
   // node_modules/@ipshipyard/crypto/node_modules/protons-runtime/dist/src/codecs/enum.js
-  function enumeration7(v) {
+  function enumeration8(v) {
     function findValue(val) {
       if (v[val.toString()] == null) {
         throw new Error("Invalid enum value");
@@ -46402,12 +48354,12 @@ a=end-of-candidates
       const val = reader.int32();
       yield findValue(val);
     };
-    return createCodec21("enum", CODEC_TYPES7.VARINT, encode19, decode20, stream);
+    return createCodec23("enum", CODEC_TYPES8.VARINT, encode19, decode20, stream);
   }
 
   // node_modules/@ipshipyard/crypto/node_modules/protons-runtime/dist/src/codecs/message.js
-  function message7(encode19, decode20, stream) {
-    return createCodec21("message", CODEC_TYPES7.LENGTH_DELIMITED, encode19, decode20, stream);
+  function message8(encode19, decode20, stream) {
+    return createCodec23("message", CODEC_TYPES8.LENGTH_DELIMITED, encode19, decode20, stream);
   }
 
   // node_modules/@ipshipyard/crypto/dist/src/pb.js
@@ -46427,7 +48379,7 @@ a=end-of-candidates
   })(__KeyTypeValues2 || (__KeyTypeValues2 = {}));
   (function(KeyType3) {
     KeyType3.codec = () => {
-      return enumeration7(__KeyTypeValues2);
+      return enumeration8(__KeyTypeValues2);
     };
   })(KeyType2 || (KeyType2 = {}));
   var PublicKeyMessage;
@@ -46435,7 +48387,7 @@ a=end-of-candidates
     let _codec;
     PublicKeyMessage2.codec = () => {
       if (_codec == null) {
-        _codec = message7((obj, w2, opts = {}) => {
+        _codec = message8((obj, w2, opts = {}) => {
           if (opts.lengthDelimited !== false) {
             w2.fork();
           }
@@ -46501,15 +48453,15 @@ a=end-of-candidates
       return _codec;
     };
     function encode19(obj) {
-      return encodeMessage7(obj, PublicKeyMessage2.codec());
+      return encodeMessage8(obj, PublicKeyMessage2.codec());
     }
     PublicKeyMessage2.encode = encode19;
     function decode20(buf, opts) {
-      return decodeMessage7(buf, PublicKeyMessage2.codec(), opts);
+      return decodeMessage8(buf, PublicKeyMessage2.codec(), opts);
     }
     PublicKeyMessage2.decode = decode20;
     function stream(buf, opts) {
-      return streamMessage6(buf, PublicKeyMessage2.codec(), opts);
+      return streamMessage7(buf, PublicKeyMessage2.codec(), opts);
     }
     PublicKeyMessage2.stream = stream;
   })(PublicKeyMessage || (PublicKeyMessage = {}));
@@ -46518,7 +48470,7 @@ a=end-of-candidates
     let _codec;
     PrivateKeyMessage2.codec = () => {
       if (_codec == null) {
-        _codec = message7((obj, w2, opts = {}) => {
+        _codec = message8((obj, w2, opts = {}) => {
           if (opts.lengthDelimited !== false) {
             w2.fork();
           }
@@ -46584,15 +48536,15 @@ a=end-of-candidates
       return _codec;
     };
     function encode19(obj) {
-      return encodeMessage7(obj, PrivateKeyMessage2.codec());
+      return encodeMessage8(obj, PrivateKeyMessage2.codec());
     }
     PrivateKeyMessage2.encode = encode19;
     function decode20(buf, opts) {
-      return decodeMessage7(buf, PrivateKeyMessage2.codec(), opts);
+      return decodeMessage8(buf, PrivateKeyMessage2.codec(), opts);
     }
     PrivateKeyMessage2.decode = decode20;
     function stream(buf, opts) {
-      return streamMessage6(buf, PrivateKeyMessage2.codec(), opts);
+      return streamMessage7(buf, PrivateKeyMessage2.codec(), opts);
     }
     PrivateKeyMessage2.stream = stream;
   })(PrivateKeyMessage || (PrivateKeyMessage = {}));
@@ -46654,7 +48606,7 @@ a=end-of-candidates
         hash: {
           name: "SHA-256"
         }
-      }, key, withArrayBuffer9(signature), withArrayBuffer9(message15));
+      }, key, withArrayBuffer10(signature), withArrayBuffer10(message15));
       options2?.signal?.throwIfAborted();
       return isValid2;
     }
@@ -46687,7 +48639,7 @@ a=end-of-candidates
         hash: {
           name: "SHA-256"
         }
-      }, key, withArrayBuffer9(message15));
+      }, key, withArrayBuffer10(message15));
       options2?.signal?.throwIfAborted();
       return new Uint8Array(sig, 0, sig.byteLength);
     }
@@ -46898,7 +48850,7 @@ a=end-of-candidates
       }, false, ["verify"]);
       const isValid2 = await crypto.subtle.verify({
         name: "Ed25519"
-      }, key, withArrayBuffer9(signature), withArrayBuffer9(message15));
+      }, key, withArrayBuffer10(signature), withArrayBuffer10(message15));
       options2?.signal?.throwIfAborted();
       return isValid2;
     }
@@ -46930,7 +48882,7 @@ a=end-of-candidates
       }, true, ["sign"]);
       const sig = await crypto.subtle.sign({
         name: "Ed25519"
-      }, key, withArrayBuffer9(message15));
+      }, key, withArrayBuffer10(message15));
       options2?.signal?.throwIfAborted();
       return new Uint8Array(sig, 0, sig.byteLength);
     }
@@ -47067,7 +49019,7 @@ a=end-of-candidates
       }, false, ["verify"]);
       const result = await crypto.subtle.verify({
         name: "RSASSA-PKCS1-v1_5"
-      }, key, withArrayBuffer9(signature), withArrayBuffer9(message15));
+      }, key, withArrayBuffer10(signature), withArrayBuffer10(message15));
       options2?.signal?.throwIfAborted();
       return result;
     }
@@ -47099,7 +49051,7 @@ a=end-of-candidates
       }, false, ["sign"]);
       const sig = await crypto.subtle.sign({
         name: "RSASSA-PKCS1-v1_5"
-      }, key, withArrayBuffer9(message15));
+      }, key, withArrayBuffer10(message15));
       options2?.signal?.throwIfAborted();
       return new Uint8Array(sig, 0, sig.byteLength);
     }
@@ -47731,7 +49683,7 @@ a=end-of-candidates
     }
     async *walk(cid, options2) {
       const queue = this.getQueue();
-      const gen = src_default10(queue.toGenerator(options2), (node) => node != null);
+      const gen = src_default11(queue.toGenerator(options2), (node) => node != null);
       let finished = false;
       const maxDepth = options2?.depth ?? Infinity;
       const job = async (opts) => {
@@ -47813,23 +49765,6 @@ a=end-of-candidates
     return p?.then != null;
   }
 
-  // node_modules/it-drain/dist/src/index.js
-  function isAsyncIterable12(thing) {
-    return thing[Symbol.asyncIterator] != null;
-  }
-  function drain(source) {
-    if (isAsyncIterable12(source)) {
-      return (async () => {
-        for await (const _ of source) {
-        }
-      })();
-    } else {
-      for (const _ of source) {
-      }
-    }
-  }
-  var src_default11 = drain;
-
   // node_modules/it-take/dist/src/index.js
   function isAsyncIterable13(thing) {
     return thing[Symbol.asyncIterator] != null;
@@ -47883,62 +49818,62 @@ a=end-of-candidates
   var DEFAULT_MAX_WANTLIST_SIZE = 1024;
 
   // node_modules/@helia/bitswap/node_modules/uint8arrays/dist/src/with-array-buffer.js
-  function isArrayBufferBacked10(arr) {
+  function isArrayBufferBacked11(arr) {
     return arr.buffer instanceof ArrayBuffer;
   }
-  function withArrayBuffer10(arr) {
-    if (isArrayBufferBacked10(arr)) {
+  function withArrayBuffer11(arr) {
+    if (isArrayBufferBacked11(arr)) {
       return arr;
     }
     return arr.slice();
   }
 
   // node_modules/@helia/bitswap/node_modules/protons-runtime/dist/src/utils/float.js
-  var f328 = new Float32Array([-0]);
-  var f8b8 = new Uint8Array(f328.buffer);
-  function writeFloatLE8(val, buf, pos) {
-    f328[0] = val;
-    buf[pos] = f8b8[0];
-    buf[pos + 1] = f8b8[1];
-    buf[pos + 2] = f8b8[2];
-    buf[pos + 3] = f8b8[3];
+  var f329 = new Float32Array([-0]);
+  var f8b9 = new Uint8Array(f329.buffer);
+  function writeFloatLE9(val, buf, pos) {
+    f329[0] = val;
+    buf[pos] = f8b9[0];
+    buf[pos + 1] = f8b9[1];
+    buf[pos + 2] = f8b9[2];
+    buf[pos + 3] = f8b9[3];
   }
-  function readFloatLE8(buf, pos) {
-    f8b8[0] = buf[pos];
-    f8b8[1] = buf[pos + 1];
-    f8b8[2] = buf[pos + 2];
-    f8b8[3] = buf[pos + 3];
-    return f328[0];
+  function readFloatLE9(buf, pos) {
+    f8b9[0] = buf[pos];
+    f8b9[1] = buf[pos + 1];
+    f8b9[2] = buf[pos + 2];
+    f8b9[3] = buf[pos + 3];
+    return f329[0];
   }
-  var f648 = new Float64Array([-0]);
-  var d8b8 = new Uint8Array(f648.buffer);
-  function writeDoubleLE8(val, buf, pos) {
-    f648[0] = val;
-    buf[pos] = d8b8[0];
-    buf[pos + 1] = d8b8[1];
-    buf[pos + 2] = d8b8[2];
-    buf[pos + 3] = d8b8[3];
-    buf[pos + 4] = d8b8[4];
-    buf[pos + 5] = d8b8[5];
-    buf[pos + 6] = d8b8[6];
-    buf[pos + 7] = d8b8[7];
+  var f649 = new Float64Array([-0]);
+  var d8b9 = new Uint8Array(f649.buffer);
+  function writeDoubleLE9(val, buf, pos) {
+    f649[0] = val;
+    buf[pos] = d8b9[0];
+    buf[pos + 1] = d8b9[1];
+    buf[pos + 2] = d8b9[2];
+    buf[pos + 3] = d8b9[3];
+    buf[pos + 4] = d8b9[4];
+    buf[pos + 5] = d8b9[5];
+    buf[pos + 6] = d8b9[6];
+    buf[pos + 7] = d8b9[7];
   }
-  function readDoubleLE8(buf, pos) {
-    d8b8[0] = buf[pos];
-    d8b8[1] = buf[pos + 1];
-    d8b8[2] = buf[pos + 2];
-    d8b8[3] = buf[pos + 3];
-    d8b8[4] = buf[pos + 4];
-    d8b8[5] = buf[pos + 5];
-    d8b8[6] = buf[pos + 6];
-    d8b8[7] = buf[pos + 7];
-    return f648[0];
+  function readDoubleLE9(buf, pos) {
+    d8b9[0] = buf[pos];
+    d8b9[1] = buf[pos + 1];
+    d8b9[2] = buf[pos + 2];
+    d8b9[3] = buf[pos + 3];
+    d8b9[4] = buf[pos + 4];
+    d8b9[5] = buf[pos + 5];
+    d8b9[6] = buf[pos + 6];
+    d8b9[7] = buf[pos + 7];
+    return f649[0];
   }
 
   // node_modules/@helia/bitswap/node_modules/protons-runtime/dist/src/utils/longbits.js
-  var MAX_SAFE_NUMBER_INTEGER8 = BigInt(Number.MAX_SAFE_INTEGER);
-  var MIN_SAFE_NUMBER_INTEGER8 = BigInt(Number.MIN_SAFE_INTEGER);
-  var LongBits8 = class _LongBits {
+  var MAX_SAFE_NUMBER_INTEGER9 = BigInt(Number.MAX_SAFE_INTEGER);
+  var MIN_SAFE_NUMBER_INTEGER9 = BigInt(Number.MIN_SAFE_INTEGER);
+  var LongBits9 = class _LongBits {
     lo;
     hi;
     constructor(lo, hi) {
@@ -48014,9 +49949,9 @@ a=end-of-candidates
      */
     static fromBigInt(value2) {
       if (value2 === 0n) {
-        return zero8;
+        return zero9;
       }
-      if (value2 < MAX_SAFE_NUMBER_INTEGER8 && value2 > MIN_SAFE_NUMBER_INTEGER8) {
+      if (value2 < MAX_SAFE_NUMBER_INTEGER9 && value2 > MIN_SAFE_NUMBER_INTEGER9) {
         return this.fromNumber(Number(value2));
       }
       const negative = value2 < 0n;
@@ -48028,9 +49963,9 @@ a=end-of-candidates
       if (negative) {
         hi = ~hi | 0n;
         lo = ~lo | 0n;
-        if (++lo > TWO_328) {
+        if (++lo > TWO_329) {
           lo = 0n;
-          if (++hi > TWO_328) {
+          if (++hi > TWO_329) {
             hi = 0n;
           }
         }
@@ -48042,7 +49977,7 @@ a=end-of-candidates
      */
     static fromNumber(value2) {
       if (value2 === 0) {
-        return zero8;
+        return zero9;
       }
       const sign = value2 < 0;
       if (sign) {
@@ -48075,23 +50010,23 @@ a=end-of-candidates
       if (typeof value2 === "string") {
         return _LongBits.fromBigInt(BigInt(value2));
       }
-      return value2.low != null || value2.high != null ? new _LongBits(value2.low >>> 0, value2.high >>> 0) : zero8;
+      return value2.low != null || value2.high != null ? new _LongBits(value2.low >>> 0, value2.high >>> 0) : zero9;
     }
   };
-  var zero8 = new LongBits8(0, 0);
-  zero8.toBigInt = function() {
+  var zero9 = new LongBits9(0, 0);
+  zero9.toBigInt = function() {
     return 0n;
   };
-  zero8.zzEncode = zero8.zzDecode = function() {
+  zero9.zzEncode = zero9.zzDecode = function() {
     return this;
   };
-  zero8.length = function() {
+  zero9.length = function() {
     return 1;
   };
-  var TWO_328 = 4294967296n;
+  var TWO_329 = 4294967296n;
 
   // node_modules/@helia/bitswap/node_modules/protons-runtime/dist/src/utils/utf8.js
-  function length10(string37) {
+  function length11(string37) {
     let len = 0;
     let c = 0;
     for (let i = 0; i < string37.length; ++i) {
@@ -48109,8 +50044,8 @@ a=end-of-candidates
     }
     return len;
   }
-  function read10(buffer2, start2, end) {
-    const len = end - start2;
+  function read11(buffer2, start3, end) {
+    const len = end - start3;
     if (len < 1) {
       return "";
     }
@@ -48118,18 +50053,18 @@ a=end-of-candidates
     const chunk = [];
     let i = 0;
     let t;
-    while (start2 < end) {
-      t = buffer2[start2++];
+    while (start3 < end) {
+      t = buffer2[start3++];
       if (t < 128) {
         chunk[i++] = t;
       } else if (t > 191 && t < 224) {
-        chunk[i++] = (t & 31) << 6 | buffer2[start2++] & 63;
+        chunk[i++] = (t & 31) << 6 | buffer2[start3++] & 63;
       } else if (t > 239 && t < 365) {
-        t = ((t & 7) << 18 | (buffer2[start2++] & 63) << 12 | (buffer2[start2++] & 63) << 6 | buffer2[start2++] & 63) - 65536;
+        t = ((t & 7) << 18 | (buffer2[start3++] & 63) << 12 | (buffer2[start3++] & 63) << 6 | buffer2[start3++] & 63) - 65536;
         chunk[i++] = 55296 + (t >> 10);
         chunk[i++] = 56320 + (t & 1023);
       } else {
-        chunk[i++] = (t & 15) << 12 | (buffer2[start2++] & 63) << 6 | buffer2[start2++] & 63;
+        chunk[i++] = (t & 15) << 12 | (buffer2[start3++] & 63) << 6 | buffer2[start3++] & 63;
       }
       if (i > 8191) {
         (parts ?? (parts = [])).push(String.fromCharCode.apply(String, chunk));
@@ -48144,8 +50079,8 @@ a=end-of-candidates
     }
     return String.fromCharCode.apply(String, chunk.slice(0, i));
   }
-  function write8(string37, buffer2, offset) {
-    const start2 = offset;
+  function write9(string37, buffer2, offset) {
+    const start3 = offset;
     let c1;
     let c2;
     for (let i = 0; i < string37.length; ++i) {
@@ -48168,23 +50103,23 @@ a=end-of-candidates
         buffer2[offset++] = c1 & 63 | 128;
       }
     }
-    return offset - start2;
+    return offset - start3;
   }
 
   // node_modules/@helia/bitswap/node_modules/protons-runtime/dist/src/utils/reader.js
-  function indexOutOfRange8(reader, writeLength) {
+  function indexOutOfRange9(reader, writeLength) {
     return RangeError(`index out of range: ${reader.pos} + ${writeLength ?? 1} > ${reader.len}`);
   }
-  function readFixed32End8(buf, end) {
+  function readFixed32End9(buf, end) {
     return (buf[end - 4] | buf[end - 3] << 8 | buf[end - 2] << 16 | buf[end - 1] << 24) >>> 0;
   }
-  var Uint8ArrayReader8 = class {
+  var Uint8ArrayReader9 = class {
     buf;
     pos;
     len;
     _slice = Uint8Array.prototype.subarray;
     constructor(buffer2) {
-      this.buf = withArrayBuffer10(buffer2);
+      this.buf = withArrayBuffer11(buffer2);
       this.pos = 0;
       this.len = buffer2.length;
     }
@@ -48215,7 +50150,7 @@ a=end-of-candidates
       }
       if ((this.pos += 5) > this.len) {
         this.pos = this.len;
-        throw indexOutOfRange8(this, 10);
+        throw indexOutOfRange9(this, 10);
       }
       return value2;
     }
@@ -48243,9 +50178,9 @@ a=end-of-candidates
      */
     fixed32() {
       if (this.pos + 4 > this.len) {
-        throw indexOutOfRange8(this, 4);
+        throw indexOutOfRange9(this, 4);
       }
-      const res = readFixed32End8(this.buf, this.pos += 4);
+      const res = readFixed32End9(this.buf, this.pos += 4);
       return res;
     }
     /**
@@ -48253,9 +50188,9 @@ a=end-of-candidates
      */
     sfixed32() {
       if (this.pos + 4 > this.len) {
-        throw indexOutOfRange8(this, 4);
+        throw indexOutOfRange9(this, 4);
       }
-      const res = readFixed32End8(this.buf, this.pos += 4) | 0;
+      const res = readFixed32End9(this.buf, this.pos += 4) | 0;
       return res;
     }
     /**
@@ -48263,9 +50198,9 @@ a=end-of-candidates
      */
     float() {
       if (this.pos + 4 > this.len) {
-        throw indexOutOfRange8(this, 4);
+        throw indexOutOfRange9(this, 4);
       }
-      const value2 = readFloatLE8(this.buf, this.pos);
+      const value2 = readFloatLE9(this.buf, this.pos);
       this.pos += 4;
       return value2;
     }
@@ -48274,9 +50209,9 @@ a=end-of-candidates
      */
     double() {
       if (this.pos + 8 > this.len) {
-        throw indexOutOfRange8(this, 4);
+        throw indexOutOfRange9(this, 4);
       }
-      const value2 = readDoubleLE8(this.buf, this.pos);
+      const value2 = readDoubleLE9(this.buf, this.pos);
       this.pos += 8;
       return value2;
     }
@@ -48285,20 +50220,20 @@ a=end-of-candidates
      */
     bytes() {
       const length18 = this.uint32();
-      const start2 = this.pos;
+      const start3 = this.pos;
       const end = this.pos + length18;
       if (end > this.len) {
-        throw indexOutOfRange8(this, length18);
+        throw indexOutOfRange9(this, length18);
       }
       this.pos += length18;
-      return start2 === end ? new Uint8Array(0) : this.buf.subarray(start2, end);
+      return start3 === end ? new Uint8Array(0) : this.buf.subarray(start3, end);
     }
     /**
      * Reads a string preceded by its byte length as a varint
      */
     string() {
       const bytes = this.bytes();
-      return read10(bytes, 0, bytes.length);
+      return read11(bytes, 0, bytes.length);
     }
     /**
      * Skips the specified number of bytes if specified, otherwise skips a varint
@@ -48306,13 +50241,13 @@ a=end-of-candidates
     skip(length18) {
       if (typeof length18 === "number") {
         if (this.pos + length18 > this.len) {
-          throw indexOutOfRange8(this, length18);
+          throw indexOutOfRange9(this, length18);
         }
         this.pos += length18;
       } else {
         do {
           if (this.pos >= this.len) {
-            throw indexOutOfRange8(this);
+            throw indexOutOfRange9(this);
           }
         } while ((this.buf[this.pos++] & 128) !== 0);
       }
@@ -48347,7 +50282,7 @@ a=end-of-candidates
       return this;
     }
     readLongVarint() {
-      const bits = new LongBits8(0, 0);
+      const bits = new LongBits9(0, 0);
       let i = 0;
       if (this.len - this.pos > 4) {
         for (; i < 4; ++i) {
@@ -48365,7 +50300,7 @@ a=end-of-candidates
       } else {
         for (; i < 3; ++i) {
           if (this.pos >= this.len) {
-            throw indexOutOfRange8(this);
+            throw indexOutOfRange9(this);
           }
           bits.lo = (bits.lo | (this.buf[this.pos] & 127) << i * 7) >>> 0;
           if (this.buf[this.pos++] < 128) {
@@ -48385,7 +50320,7 @@ a=end-of-candidates
       } else {
         for (; i < 5; ++i) {
           if (this.pos >= this.len) {
-            throw indexOutOfRange8(this);
+            throw indexOutOfRange9(this);
           }
           bits.hi = (bits.hi | (this.buf[this.pos] & 127) << i * 7 + 3) >>> 0;
           if (this.buf[this.pos++] < 128) {
@@ -48397,11 +50332,11 @@ a=end-of-candidates
     }
     readFixed64() {
       if (this.pos + 8 > this.len) {
-        throw indexOutOfRange8(this, 8);
+        throw indexOutOfRange9(this, 8);
       }
-      const lo = readFixed32End8(this.buf, this.pos += 4);
-      const hi = readFixed32End8(this.buf, this.pos += 4);
-      return new LongBits8(lo, hi);
+      const lo = readFixed32End9(this.buf, this.pos += 4);
+      const hi = readFixed32End9(this.buf, this.pos += 4);
+      return new LongBits9(lo, hi);
     }
     /**
      * Reads a varint as a signed 64 bit value
@@ -48501,26 +50436,26 @@ a=end-of-candidates
       return this.readFixed64().toString();
     }
   };
-  function createReader8(buf) {
-    return new Uint8ArrayReader8(buf instanceof Uint8Array ? buf : buf.subarray());
+  function createReader9(buf) {
+    return new Uint8ArrayReader9(buf instanceof Uint8Array ? buf : buf.subarray());
   }
 
   // node_modules/@helia/bitswap/node_modules/protons-runtime/dist/src/decode.js
-  function decodeMessage8(buf, codec, opts) {
-    const reader = createReader8(buf);
+  function decodeMessage9(buf, codec, opts) {
+    const reader = createReader9(buf);
     return codec.decode(reader, void 0, opts);
   }
 
   // node_modules/@helia/bitswap/node_modules/uint8arrays/dist/src/alloc.js
-  function alloc20(size = 0) {
+  function alloc21(size = 0) {
     return new Uint8Array(size);
   }
-  function allocUnsafe18(size = 0) {
+  function allocUnsafe19(size = 0) {
     return new Uint8Array(size);
   }
 
   // node_modules/@helia/bitswap/node_modules/uint8arrays/dist/src/util/bases.js
-  function createCodec22(name10, prefix, encode19, decode20) {
+  function createCodec24(name10, prefix, encode19, decode20) {
     return {
       name: name10,
       prefix,
@@ -48534,14 +50469,14 @@ a=end-of-candidates
       }
     };
   }
-  var string15 = createCodec22("utf8", "u", (buf) => {
+  var string16 = createCodec24("utf8", "u", (buf) => {
     const decoder = new TextDecoder("utf8");
     return "u" + decoder.decode(buf);
   }, (str) => {
     const encoder2 = new TextEncoder();
     return encoder2.encode(str.substring(1));
   });
-  var ascii15 = createCodec22("ascii", "a", (buf) => {
+  var ascii16 = createCodec24("ascii", "a", (buf) => {
     let string37 = "a";
     for (let i = 0; i < buf.length; i++) {
       string37 += String.fromCharCode(buf[i]);
@@ -48549,26 +50484,26 @@ a=end-of-candidates
     return string37;
   }, (str) => {
     str = str.substring(1);
-    const buf = allocUnsafe18(str.length);
+    const buf = allocUnsafe19(str.length);
     for (let i = 0; i < str.length; i++) {
       buf[i] = str.charCodeAt(i);
     }
     return buf;
   });
-  var BASES15 = {
-    utf8: string15,
-    "utf-8": string15,
+  var BASES16 = {
+    utf8: string16,
+    "utf-8": string16,
     hex: bases.base16,
-    latin1: ascii15,
-    ascii: ascii15,
-    binary: ascii15,
+    latin1: ascii16,
+    ascii: ascii16,
+    binary: ascii16,
     ...bases
   };
-  var bases_default15 = BASES15;
+  var bases_default16 = BASES16;
 
   // node_modules/@helia/bitswap/node_modules/uint8arrays/dist/src/from-string.js
-  function fromString18(string37, encoding = "utf8") {
-    const base4 = bases_default15[encoding];
+  function fromString19(string37, encoding = "utf8") {
+    const base4 = bases_default16[encoding];
     if (base4 == null) {
       throw new Error(`Unsupported encoding "${encoding}"`);
     }
@@ -48576,17 +50511,17 @@ a=end-of-candidates
   }
 
   // node_modules/@helia/bitswap/node_modules/protons-runtime/dist/src/utils/pool.js
-  function pool8(size) {
+  function pool9(size) {
     const SIZE = size ?? 8192;
     const MAX = SIZE >>> 1;
     let slab;
     let offset = SIZE;
     return function poolAlloc(size2) {
       if (size2 < 1 || size2 > MAX) {
-        return allocUnsafe18(size2);
+        return allocUnsafe19(size2);
       }
       if (offset + size2 > SIZE) {
-        slab = allocUnsafe18(SIZE);
+        slab = allocUnsafe19(SIZE);
         offset = 0;
       }
       const buf = slab.subarray(offset, offset += size2);
@@ -48598,7 +50533,7 @@ a=end-of-candidates
   }
 
   // node_modules/@helia/bitswap/node_modules/protons-runtime/dist/src/utils/writer.js
-  var Op8 = class {
+  var Op9 = class {
     /**
      * Function to call
      */
@@ -48622,9 +50557,9 @@ a=end-of-candidates
       this.val = val;
     }
   };
-  function noop8() {
+  function noop9() {
   }
-  var State8 = class {
+  var State9 = class {
     /**
      * Current head
      */
@@ -48648,14 +50583,14 @@ a=end-of-candidates
       this.next = writer.states;
     }
   };
-  var bufferPool8 = pool8();
-  function alloc21(size) {
+  var bufferPool9 = pool9();
+  function alloc22(size) {
     if (globalThis.Buffer != null) {
-      return allocUnsafe18(size);
+      return allocUnsafe19(size);
     }
-    return bufferPool8(size);
+    return bufferPool9(size);
   }
-  var Uint8ArrayWriter8 = class {
+  var Uint8ArrayWriter9 = class {
     /**
      * Current length
      */
@@ -48674,7 +50609,7 @@ a=end-of-candidates
     states;
     constructor() {
       this.len = 0;
-      this.head = new Op8(noop8, 0, 0);
+      this.head = new Op9(noop9, 0, 0);
       this.tail = this.head;
       this.states = null;
     }
@@ -48682,7 +50617,7 @@ a=end-of-candidates
      * Pushes a new operation to the queue
      */
     _push(fn, len, val) {
-      this.tail = this.tail.next = new Op8(fn, len, val);
+      this.tail = this.tail.next = new Op9(fn, len, val);
       this.len += len;
       return this;
     }
@@ -48690,14 +50625,14 @@ a=end-of-candidates
      * Writes an unsigned 32 bit value as a varint
      */
     uint32(value2) {
-      this.len += (this.tail = this.tail.next = new VarintOp8((value2 = value2 >>> 0) < 128 ? 1 : value2 < 16384 ? 2 : value2 < 2097152 ? 3 : value2 < 268435456 ? 4 : 5, value2)).len;
+      this.len += (this.tail = this.tail.next = new VarintOp9((value2 = value2 >>> 0) < 128 ? 1 : value2 < 16384 ? 2 : value2 < 2097152 ? 3 : value2 < 268435456 ? 4 : 5, value2)).len;
       return this;
     }
     /**
      * Writes a signed 32 bit value as a varint`
      */
     int32(value2) {
-      return value2 < 0 ? this._push(writeVarint648, 10, LongBits8.fromNumber(value2)) : this.uint32(value2);
+      return value2 < 0 ? this._push(writeVarint649, 10, LongBits9.fromNumber(value2)) : this.uint32(value2);
     }
     /**
      * Writes a 32 bit value as a varint, zig-zag encoded
@@ -48709,8 +50644,8 @@ a=end-of-candidates
      * Writes an unsigned 64 bit value as a varint
      */
     uint64(value2) {
-      const bits = LongBits8.fromBigInt(value2);
-      return this._push(writeVarint648, bits.length(), bits);
+      const bits = LongBits9.fromBigInt(value2);
+      return this._push(writeVarint649, bits.length(), bits);
     }
     /**
      * Writes an unsigned 64 bit value as a varint
@@ -48746,15 +50681,15 @@ a=end-of-candidates
      * Writes a signed 64 bit value as a varint, zig-zag encoded
      */
     sint64(value2) {
-      const bits = LongBits8.fromBigInt(value2).zzEncode();
-      return this._push(writeVarint648, bits.length(), bits);
+      const bits = LongBits9.fromBigInt(value2).zzEncode();
+      return this._push(writeVarint649, bits.length(), bits);
     }
     /**
      * Writes a signed 64 bit value as a varint, zig-zag encoded
      */
     sint64Number(value2) {
-      const bits = LongBits8.fromNumber(value2).zzEncode();
-      return this._push(writeVarint648, bits.length(), bits);
+      const bits = LongBits9.fromNumber(value2).zzEncode();
+      return this._push(writeVarint649, bits.length(), bits);
     }
     /**
      * Writes a signed 64 bit value as a varint, zig-zag encoded
@@ -48766,13 +50701,13 @@ a=end-of-candidates
      * Writes a boolish value as a varint
      */
     bool(value2) {
-      return this._push(writeByte8, 1, value2 ? 1 : 0);
+      return this._push(writeByte9, 1, value2 ? 1 : 0);
     }
     /**
      * Writes an unsigned 32 bit value as fixed 32 bits
      */
     fixed32(value2) {
-      return this._push(writeFixed328, 4, value2 >>> 0);
+      return this._push(writeFixed329, 4, value2 >>> 0);
     }
     /**
      * Writes a signed 32 bit value as fixed 32 bits
@@ -48784,15 +50719,15 @@ a=end-of-candidates
      * Writes an unsigned 64 bit value as fixed 64 bits
      */
     fixed64(value2) {
-      const bits = LongBits8.fromBigInt(value2);
-      return this._push(writeFixed328, 4, bits.lo)._push(writeFixed328, 4, bits.hi);
+      const bits = LongBits9.fromBigInt(value2);
+      return this._push(writeFixed329, 4, bits.lo)._push(writeFixed329, 4, bits.hi);
     }
     /**
      * Writes an unsigned 64 bit value as fixed 64 bits
      */
     fixed64Number(value2) {
-      const bits = LongBits8.fromNumber(value2);
-      return this._push(writeFixed328, 4, bits.lo)._push(writeFixed328, 4, bits.hi);
+      const bits = LongBits9.fromNumber(value2);
+      return this._push(writeFixed329, 4, bits.lo)._push(writeFixed329, 4, bits.hi);
     }
     /**
      * Writes an unsigned 64 bit value as fixed 64 bits
@@ -48822,7 +50757,7 @@ a=end-of-candidates
      * Writes a float (32 bit)
      */
     float(value2) {
-      return this._push(writeFloatLE8, 4, value2);
+      return this._push(writeFloatLE9, 4, value2);
     }
     /**
      * Writes a double (64 bit float).
@@ -48832,7 +50767,7 @@ a=end-of-candidates
      * @returns {Writer} `this`
      */
     double(value2) {
-      return this._push(writeDoubleLE8, 8, value2);
+      return this._push(writeDoubleLE9, 8, value2);
     }
     /**
      * Writes a sequence of bytes
@@ -48840,24 +50775,24 @@ a=end-of-candidates
     bytes(value2) {
       const len = value2.length >>> 0;
       if (len === 0) {
-        return this._push(writeByte8, 1, 0);
+        return this._push(writeByte9, 1, 0);
       }
-      return this.uint32(len)._push(writeBytes8, len, value2);
+      return this.uint32(len)._push(writeBytes9, len, value2);
     }
     /**
      * Writes a string
      */
     string(value2) {
-      const len = length10(value2);
-      return len !== 0 ? this.uint32(len)._push(write8, len, value2) : this._push(writeByte8, 1, 0);
+      const len = length11(value2);
+      return len !== 0 ? this.uint32(len)._push(write9, len, value2) : this._push(writeByte9, 1, 0);
     }
     /**
      * Forks this writer's state by pushing it to a stack.
      * Calling {@link Writer#reset|reset} or {@link Writer#ldelim|ldelim} resets the writer to the previous state.
      */
     fork() {
-      this.states = new State8(this);
-      this.head = this.tail = new Op8(noop8, 0, 0);
+      this.states = new State9(this);
+      this.head = this.tail = new Op9(noop9, 0, 0);
       this.len = 0;
       return this;
     }
@@ -48871,7 +50806,7 @@ a=end-of-candidates
         this.len = this.states.len;
         this.states = this.states.next;
       } else {
-        this.head = this.tail = new Op8(noop8, 0, 0);
+        this.head = this.tail = new Op9(noop9, 0, 0);
         this.len = 0;
       }
       return this;
@@ -48896,7 +50831,7 @@ a=end-of-candidates
      */
     finish() {
       let head = this.head.next;
-      const buf = alloc21(this.len);
+      const buf = alloc22(this.len);
       let pos = 0;
       while (head != null) {
         head.fn(head.val, buf, pos);
@@ -48906,24 +50841,24 @@ a=end-of-candidates
       return buf;
     }
   };
-  function writeByte8(val, buf, pos) {
+  function writeByte9(val, buf, pos) {
     buf[pos] = val & 255;
   }
-  function writeVarint328(val, buf, pos) {
+  function writeVarint329(val, buf, pos) {
     while (val > 127) {
       buf[pos++] = val & 127 | 128;
       val >>>= 7;
     }
     buf[pos] = val;
   }
-  var VarintOp8 = class extends Op8 {
+  var VarintOp9 = class extends Op9 {
     next;
     constructor(len, val) {
-      super(writeVarint328, len, val);
+      super(writeVarint329, len, val);
       this.next = void 0;
     }
   };
-  function writeVarint648(val, buf, pos) {
+  function writeVarint649(val, buf, pos) {
     while (val.hi !== 0) {
       buf[pos++] = val.lo & 127 | 128;
       val.lo = (val.lo >>> 7 | val.hi << 25) >>> 0;
@@ -48935,52 +50870,52 @@ a=end-of-candidates
     }
     buf[pos++] = val.lo;
   }
-  function writeFixed328(val, buf, pos) {
+  function writeFixed329(val, buf, pos) {
     buf[pos] = val & 255;
     buf[pos + 1] = val >>> 8 & 255;
     buf[pos + 2] = val >>> 16 & 255;
     buf[pos + 3] = val >>> 24;
   }
-  function writeBytes8(val, buf, pos) {
+  function writeBytes9(val, buf, pos) {
     buf.set(val, pos);
   }
   if (globalThis.Buffer != null) {
-    Uint8ArrayWriter8.prototype.bytes = function(value2) {
+    Uint8ArrayWriter9.prototype.bytes = function(value2) {
       const len = value2.length >>> 0;
       this.uint32(len);
       if (len > 0) {
-        this._push(writeBytesBuffer8, len, value2);
+        this._push(writeBytesBuffer9, len, value2);
       }
       return this;
     };
-    Uint8ArrayWriter8.prototype.string = function(value2) {
+    Uint8ArrayWriter9.prototype.string = function(value2) {
       const len = globalThis.Buffer.byteLength(value2);
       this.uint32(len);
       if (len > 0) {
-        this._push(writeStringBuffer8, len, value2);
+        this._push(writeStringBuffer9, len, value2);
       }
       return this;
     };
   }
-  function writeBytesBuffer8(val, buf, pos) {
+  function writeBytesBuffer9(val, buf, pos) {
     buf.set(val, pos);
   }
-  function writeStringBuffer8(val, buf, pos) {
+  function writeStringBuffer9(val, buf, pos) {
     if (val.length < 40) {
-      write8(val, buf, pos);
+      write9(val, buf, pos);
     } else if (buf.utf8Write != null) {
       buf.utf8Write(val, pos);
     } else {
-      buf.set(fromString18(val), pos);
+      buf.set(fromString19(val), pos);
     }
   }
-  function createWriter8() {
-    return new Uint8ArrayWriter8();
+  function createWriter9() {
+    return new Uint8ArrayWriter9();
   }
 
   // node_modules/@helia/bitswap/node_modules/protons-runtime/dist/src/encode.js
-  function encodeMessage8(message15, codec) {
-    const w2 = createWriter8();
+  function encodeMessage9(message15, codec) {
+    const w2 = createWriter9();
     codec.encode(message15, w2, {
       lengthDelimited: false
     });
@@ -48988,13 +50923,13 @@ a=end-of-candidates
   }
 
   // node_modules/@helia/bitswap/node_modules/protons-runtime/dist/src/stream.js
-  function* streamMessage7(buf, codec, opts) {
-    const reader = createReader8(buf);
+  function* streamMessage8(buf, codec, opts) {
+    const reader = createReader9(buf);
     yield* codec.stream(reader, void 0, "$", opts);
   }
 
   // node_modules/@helia/bitswap/node_modules/protons-runtime/dist/src/codec.js
-  var CODEC_TYPES8 = {
+  var CODEC_TYPES9 = {
     VARINT: 0,
     BIT64: 1,
     LENGTH_DELIMITED: 2,
@@ -49002,7 +50937,7 @@ a=end-of-candidates
     END_GROUP: 4,
     BIT32: 5
   };
-  function createCodec23(name10, type, encode19, decode20, stream) {
+  function createCodec25(name10, type, encode19, decode20, stream) {
     return {
       name: name10,
       type,
@@ -49013,7 +50948,7 @@ a=end-of-candidates
   }
 
   // node_modules/@helia/bitswap/node_modules/protons-runtime/dist/src/codecs/enum.js
-  function enumeration8(v) {
+  function enumeration9(v) {
     function findValue(val) {
       if (v[val.toString()] == null) {
         throw new Error("Invalid enum value");
@@ -49032,16 +50967,16 @@ a=end-of-candidates
       const val = reader.int32();
       yield findValue(val);
     };
-    return createCodec23("enum", CODEC_TYPES8.VARINT, encode19, decode20, stream);
+    return createCodec25("enum", CODEC_TYPES9.VARINT, encode19, decode20, stream);
   }
 
   // node_modules/@helia/bitswap/node_modules/protons-runtime/dist/src/codecs/message.js
-  function message8(encode19, decode20, stream) {
-    return createCodec23("message", CODEC_TYPES8.LENGTH_DELIMITED, encode19, decode20, stream);
+  function message9(encode19, decode20, stream) {
+    return createCodec25("message", CODEC_TYPES9.LENGTH_DELIMITED, encode19, decode20, stream);
   }
 
   // node_modules/@helia/bitswap/node_modules/protons-runtime/dist/src/index.js
-  var MaxLengthError5 = class extends Error {
+  var MaxLengthError6 = class extends Error {
     /**
      * This will be removed in a future release
      *
@@ -49064,7 +50999,7 @@ a=end-of-candidates
   })(__WantTypeValues || (__WantTypeValues = {}));
   (function(WantType2) {
     WantType2.codec = () => {
-      return enumeration8(__WantTypeValues);
+      return enumeration9(__WantTypeValues);
     };
   })(WantType || (WantType = {}));
   var WantlistEntry;
@@ -49072,7 +51007,7 @@ a=end-of-candidates
     let _codec;
     WantlistEntry2.codec = () => {
       if (_codec == null) {
-        _codec = message8((obj, w2, opts = {}) => {
+        _codec = message9((obj, w2, opts = {}) => {
           if (opts.lengthDelimited !== false) {
             w2.fork();
           }
@@ -49101,7 +51036,7 @@ a=end-of-candidates
           }
         }, (reader, length18, opts = {}) => {
           const obj = {
-            cid: alloc20(0),
+            cid: alloc21(0),
             priority: 0
           };
           const end = length18 == null ? reader.len : reader.pos + length18;
@@ -49186,15 +51121,15 @@ a=end-of-candidates
       return _codec;
     };
     function encode19(obj) {
-      return encodeMessage8(obj, WantlistEntry2.codec());
+      return encodeMessage9(obj, WantlistEntry2.codec());
     }
     WantlistEntry2.encode = encode19;
     function decode20(buf, opts) {
-      return decodeMessage8(buf, WantlistEntry2.codec(), opts);
+      return decodeMessage9(buf, WantlistEntry2.codec(), opts);
     }
     WantlistEntry2.decode = decode20;
     function stream(buf, opts) {
-      return streamMessage7(buf, WantlistEntry2.codec(), opts);
+      return streamMessage8(buf, WantlistEntry2.codec(), opts);
     }
     WantlistEntry2.stream = stream;
   })(WantlistEntry || (WantlistEntry = {}));
@@ -49203,7 +51138,7 @@ a=end-of-candidates
     let _codec;
     Wantlist2.codec = () => {
       if (_codec == null) {
-        _codec = message8((obj, w2, opts = {}) => {
+        _codec = message9((obj, w2, opts = {}) => {
           if (opts.lengthDelimited !== false) {
             w2.fork();
           }
@@ -49230,7 +51165,7 @@ a=end-of-candidates
             switch (tag >>> 3) {
               case 1: {
                 if (opts.limits?.entries != null && obj.entries.length === opts.limits.entries) {
-                  throw new MaxLengthError5('Decode error - repeated field "entries" had too many elements');
+                  throw new MaxLengthError6('Decode error - repeated field "entries" had too many elements');
                 }
                 obj.entries.push(WantlistEntry.codec().decode(reader, reader.uint32(), {
                   limits: opts.limits?.entries$
@@ -49258,7 +51193,7 @@ a=end-of-candidates
             switch (tag >>> 3) {
               case 1: {
                 if (opts.limits?.entries != null && obj.entries === opts.limits.entries) {
-                  throw new MaxLengthError5('Streaming decode error - repeated field "entries" had too many elements');
+                  throw new MaxLengthError6('Streaming decode error - repeated field "entries" had too many elements');
                 }
                 for (const evt of WantlistEntry.codec().stream(reader, reader.uint32(), `${prefix}.entries[]`, {
                   limits: opts.limits?.entries$
@@ -49289,15 +51224,15 @@ a=end-of-candidates
       return _codec;
     };
     function encode19(obj) {
-      return encodeMessage8(obj, Wantlist2.codec());
+      return encodeMessage9(obj, Wantlist2.codec());
     }
     Wantlist2.encode = encode19;
     function decode20(buf, opts) {
-      return decodeMessage8(buf, Wantlist2.codec(), opts);
+      return decodeMessage9(buf, Wantlist2.codec(), opts);
     }
     Wantlist2.decode = decode20;
     function stream(buf, opts) {
-      return streamMessage7(buf, Wantlist2.codec(), opts);
+      return streamMessage8(buf, Wantlist2.codec(), opts);
     }
     Wantlist2.stream = stream;
   })(Wantlist || (Wantlist = {}));
@@ -49306,7 +51241,7 @@ a=end-of-candidates
     let _codec;
     Block3.codec = () => {
       if (_codec == null) {
-        _codec = message8((obj, w2, opts = {}) => {
+        _codec = message9((obj, w2, opts = {}) => {
           if (opts.lengthDelimited !== false) {
             w2.fork();
           }
@@ -49323,8 +51258,8 @@ a=end-of-candidates
           }
         }, (reader, length18, opts = {}) => {
           const obj = {
-            prefix: alloc20(0),
-            data: alloc20(0)
+            prefix: alloc21(0),
+            data: alloc21(0)
           };
           const end = length18 == null ? reader.len : reader.pos + length18;
           while (reader.pos < end) {
@@ -49375,15 +51310,15 @@ a=end-of-candidates
       return _codec;
     };
     function encode19(obj) {
-      return encodeMessage8(obj, Block3.codec());
+      return encodeMessage9(obj, Block3.codec());
     }
     Block3.encode = encode19;
     function decode20(buf, opts) {
-      return decodeMessage8(buf, Block3.codec(), opts);
+      return decodeMessage9(buf, Block3.codec(), opts);
     }
     Block3.decode = decode20;
     function stream(buf, opts) {
-      return streamMessage7(buf, Block3.codec(), opts);
+      return streamMessage8(buf, Block3.codec(), opts);
     }
     Block3.stream = stream;
   })(Block2 || (Block2 = {}));
@@ -49399,7 +51334,7 @@ a=end-of-candidates
   })(__BlockPresenceTypeValues || (__BlockPresenceTypeValues = {}));
   (function(BlockPresenceType2) {
     BlockPresenceType2.codec = () => {
-      return enumeration8(__BlockPresenceTypeValues);
+      return enumeration9(__BlockPresenceTypeValues);
     };
   })(BlockPresenceType || (BlockPresenceType = {}));
   var BlockPresence;
@@ -49407,7 +51342,7 @@ a=end-of-candidates
     let _codec;
     BlockPresence2.codec = () => {
       if (_codec == null) {
-        _codec = message8((obj, w2, opts = {}) => {
+        _codec = message9((obj, w2, opts = {}) => {
           if (opts.lengthDelimited !== false) {
             w2.fork();
           }
@@ -49424,7 +51359,7 @@ a=end-of-candidates
           }
         }, (reader, length18, opts = {}) => {
           const obj = {
-            cid: alloc20(0),
+            cid: alloc21(0),
             type: BlockPresenceType.HaveBlock
           };
           const end = length18 == null ? reader.len : reader.pos + length18;
@@ -49476,15 +51411,15 @@ a=end-of-candidates
       return _codec;
     };
     function encode19(obj) {
-      return encodeMessage8(obj, BlockPresence2.codec());
+      return encodeMessage9(obj, BlockPresence2.codec());
     }
     BlockPresence2.encode = encode19;
     function decode20(buf, opts) {
-      return decodeMessage8(buf, BlockPresence2.codec(), opts);
+      return decodeMessage9(buf, BlockPresence2.codec(), opts);
     }
     BlockPresence2.decode = decode20;
     function stream(buf, opts) {
-      return streamMessage7(buf, BlockPresence2.codec(), opts);
+      return streamMessage8(buf, BlockPresence2.codec(), opts);
     }
     BlockPresence2.stream = stream;
   })(BlockPresence || (BlockPresence = {}));
@@ -49493,7 +51428,7 @@ a=end-of-candidates
     let _codec;
     BitswapMessage2.codec = () => {
       if (_codec == null) {
-        _codec = message8((obj, w2, opts = {}) => {
+        _codec = message9((obj, w2, opts = {}) => {
           if (opts.lengthDelimited !== false) {
             w2.fork();
           }
@@ -49538,7 +51473,7 @@ a=end-of-candidates
               }
               case 3: {
                 if (opts.limits?.blocks != null && obj.blocks.length === opts.limits.blocks) {
-                  throw new MaxLengthError5('Decode error - repeated field "blocks" had too many elements');
+                  throw new MaxLengthError6('Decode error - repeated field "blocks" had too many elements');
                 }
                 obj.blocks.push(Block2.codec().decode(reader, reader.uint32(), {
                   limits: opts.limits?.blocks$
@@ -49547,7 +51482,7 @@ a=end-of-candidates
               }
               case 4: {
                 if (opts.limits?.blockPresences != null && obj.blockPresences.length === opts.limits.blockPresences) {
-                  throw new MaxLengthError5('Decode error - repeated field "blockPresences" had too many elements');
+                  throw new MaxLengthError6('Decode error - repeated field "blockPresences" had too many elements');
                 }
                 obj.blockPresences.push(BlockPresence.codec().decode(reader, reader.uint32(), {
                   limits: opts.limits?.blockPresences$
@@ -49582,7 +51517,7 @@ a=end-of-candidates
               }
               case 3: {
                 if (opts.limits?.blocks != null && obj.blocks === opts.limits.blocks) {
-                  throw new MaxLengthError5('Streaming decode error - repeated field "blocks" had too many elements');
+                  throw new MaxLengthError6('Streaming decode error - repeated field "blocks" had too many elements');
                 }
                 for (const evt of Block2.codec().stream(reader, reader.uint32(), `${prefix}.blocks[]`, {
                   limits: opts.limits?.blocks$
@@ -49597,7 +51532,7 @@ a=end-of-candidates
               }
               case 4: {
                 if (opts.limits?.blockPresences != null && obj.blockPresences === opts.limits.blockPresences) {
-                  throw new MaxLengthError5('Streaming decode error - repeated field "blockPresences" had too many elements');
+                  throw new MaxLengthError6('Streaming decode error - repeated field "blockPresences" had too many elements');
                 }
                 for (const evt of BlockPresence.codec().stream(reader, reader.uint32(), `${prefix}.blockPresences[]`, {
                   limits: opts.limits?.blockPresences$
@@ -49628,15 +51563,15 @@ a=end-of-candidates
       return _codec;
     };
     function encode19(obj) {
-      return encodeMessage8(obj, BitswapMessage2.codec());
+      return encodeMessage9(obj, BitswapMessage2.codec());
     }
     BitswapMessage2.encode = encode19;
     function decode20(buf, opts) {
-      return decodeMessage8(buf, BitswapMessage2.codec(), opts);
+      return decodeMessage9(buf, BitswapMessage2.codec(), opts);
     }
     BitswapMessage2.decode = decode20;
     function stream(buf, opts) {
-      return streamMessage7(buf, BitswapMessage2.codec(), opts);
+      return streamMessage8(buf, BitswapMessage2.codec(), opts);
     }
     BitswapMessage2.stream = stream;
   })(BitswapMessage || (BitswapMessage = {}));
@@ -49720,10 +51655,10 @@ a=end-of-candidates
       }
     }
   }
-  function addToMessage(input, output, start2, maxSize, size, calculateSize3) {
+  function addToMessage(input, output, start3, maxSize, size, calculateSize3) {
     let added = 0;
     let hasMore = false;
-    for (let i = start2; i < input.length; i++) {
+    for (let i = start3; i < input.length; i++) {
       const item = input[i];
       const itemSize = calculateSize3(item);
       if (itemSize > MAX_ENCODED_BLOCK_SIZE) {
@@ -49945,7 +51880,7 @@ a=end-of-candidates
           this.log.error("could not connect to supplied provider - %e", err);
         })));
       }
-      await src_default11(src_default9(src_default12(this.findProviders(cid, options2), options2?.maxProviders ?? DEFAULT_MAX_PROVIDERS_PER_REQUEST), async (provider) => this.connectTo(provider.id, options2))).catch((err) => {
+      await src_default10(src_default9(src_default12(this.findProviders(cid, options2), options2?.maxProviders ?? DEFAULT_MAX_PROVIDERS_PER_REQUEST), async (provider) => this.connectTo(provider.id, options2))).catch((err) => {
         this.log.error(err);
       });
     }
@@ -50018,8 +51953,8 @@ a=end-of-candidates
   };
 
   // node_modules/@helia/bitswap/node_modules/uint8arrays/dist/src/to-string.js
-  function toString8(array, encoding = "utf8") {
-    const base4 = bases_default15[encoding];
+  function toString9(array, encoding = "utf8") {
+    const base4 = bases_default16[encoding];
     if (base4 == null) {
       throw new Error(`Unsupported encoding "${encoding}"`);
     }
@@ -50138,7 +52073,7 @@ a=end-of-candidates
       }
       for (const entry of wantlist.entries) {
         const cid = CID.decode(entry.cid);
-        const cidStr = toString8(cid.multihash.bytes, "base64");
+        const cidStr = toString9(cid.multihash.bytes, "base64");
         if (entry.cancel === true) {
           this.log("peer %p cancelled want of block for %c", this.peerId, cid);
           this.wants.delete(cidStr);
@@ -50210,7 +52145,7 @@ a=end-of-candidates
       return [...this.wants.values()];
     }
     hasWant(cid) {
-      const cidStr = toString8(cid.multihash.bytes, "base64");
+      const cidStr = toString9(cid.multihash.bytes, "base64");
       return this.wants.has(cidStr);
     }
     async sendBlocksToPeer(options2) {
@@ -50665,7 +52600,7 @@ a=end-of-candidates
       });
     }
     async addEntry(cid, options2) {
-      const cidStr = toString8(cid.multihash.bytes, "base64");
+      const cidStr = toString9(cid.multihash.bytes, "base64");
       let entry = this.wants.get(cidStr);
       if (entry == null) {
         entry = {
@@ -50774,7 +52709,7 @@ a=end-of-candidates
       this.sendingMessages.resolve();
     }
     has(cid) {
-      const cidStr = toString8(cid.multihash.bytes, "base64");
+      const cidStr = toString9(cid.multihash.bytes, "base64");
       return this.wants.has(cidStr);
     }
     /**
@@ -50828,7 +52763,7 @@ a=end-of-candidates
      * Invoked when a block has been received from an external source
      */
     async receivedBlock(cid, options2) {
-      const cidStr = toString8(cid.multihash.bytes, "base64");
+      const cidStr = toString9(cid.multihash.bytes, "base64");
       const entry = this.wants.get(cidStr);
       if (entry == null) {
         return;
@@ -50880,7 +52815,7 @@ a=end-of-candidates
             block: block.data
           }
         });
-        const cidStr = toString8(cid.multihash.bytes, "base64");
+        const cidStr = toString9(cid.multihash.bytes, "base64");
         const entry = this.wants.get(cidStr);
         if (entry == null) {
           continue;
@@ -51169,10 +53104,10 @@ a=end-of-candidates
   }
 
   // node_modules/it-ndjson/node_modules/uint8arrays/dist/src/alloc.js
-  function alloc22(size = 0) {
+  function alloc23(size = 0) {
     return new Uint8Array(size);
   }
-  function allocUnsafe19(size = 0) {
+  function allocUnsafe20(size = 0) {
     return new Uint8Array(size);
   }
 
@@ -51193,7 +53128,7 @@ a=end-of-candidates
     if (length18 == null) {
       length18 = arrays.reduce((acc, curr) => acc + curr.length, 0);
     }
-    const output = allocUnsafe19(length18);
+    const output = allocUnsafe20(length18);
     let offset = 0;
     for (const arr of arrays) {
       output.set(arr, offset);
@@ -51432,8 +53367,8 @@ a=end-of-candidates
             bufs.push(buf);
             break;
           }
-          const start2 = beginInclusive - bufStart;
-          bufs.push(buf.subarray(start2, start2 + (endExclusive - beginInclusive)));
+          const start3 = beginInclusive - bufStart;
+          bufs.push(buf.subarray(start3, start3 + (endExclusive - beginInclusive)));
           break;
         }
         if (sliceStartInBuf) {
@@ -51511,7 +53446,7 @@ a=end-of-candidates
       return view.getInt8(0);
     }
     setInt8(byteOffset, value2) {
-      const buf = allocUnsafe19(1);
+      const buf = allocUnsafe20(1);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setInt8(0, value2);
       this.write(buf, byteOffset);
@@ -51522,7 +53457,7 @@ a=end-of-candidates
       return view.getInt16(0, littleEndian);
     }
     setInt16(byteOffset, value2, littleEndian) {
-      const buf = alloc22(2);
+      const buf = alloc23(2);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setInt16(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -51533,7 +53468,7 @@ a=end-of-candidates
       return view.getInt32(0, littleEndian);
     }
     setInt32(byteOffset, value2, littleEndian) {
-      const buf = alloc22(4);
+      const buf = alloc23(4);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setInt32(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -51544,7 +53479,7 @@ a=end-of-candidates
       return view.getBigInt64(0, littleEndian);
     }
     setBigInt64(byteOffset, value2, littleEndian) {
-      const buf = alloc22(8);
+      const buf = alloc23(8);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setBigInt64(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -51555,7 +53490,7 @@ a=end-of-candidates
       return view.getUint8(0);
     }
     setUint8(byteOffset, value2) {
-      const buf = allocUnsafe19(1);
+      const buf = allocUnsafe20(1);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setUint8(0, value2);
       this.write(buf, byteOffset);
@@ -51566,7 +53501,7 @@ a=end-of-candidates
       return view.getUint16(0, littleEndian);
     }
     setUint16(byteOffset, value2, littleEndian) {
-      const buf = alloc22(2);
+      const buf = alloc23(2);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setUint16(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -51577,7 +53512,7 @@ a=end-of-candidates
       return view.getUint32(0, littleEndian);
     }
     setUint32(byteOffset, value2, littleEndian) {
-      const buf = alloc22(4);
+      const buf = alloc23(4);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setUint32(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -51588,7 +53523,7 @@ a=end-of-candidates
       return view.getBigUint64(0, littleEndian);
     }
     setBigUint64(byteOffset, value2, littleEndian) {
-      const buf = alloc22(8);
+      const buf = alloc23(8);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setBigUint64(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -51599,7 +53534,7 @@ a=end-of-candidates
       return view.getFloat32(0, littleEndian);
     }
     setFloat32(byteOffset, value2, littleEndian) {
-      const buf = alloc22(4);
+      const buf = alloc23(4);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setFloat32(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -51610,7 +53545,7 @@ a=end-of-candidates
       return view.getFloat64(0, littleEndian);
     }
     setFloat64(byteOffset, value2, littleEndian) {
-      const buf = alloc22(8);
+      const buf = alloc23(8);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setFloat64(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -51682,11 +53617,11 @@ a=end-of-candidates
   }
 
   // node_modules/@helia/delegated-routing-v1-http-api-client/node_modules/uint8arrays/dist/src/with-array-buffer.js
-  function isArrayBufferBacked11(arr) {
+  function isArrayBufferBacked12(arr) {
     return arr.buffer instanceof ArrayBuffer;
   }
-  function withArrayBuffer11(arr) {
-    if (isArrayBufferBacked11(arr)) {
+  function withArrayBuffer12(arr) {
+    if (isArrayBufferBacked12(arr)) {
       return arr;
     }
     return arr.slice();
@@ -51712,7 +53647,7 @@ a=end-of-candidates
   };
 
   // node_modules/@helia/delegated-routing-v1-http-api-client/dist/src/client.js
-  var defaultValues = {
+  var defaultValues2 = {
     concurrentRequests: 4,
     timeout: 3e4,
     cacheTTL: 5 * 60 * 1e3,
@@ -51741,15 +53676,15 @@ a=end-of-candidates
       this.shutDownController = new AbortController();
       setMaxListeners(Infinity, this.shutDownController.signal);
       this.httpQueue = new Queue({
-        concurrency: init.concurrentRequests ?? defaultValues.concurrentRequests
+        concurrency: init.concurrentRequests ?? defaultValues2.concurrentRequests
       });
       this.inFlightRequests = /* @__PURE__ */ new Map();
       this.url = init.url instanceof URL ? init.url : new URL(init.url);
-      this.timeout = init.timeout ?? defaultValues.timeout;
+      this.timeout = init.timeout ?? defaultValues2.timeout;
       this.filterAddrs = init.filterAddrs;
       this.filterProtocols = init.filterProtocols;
-      this.cacheName = init.cacheName ?? defaultValues.cacheName;
-      this.cacheTTL = init.cacheTTL ?? defaultValues.cacheTTL;
+      this.cacheName = init.cacheName ?? defaultValues2.cacheName;
+      this.cacheTTL = init.cacheTTL ?? defaultValues2.cacheTTL;
     }
     isStarted() {
       return this.started;
@@ -52025,7 +53960,7 @@ a=end-of-candidates
           headers: {
             "Content-Type": "application/vnd.ipfs.ipns-record"
           },
-          body: withArrayBuffer11(record),
+          body: withArrayBuffer12(record),
           signal
         });
         this.log("putIPNS PUT %s %d", resource, res.status);
@@ -52170,12 +54105,12 @@ a=end-of-candidates
   }
 
   // node_modules/@helia/delegated-routing-v1-http-api-client/node_modules/uint8arrays/dist/src/alloc.js
-  function allocUnsafe20(size = 0) {
+  function allocUnsafe21(size = 0) {
     return new Uint8Array(size);
   }
 
   // node_modules/@helia/delegated-routing-v1-http-api-client/node_modules/uint8arrays/dist/src/util/bases.js
-  function createCodec24(name10, prefix, encode19, decode20) {
+  function createCodec26(name10, prefix, encode19, decode20) {
     return {
       name: name10,
       prefix,
@@ -52189,14 +54124,14 @@ a=end-of-candidates
       }
     };
   }
-  var string16 = createCodec24("utf8", "u", (buf) => {
+  var string17 = createCodec26("utf8", "u", (buf) => {
     const decoder = new TextDecoder("utf8");
     return "u" + decoder.decode(buf);
   }, (str) => {
     const encoder2 = new TextEncoder();
     return encoder2.encode(str.substring(1));
   });
-  var ascii16 = createCodec24("ascii", "a", (buf) => {
+  var ascii17 = createCodec26("ascii", "a", (buf) => {
     let string37 = "a";
     for (let i = 0; i < buf.length; i++) {
       string37 += String.fromCharCode(buf[i]);
@@ -52204,26 +54139,26 @@ a=end-of-candidates
     return string37;
   }, (str) => {
     str = str.substring(1);
-    const buf = allocUnsafe20(str.length);
+    const buf = allocUnsafe21(str.length);
     for (let i = 0; i < str.length; i++) {
       buf[i] = str.charCodeAt(i);
     }
     return buf;
   });
-  var BASES16 = {
-    utf8: string16,
-    "utf-8": string16,
+  var BASES17 = {
+    utf8: string17,
+    "utf-8": string17,
     hex: bases.base16,
-    latin1: ascii16,
-    ascii: ascii16,
-    binary: ascii16,
+    latin1: ascii17,
+    ascii: ascii17,
+    binary: ascii17,
     ...bases
   };
-  var bases_default16 = BASES16;
+  var bases_default17 = BASES17;
 
   // node_modules/@helia/delegated-routing-v1-http-api-client/node_modules/uint8arrays/dist/src/from-string.js
-  function fromString19(string37, encoding = "utf8") {
-    const base4 = bases_default16[encoding];
+  function fromString20(string37, encoding = "utf8") {
+    const base4 = bases_default17[encoding];
     if (base4 == null) {
       throw new Error(`Unsupported encoding "${encoding}"`);
     }
@@ -52231,7 +54166,7 @@ a=end-of-candidates
   }
 
   // node_modules/@helia/delegated-routing-v1-http-api-client/dist/src/routings.js
-  var IPNS_PREFIX = fromString19("/ipns/");
+  var IPNS_PREFIX = fromString20("/ipns/");
   function isIPNSKey(key) {
     return equals20(key.subarray(0, IPNS_PREFIX.byteLength), IPNS_PREFIX);
   }
@@ -52371,12 +54306,12 @@ a=end-of-candidates
   }
 
   // node_modules/@helia/delegated-routing-client/node_modules/uint8arrays/dist/src/alloc.js
-  function allocUnsafe21(size = 0) {
+  function allocUnsafe22(size = 0) {
     return new Uint8Array(size);
   }
 
   // node_modules/@helia/delegated-routing-client/node_modules/uint8arrays/dist/src/util/bases.js
-  function createCodec25(name10, prefix, encode19, decode20) {
+  function createCodec27(name10, prefix, encode19, decode20) {
     return {
       name: name10,
       prefix,
@@ -52390,14 +54325,14 @@ a=end-of-candidates
       }
     };
   }
-  var string17 = createCodec25("utf8", "u", (buf) => {
+  var string18 = createCodec27("utf8", "u", (buf) => {
     const decoder = new TextDecoder("utf8");
     return "u" + decoder.decode(buf);
   }, (str) => {
     const encoder2 = new TextEncoder();
     return encoder2.encode(str.substring(1));
   });
-  var ascii17 = createCodec25("ascii", "a", (buf) => {
+  var ascii18 = createCodec27("ascii", "a", (buf) => {
     let string37 = "a";
     for (let i = 0; i < buf.length; i++) {
       string37 += String.fromCharCode(buf[i]);
@@ -52405,26 +54340,26 @@ a=end-of-candidates
     return string37;
   }, (str) => {
     str = str.substring(1);
-    const buf = allocUnsafe21(str.length);
+    const buf = allocUnsafe22(str.length);
     for (let i = 0; i < str.length; i++) {
       buf[i] = str.charCodeAt(i);
     }
     return buf;
   });
-  var BASES17 = {
-    utf8: string17,
-    "utf-8": string17,
+  var BASES18 = {
+    utf8: string18,
+    "utf-8": string18,
     hex: bases.base16,
-    latin1: ascii17,
-    ascii: ascii17,
-    binary: ascii17,
+    latin1: ascii18,
+    ascii: ascii18,
+    binary: ascii18,
     ...bases
   };
-  var bases_default17 = BASES17;
+  var bases_default18 = BASES18;
 
   // node_modules/@helia/delegated-routing-client/node_modules/uint8arrays/dist/src/from-string.js
-  function fromString20(string37, encoding = "utf8") {
-    const base4 = bases_default17[encoding];
+  function fromString21(string37, encoding = "utf8") {
+    const base4 = bases_default18[encoding];
     if (base4 == null) {
       throw new Error(`Unsupported encoding "${encoding}"`);
     }
@@ -52432,7 +54367,7 @@ a=end-of-candidates
   }
 
   // node_modules/@helia/delegated-routing-client/dist/src/delegated-routing-router.js
-  var IPNS_PREFIX2 = fromString20("/ipns/");
+  var IPNS_PREFIX2 = fromString21("/ipns/");
   function isIPNSKey2(key) {
     return equals21(key.subarray(0, IPNS_PREFIX2.byteLength), IPNS_PREFIX2);
   }
@@ -52552,9 +54487,9 @@ a=end-of-candidates
   }
 
   // node_modules/is-regexp/index.js
-  var { toString: toString9 } = Object.prototype;
+  var { toString: toString10 } = Object.prototype;
   function isRegexp(value2) {
-    return toString9.call(value2) === "[object RegExp]";
+    return toString10.call(value2) === "[object RegExp]";
   }
 
   // node_modules/clone-regexp/index.js
@@ -52711,12 +54646,12 @@ a=end-of-candidates
   }
 
   // node_modules/@helia/fallback-router/node_modules/uint8arrays/dist/src/alloc.js
-  function allocUnsafe22(size = 0) {
+  function allocUnsafe23(size = 0) {
     return new Uint8Array(size);
   }
 
   // node_modules/@helia/fallback-router/node_modules/uint8arrays/dist/src/util/bases.js
-  function createCodec26(name10, prefix, encode19, decode20) {
+  function createCodec28(name10, prefix, encode19, decode20) {
     return {
       name: name10,
       prefix,
@@ -52730,14 +54665,14 @@ a=end-of-candidates
       }
     };
   }
-  var string18 = createCodec26("utf8", "u", (buf) => {
+  var string19 = createCodec28("utf8", "u", (buf) => {
     const decoder = new TextDecoder("utf8");
     return "u" + decoder.decode(buf);
   }, (str) => {
     const encoder2 = new TextEncoder();
     return encoder2.encode(str.substring(1));
   });
-  var ascii18 = createCodec26("ascii", "a", (buf) => {
+  var ascii19 = createCodec28("ascii", "a", (buf) => {
     let string37 = "a";
     for (let i = 0; i < buf.length; i++) {
       string37 += String.fromCharCode(buf[i]);
@@ -52745,26 +54680,26 @@ a=end-of-candidates
     return string37;
   }, (str) => {
     str = str.substring(1);
-    const buf = allocUnsafe22(str.length);
+    const buf = allocUnsafe23(str.length);
     for (let i = 0; i < str.length; i++) {
       buf[i] = str.charCodeAt(i);
     }
     return buf;
   });
-  var BASES18 = {
-    utf8: string18,
-    "utf-8": string18,
+  var BASES19 = {
+    utf8: string19,
+    "utf-8": string19,
     hex: bases.base16,
-    latin1: ascii18,
-    ascii: ascii18,
-    binary: ascii18,
+    latin1: ascii19,
+    ascii: ascii19,
+    binary: ascii19,
     ...bases
   };
-  var bases_default18 = BASES18;
+  var bases_default19 = BASES19;
 
   // node_modules/@helia/fallback-router/node_modules/uint8arrays/dist/src/from-string.js
-  function fromString21(string37, encoding = "utf8") {
-    const base4 = bases_default18[encoding];
+  function fromString22(string37, encoding = "utf8") {
+    const base4 = bases_default19[encoding];
     if (base4 == null) {
       throw new Error(`Unsupported encoding "${encoding}"`);
     }
@@ -52772,8 +54707,8 @@ a=end-of-candidates
   }
 
   // node_modules/@helia/fallback-router/node_modules/uint8arrays/dist/src/to-string.js
-  function toString10(array, encoding = "utf8") {
-    const base4 = bases_default18[encoding];
+  function toString11(array, encoding = "utf8") {
+    const base4 = bases_default19[encoding];
     if (base4 == null) {
       throw new Error(`Unsupported encoding "${encoding}"`);
     }
@@ -52785,7 +54720,7 @@ a=end-of-candidates
   function toPeerInfo(url) {
     url = url.toString();
     return {
-      id: CID.createV1(TRANSPORT_IPFS_GATEWAY_HTTP_CODE3, identity.digest(fromString21(url))),
+      id: CID.createV1(TRANSPORT_IPFS_GATEWAY_HTTP_CODE3, identity.digest(fromString22(url))),
       multiaddrs: [
         uriToMultiaddr(url)
       ],
@@ -52793,7 +54728,7 @@ a=end-of-candidates
     };
   }
   function toUrl(info) {
-    return new URL(toString10(info.id.multihash.digest));
+    return new URL(toString11(info.id.multihash.digest));
   }
   var FallbackRouter = class {
     name = "fallback-router";
@@ -52829,15 +54764,15 @@ a=end-of-candidates
   }
 
   // node_modules/@helia/trustless-gateway-client/node_modules/uint8arrays/dist/src/alloc.js
-  function alloc23(size = 0) {
+  function alloc24(size = 0) {
     return new Uint8Array(size);
   }
-  function allocUnsafe23(size = 0) {
+  function allocUnsafe24(size = 0) {
     return new Uint8Array(size);
   }
 
   // node_modules/@helia/trustless-gateway-client/node_modules/uint8arrays/dist/src/util/bases.js
-  function createCodec27(name10, prefix, encode19, decode20) {
+  function createCodec29(name10, prefix, encode19, decode20) {
     return {
       name: name10,
       prefix,
@@ -52851,14 +54786,14 @@ a=end-of-candidates
       }
     };
   }
-  var string19 = createCodec27("utf8", "u", (buf) => {
+  var string20 = createCodec29("utf8", "u", (buf) => {
     const decoder = new TextDecoder("utf8");
     return "u" + decoder.decode(buf);
   }, (str) => {
     const encoder2 = new TextEncoder();
     return encoder2.encode(str.substring(1));
   });
-  var ascii19 = createCodec27("ascii", "a", (buf) => {
+  var ascii20 = createCodec29("ascii", "a", (buf) => {
     let string37 = "a";
     for (let i = 0; i < buf.length; i++) {
       string37 += String.fromCharCode(buf[i]);
@@ -52866,26 +54801,26 @@ a=end-of-candidates
     return string37;
   }, (str) => {
     str = str.substring(1);
-    const buf = allocUnsafe23(str.length);
+    const buf = allocUnsafe24(str.length);
     for (let i = 0; i < str.length; i++) {
       buf[i] = str.charCodeAt(i);
     }
     return buf;
   });
-  var BASES19 = {
-    utf8: string19,
-    "utf-8": string19,
+  var BASES20 = {
+    utf8: string20,
+    "utf-8": string20,
     hex: bases.base16,
-    latin1: ascii19,
-    ascii: ascii19,
-    binary: ascii19,
+    latin1: ascii20,
+    ascii: ascii20,
+    binary: ascii20,
     ...bases
   };
-  var bases_default19 = BASES19;
+  var bases_default20 = BASES20;
 
   // node_modules/@helia/trustless-gateway-client/node_modules/uint8arrays/dist/src/from-string.js
-  function fromString22(string37, encoding = "utf8") {
-    const base4 = bases_default19[encoding];
+  function fromString23(string37, encoding = "utf8") {
+    const base4 = bases_default20[encoding];
     if (base4 == null) {
       throw new Error(`Unsupported encoding "${encoding}"`);
     }
@@ -52909,7 +54844,7 @@ a=end-of-candidates
     if (length18 == null) {
       length18 = arrays.reduce((acc, curr) => acc + curr.length, 0);
     }
-    const output = allocUnsafe23(length18);
+    const output = allocUnsafe24(length18);
     let offset = 0;
     for (const arr of arrays) {
       output.set(arr, offset);
@@ -53148,8 +55083,8 @@ a=end-of-candidates
             bufs.push(buf);
             break;
           }
-          const start2 = beginInclusive - bufStart;
-          bufs.push(buf.subarray(start2, start2 + (endExclusive - beginInclusive)));
+          const start3 = beginInclusive - bufStart;
+          bufs.push(buf.subarray(start3, start3 + (endExclusive - beginInclusive)));
           break;
         }
         if (sliceStartInBuf) {
@@ -53227,7 +55162,7 @@ a=end-of-candidates
       return view.getInt8(0);
     }
     setInt8(byteOffset, value2) {
-      const buf = allocUnsafe23(1);
+      const buf = allocUnsafe24(1);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setInt8(0, value2);
       this.write(buf, byteOffset);
@@ -53238,7 +55173,7 @@ a=end-of-candidates
       return view.getInt16(0, littleEndian);
     }
     setInt16(byteOffset, value2, littleEndian) {
-      const buf = alloc23(2);
+      const buf = alloc24(2);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setInt16(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -53249,7 +55184,7 @@ a=end-of-candidates
       return view.getInt32(0, littleEndian);
     }
     setInt32(byteOffset, value2, littleEndian) {
-      const buf = alloc23(4);
+      const buf = alloc24(4);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setInt32(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -53260,7 +55195,7 @@ a=end-of-candidates
       return view.getBigInt64(0, littleEndian);
     }
     setBigInt64(byteOffset, value2, littleEndian) {
-      const buf = alloc23(8);
+      const buf = alloc24(8);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setBigInt64(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -53271,7 +55206,7 @@ a=end-of-candidates
       return view.getUint8(0);
     }
     setUint8(byteOffset, value2) {
-      const buf = allocUnsafe23(1);
+      const buf = allocUnsafe24(1);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setUint8(0, value2);
       this.write(buf, byteOffset);
@@ -53282,7 +55217,7 @@ a=end-of-candidates
       return view.getUint16(0, littleEndian);
     }
     setUint16(byteOffset, value2, littleEndian) {
-      const buf = alloc23(2);
+      const buf = alloc24(2);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setUint16(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -53293,7 +55228,7 @@ a=end-of-candidates
       return view.getUint32(0, littleEndian);
     }
     setUint32(byteOffset, value2, littleEndian) {
-      const buf = alloc23(4);
+      const buf = alloc24(4);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setUint32(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -53304,7 +55239,7 @@ a=end-of-candidates
       return view.getBigUint64(0, littleEndian);
     }
     setBigUint64(byteOffset, value2, littleEndian) {
-      const buf = alloc23(8);
+      const buf = alloc24(8);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setBigUint64(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -53315,7 +55250,7 @@ a=end-of-candidates
       return view.getFloat32(0, littleEndian);
     }
     setFloat32(byteOffset, value2, littleEndian) {
-      const buf = alloc23(4);
+      const buf = alloc24(4);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setFloat32(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -53326,7 +55261,7 @@ a=end-of-candidates
       return view.getFloat64(0, littleEndian);
     }
     setFloat64(byteOffset, value2, littleEndian) {
-      const buf = alloc23(8);
+      const buf = alloc24(8);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setFloat64(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -53492,7 +55427,7 @@ a=end-of-candidates
       this.transformRequestInit = transformRequestInit;
       this.log = logger3.forComponent(`helia:trustless-gateway-block-broker:${this.url.host}`);
       this.router = router;
-      this.peer = CID.createV1(TRANSPORT_IPFS_GATEWAY_HTTP_CODE4, identity.digest(fromString22(this.url.toString())));
+      this.peer = CID.createV1(TRANSPORT_IPFS_GATEWAY_HTTP_CODE4, identity.digest(fromString23(this.url.toString())));
     }
     /**
      * This function returns a unique string for the multihash.bytes of the CID.
@@ -54600,62 +56535,62 @@ HTTP/1.1 %d %s
   var MAX_PEER_AGE = 216e5;
 
   // node_modules/@libp2p/peer-store/node_modules/uint8arrays/dist/src/with-array-buffer.js
-  function isArrayBufferBacked12(arr) {
+  function isArrayBufferBacked13(arr) {
     return arr.buffer instanceof ArrayBuffer;
   }
-  function withArrayBuffer12(arr) {
-    if (isArrayBufferBacked12(arr)) {
+  function withArrayBuffer13(arr) {
+    if (isArrayBufferBacked13(arr)) {
       return arr;
     }
     return arr.slice();
   }
 
   // node_modules/@libp2p/peer-store/node_modules/protons-runtime/dist/src/utils/float.js
-  var f329 = new Float32Array([-0]);
-  var f8b9 = new Uint8Array(f329.buffer);
-  function writeFloatLE9(val, buf, pos) {
-    f329[0] = val;
-    buf[pos] = f8b9[0];
-    buf[pos + 1] = f8b9[1];
-    buf[pos + 2] = f8b9[2];
-    buf[pos + 3] = f8b9[3];
+  var f3210 = new Float32Array([-0]);
+  var f8b10 = new Uint8Array(f3210.buffer);
+  function writeFloatLE10(val, buf, pos) {
+    f3210[0] = val;
+    buf[pos] = f8b10[0];
+    buf[pos + 1] = f8b10[1];
+    buf[pos + 2] = f8b10[2];
+    buf[pos + 3] = f8b10[3];
   }
-  function readFloatLE9(buf, pos) {
-    f8b9[0] = buf[pos];
-    f8b9[1] = buf[pos + 1];
-    f8b9[2] = buf[pos + 2];
-    f8b9[3] = buf[pos + 3];
-    return f329[0];
+  function readFloatLE10(buf, pos) {
+    f8b10[0] = buf[pos];
+    f8b10[1] = buf[pos + 1];
+    f8b10[2] = buf[pos + 2];
+    f8b10[3] = buf[pos + 3];
+    return f3210[0];
   }
-  var f649 = new Float64Array([-0]);
-  var d8b9 = new Uint8Array(f649.buffer);
-  function writeDoubleLE9(val, buf, pos) {
-    f649[0] = val;
-    buf[pos] = d8b9[0];
-    buf[pos + 1] = d8b9[1];
-    buf[pos + 2] = d8b9[2];
-    buf[pos + 3] = d8b9[3];
-    buf[pos + 4] = d8b9[4];
-    buf[pos + 5] = d8b9[5];
-    buf[pos + 6] = d8b9[6];
-    buf[pos + 7] = d8b9[7];
+  var f6410 = new Float64Array([-0]);
+  var d8b10 = new Uint8Array(f6410.buffer);
+  function writeDoubleLE10(val, buf, pos) {
+    f6410[0] = val;
+    buf[pos] = d8b10[0];
+    buf[pos + 1] = d8b10[1];
+    buf[pos + 2] = d8b10[2];
+    buf[pos + 3] = d8b10[3];
+    buf[pos + 4] = d8b10[4];
+    buf[pos + 5] = d8b10[5];
+    buf[pos + 6] = d8b10[6];
+    buf[pos + 7] = d8b10[7];
   }
-  function readDoubleLE9(buf, pos) {
-    d8b9[0] = buf[pos];
-    d8b9[1] = buf[pos + 1];
-    d8b9[2] = buf[pos + 2];
-    d8b9[3] = buf[pos + 3];
-    d8b9[4] = buf[pos + 4];
-    d8b9[5] = buf[pos + 5];
-    d8b9[6] = buf[pos + 6];
-    d8b9[7] = buf[pos + 7];
-    return f649[0];
+  function readDoubleLE10(buf, pos) {
+    d8b10[0] = buf[pos];
+    d8b10[1] = buf[pos + 1];
+    d8b10[2] = buf[pos + 2];
+    d8b10[3] = buf[pos + 3];
+    d8b10[4] = buf[pos + 4];
+    d8b10[5] = buf[pos + 5];
+    d8b10[6] = buf[pos + 6];
+    d8b10[7] = buf[pos + 7];
+    return f6410[0];
   }
 
   // node_modules/@libp2p/peer-store/node_modules/protons-runtime/dist/src/utils/longbits.js
-  var MAX_SAFE_NUMBER_INTEGER9 = BigInt(Number.MAX_SAFE_INTEGER);
-  var MIN_SAFE_NUMBER_INTEGER9 = BigInt(Number.MIN_SAFE_INTEGER);
-  var LongBits9 = class _LongBits {
+  var MAX_SAFE_NUMBER_INTEGER10 = BigInt(Number.MAX_SAFE_INTEGER);
+  var MIN_SAFE_NUMBER_INTEGER10 = BigInt(Number.MIN_SAFE_INTEGER);
+  var LongBits10 = class _LongBits {
     lo;
     hi;
     constructor(lo, hi) {
@@ -54731,9 +56666,9 @@ HTTP/1.1 %d %s
      */
     static fromBigInt(value2) {
       if (value2 === 0n) {
-        return zero9;
+        return zero10;
       }
-      if (value2 < MAX_SAFE_NUMBER_INTEGER9 && value2 > MIN_SAFE_NUMBER_INTEGER9) {
+      if (value2 < MAX_SAFE_NUMBER_INTEGER10 && value2 > MIN_SAFE_NUMBER_INTEGER10) {
         return this.fromNumber(Number(value2));
       }
       const negative = value2 < 0n;
@@ -54745,9 +56680,9 @@ HTTP/1.1 %d %s
       if (negative) {
         hi = ~hi | 0n;
         lo = ~lo | 0n;
-        if (++lo > TWO_329) {
+        if (++lo > TWO_3210) {
           lo = 0n;
-          if (++hi > TWO_329) {
+          if (++hi > TWO_3210) {
             hi = 0n;
           }
         }
@@ -54759,7 +56694,7 @@ HTTP/1.1 %d %s
      */
     static fromNumber(value2) {
       if (value2 === 0) {
-        return zero9;
+        return zero10;
       }
       const sign = value2 < 0;
       if (sign) {
@@ -54792,23 +56727,23 @@ HTTP/1.1 %d %s
       if (typeof value2 === "string") {
         return _LongBits.fromBigInt(BigInt(value2));
       }
-      return value2.low != null || value2.high != null ? new _LongBits(value2.low >>> 0, value2.high >>> 0) : zero9;
+      return value2.low != null || value2.high != null ? new _LongBits(value2.low >>> 0, value2.high >>> 0) : zero10;
     }
   };
-  var zero9 = new LongBits9(0, 0);
-  zero9.toBigInt = function() {
+  var zero10 = new LongBits10(0, 0);
+  zero10.toBigInt = function() {
     return 0n;
   };
-  zero9.zzEncode = zero9.zzDecode = function() {
+  zero10.zzEncode = zero10.zzDecode = function() {
     return this;
   };
-  zero9.length = function() {
+  zero10.length = function() {
     return 1;
   };
-  var TWO_329 = 4294967296n;
+  var TWO_3210 = 4294967296n;
 
   // node_modules/@libp2p/peer-store/node_modules/protons-runtime/dist/src/utils/utf8.js
-  function length11(string37) {
+  function length12(string37) {
     let len = 0;
     let c = 0;
     for (let i = 0; i < string37.length; ++i) {
@@ -54826,8 +56761,8 @@ HTTP/1.1 %d %s
     }
     return len;
   }
-  function read11(buffer2, start2, end) {
-    const len = end - start2;
+  function read12(buffer2, start3, end) {
+    const len = end - start3;
     if (len < 1) {
       return "";
     }
@@ -54835,18 +56770,18 @@ HTTP/1.1 %d %s
     const chunk = [];
     let i = 0;
     let t;
-    while (start2 < end) {
-      t = buffer2[start2++];
+    while (start3 < end) {
+      t = buffer2[start3++];
       if (t < 128) {
         chunk[i++] = t;
       } else if (t > 191 && t < 224) {
-        chunk[i++] = (t & 31) << 6 | buffer2[start2++] & 63;
+        chunk[i++] = (t & 31) << 6 | buffer2[start3++] & 63;
       } else if (t > 239 && t < 365) {
-        t = ((t & 7) << 18 | (buffer2[start2++] & 63) << 12 | (buffer2[start2++] & 63) << 6 | buffer2[start2++] & 63) - 65536;
+        t = ((t & 7) << 18 | (buffer2[start3++] & 63) << 12 | (buffer2[start3++] & 63) << 6 | buffer2[start3++] & 63) - 65536;
         chunk[i++] = 55296 + (t >> 10);
         chunk[i++] = 56320 + (t & 1023);
       } else {
-        chunk[i++] = (t & 15) << 12 | (buffer2[start2++] & 63) << 6 | buffer2[start2++] & 63;
+        chunk[i++] = (t & 15) << 12 | (buffer2[start3++] & 63) << 6 | buffer2[start3++] & 63;
       }
       if (i > 8191) {
         (parts ?? (parts = [])).push(String.fromCharCode.apply(String, chunk));
@@ -54861,8 +56796,8 @@ HTTP/1.1 %d %s
     }
     return String.fromCharCode.apply(String, chunk.slice(0, i));
   }
-  function write9(string37, buffer2, offset) {
-    const start2 = offset;
+  function write10(string37, buffer2, offset) {
+    const start3 = offset;
     let c1;
     let c2;
     for (let i = 0; i < string37.length; ++i) {
@@ -54885,23 +56820,23 @@ HTTP/1.1 %d %s
         buffer2[offset++] = c1 & 63 | 128;
       }
     }
-    return offset - start2;
+    return offset - start3;
   }
 
   // node_modules/@libp2p/peer-store/node_modules/protons-runtime/dist/src/utils/reader.js
-  function indexOutOfRange9(reader, writeLength) {
+  function indexOutOfRange10(reader, writeLength) {
     return RangeError(`index out of range: ${reader.pos} + ${writeLength ?? 1} > ${reader.len}`);
   }
-  function readFixed32End9(buf, end) {
+  function readFixed32End10(buf, end) {
     return (buf[end - 4] | buf[end - 3] << 8 | buf[end - 2] << 16 | buf[end - 1] << 24) >>> 0;
   }
-  var Uint8ArrayReader9 = class {
+  var Uint8ArrayReader10 = class {
     buf;
     pos;
     len;
     _slice = Uint8Array.prototype.subarray;
     constructor(buffer2) {
-      this.buf = withArrayBuffer12(buffer2);
+      this.buf = withArrayBuffer13(buffer2);
       this.pos = 0;
       this.len = buffer2.length;
     }
@@ -54932,7 +56867,7 @@ HTTP/1.1 %d %s
       }
       if ((this.pos += 5) > this.len) {
         this.pos = this.len;
-        throw indexOutOfRange9(this, 10);
+        throw indexOutOfRange10(this, 10);
       }
       return value2;
     }
@@ -54960,9 +56895,9 @@ HTTP/1.1 %d %s
      */
     fixed32() {
       if (this.pos + 4 > this.len) {
-        throw indexOutOfRange9(this, 4);
+        throw indexOutOfRange10(this, 4);
       }
-      const res = readFixed32End9(this.buf, this.pos += 4);
+      const res = readFixed32End10(this.buf, this.pos += 4);
       return res;
     }
     /**
@@ -54970,9 +56905,9 @@ HTTP/1.1 %d %s
      */
     sfixed32() {
       if (this.pos + 4 > this.len) {
-        throw indexOutOfRange9(this, 4);
+        throw indexOutOfRange10(this, 4);
       }
-      const res = readFixed32End9(this.buf, this.pos += 4) | 0;
+      const res = readFixed32End10(this.buf, this.pos += 4) | 0;
       return res;
     }
     /**
@@ -54980,9 +56915,9 @@ HTTP/1.1 %d %s
      */
     float() {
       if (this.pos + 4 > this.len) {
-        throw indexOutOfRange9(this, 4);
+        throw indexOutOfRange10(this, 4);
       }
-      const value2 = readFloatLE9(this.buf, this.pos);
+      const value2 = readFloatLE10(this.buf, this.pos);
       this.pos += 4;
       return value2;
     }
@@ -54991,9 +56926,9 @@ HTTP/1.1 %d %s
      */
     double() {
       if (this.pos + 8 > this.len) {
-        throw indexOutOfRange9(this, 4);
+        throw indexOutOfRange10(this, 4);
       }
-      const value2 = readDoubleLE9(this.buf, this.pos);
+      const value2 = readDoubleLE10(this.buf, this.pos);
       this.pos += 8;
       return value2;
     }
@@ -55002,20 +56937,20 @@ HTTP/1.1 %d %s
      */
     bytes() {
       const length18 = this.uint32();
-      const start2 = this.pos;
+      const start3 = this.pos;
       const end = this.pos + length18;
       if (end > this.len) {
-        throw indexOutOfRange9(this, length18);
+        throw indexOutOfRange10(this, length18);
       }
       this.pos += length18;
-      return start2 === end ? new Uint8Array(0) : this.buf.subarray(start2, end);
+      return start3 === end ? new Uint8Array(0) : this.buf.subarray(start3, end);
     }
     /**
      * Reads a string preceded by its byte length as a varint
      */
     string() {
       const bytes = this.bytes();
-      return read11(bytes, 0, bytes.length);
+      return read12(bytes, 0, bytes.length);
     }
     /**
      * Skips the specified number of bytes if specified, otherwise skips a varint
@@ -55023,13 +56958,13 @@ HTTP/1.1 %d %s
     skip(length18) {
       if (typeof length18 === "number") {
         if (this.pos + length18 > this.len) {
-          throw indexOutOfRange9(this, length18);
+          throw indexOutOfRange10(this, length18);
         }
         this.pos += length18;
       } else {
         do {
           if (this.pos >= this.len) {
-            throw indexOutOfRange9(this);
+            throw indexOutOfRange10(this);
           }
         } while ((this.buf[this.pos++] & 128) !== 0);
       }
@@ -55064,7 +56999,7 @@ HTTP/1.1 %d %s
       return this;
     }
     readLongVarint() {
-      const bits = new LongBits9(0, 0);
+      const bits = new LongBits10(0, 0);
       let i = 0;
       if (this.len - this.pos > 4) {
         for (; i < 4; ++i) {
@@ -55082,7 +57017,7 @@ HTTP/1.1 %d %s
       } else {
         for (; i < 3; ++i) {
           if (this.pos >= this.len) {
-            throw indexOutOfRange9(this);
+            throw indexOutOfRange10(this);
           }
           bits.lo = (bits.lo | (this.buf[this.pos] & 127) << i * 7) >>> 0;
           if (this.buf[this.pos++] < 128) {
@@ -55102,7 +57037,7 @@ HTTP/1.1 %d %s
       } else {
         for (; i < 5; ++i) {
           if (this.pos >= this.len) {
-            throw indexOutOfRange9(this);
+            throw indexOutOfRange10(this);
           }
           bits.hi = (bits.hi | (this.buf[this.pos] & 127) << i * 7 + 3) >>> 0;
           if (this.buf[this.pos++] < 128) {
@@ -55114,11 +57049,11 @@ HTTP/1.1 %d %s
     }
     readFixed64() {
       if (this.pos + 8 > this.len) {
-        throw indexOutOfRange9(this, 8);
+        throw indexOutOfRange10(this, 8);
       }
-      const lo = readFixed32End9(this.buf, this.pos += 4);
-      const hi = readFixed32End9(this.buf, this.pos += 4);
-      return new LongBits9(lo, hi);
+      const lo = readFixed32End10(this.buf, this.pos += 4);
+      const hi = readFixed32End10(this.buf, this.pos += 4);
+      return new LongBits10(lo, hi);
     }
     /**
      * Reads a varint as a signed 64 bit value
@@ -55218,26 +57153,26 @@ HTTP/1.1 %d %s
       return this.readFixed64().toString();
     }
   };
-  function createReader9(buf) {
-    return new Uint8ArrayReader9(buf instanceof Uint8Array ? buf : buf.subarray());
+  function createReader10(buf) {
+    return new Uint8ArrayReader10(buf instanceof Uint8Array ? buf : buf.subarray());
   }
 
   // node_modules/@libp2p/peer-store/node_modules/protons-runtime/dist/src/decode.js
-  function decodeMessage9(buf, codec, opts) {
-    const reader = createReader9(buf);
+  function decodeMessage10(buf, codec, opts) {
+    const reader = createReader10(buf);
     return codec.decode(reader, void 0, opts);
   }
 
   // node_modules/@libp2p/peer-store/node_modules/uint8arrays/dist/src/alloc.js
-  function alloc24(size = 0) {
+  function alloc25(size = 0) {
     return new Uint8Array(size);
   }
-  function allocUnsafe24(size = 0) {
+  function allocUnsafe25(size = 0) {
     return new Uint8Array(size);
   }
 
   // node_modules/@libp2p/peer-store/node_modules/uint8arrays/dist/src/util/bases.js
-  function createCodec28(name10, prefix, encode19, decode20) {
+  function createCodec30(name10, prefix, encode19, decode20) {
     return {
       name: name10,
       prefix,
@@ -55251,14 +57186,14 @@ HTTP/1.1 %d %s
       }
     };
   }
-  var string20 = createCodec28("utf8", "u", (buf) => {
+  var string21 = createCodec30("utf8", "u", (buf) => {
     const decoder = new TextDecoder("utf8");
     return "u" + decoder.decode(buf);
   }, (str) => {
     const encoder2 = new TextEncoder();
     return encoder2.encode(str.substring(1));
   });
-  var ascii20 = createCodec28("ascii", "a", (buf) => {
+  var ascii21 = createCodec30("ascii", "a", (buf) => {
     let string37 = "a";
     for (let i = 0; i < buf.length; i++) {
       string37 += String.fromCharCode(buf[i]);
@@ -55266,26 +57201,26 @@ HTTP/1.1 %d %s
     return string37;
   }, (str) => {
     str = str.substring(1);
-    const buf = allocUnsafe24(str.length);
+    const buf = allocUnsafe25(str.length);
     for (let i = 0; i < str.length; i++) {
       buf[i] = str.charCodeAt(i);
     }
     return buf;
   });
-  var BASES20 = {
-    utf8: string20,
-    "utf-8": string20,
+  var BASES21 = {
+    utf8: string21,
+    "utf-8": string21,
     hex: bases.base16,
-    latin1: ascii20,
-    ascii: ascii20,
-    binary: ascii20,
+    latin1: ascii21,
+    ascii: ascii21,
+    binary: ascii21,
     ...bases
   };
-  var bases_default20 = BASES20;
+  var bases_default21 = BASES21;
 
   // node_modules/@libp2p/peer-store/node_modules/uint8arrays/dist/src/from-string.js
-  function fromString23(string37, encoding = "utf8") {
-    const base4 = bases_default20[encoding];
+  function fromString24(string37, encoding = "utf8") {
+    const base4 = bases_default21[encoding];
     if (base4 == null) {
       throw new Error(`Unsupported encoding "${encoding}"`);
     }
@@ -55293,17 +57228,17 @@ HTTP/1.1 %d %s
   }
 
   // node_modules/@libp2p/peer-store/node_modules/protons-runtime/dist/src/utils/pool.js
-  function pool9(size) {
+  function pool10(size) {
     const SIZE = size ?? 8192;
     const MAX = SIZE >>> 1;
     let slab;
     let offset = SIZE;
     return function poolAlloc(size2) {
       if (size2 < 1 || size2 > MAX) {
-        return allocUnsafe24(size2);
+        return allocUnsafe25(size2);
       }
       if (offset + size2 > SIZE) {
-        slab = allocUnsafe24(SIZE);
+        slab = allocUnsafe25(SIZE);
         offset = 0;
       }
       const buf = slab.subarray(offset, offset += size2);
@@ -55315,7 +57250,7 @@ HTTP/1.1 %d %s
   }
 
   // node_modules/@libp2p/peer-store/node_modules/protons-runtime/dist/src/utils/writer.js
-  var Op9 = class {
+  var Op10 = class {
     /**
      * Function to call
      */
@@ -55339,9 +57274,9 @@ HTTP/1.1 %d %s
       this.val = val;
     }
   };
-  function noop9() {
+  function noop10() {
   }
-  var State9 = class {
+  var State10 = class {
     /**
      * Current head
      */
@@ -55365,14 +57300,14 @@ HTTP/1.1 %d %s
       this.next = writer.states;
     }
   };
-  var bufferPool9 = pool9();
-  function alloc25(size) {
+  var bufferPool10 = pool10();
+  function alloc26(size) {
     if (globalThis.Buffer != null) {
-      return allocUnsafe24(size);
+      return allocUnsafe25(size);
     }
-    return bufferPool9(size);
+    return bufferPool10(size);
   }
-  var Uint8ArrayWriter9 = class {
+  var Uint8ArrayWriter10 = class {
     /**
      * Current length
      */
@@ -55391,7 +57326,7 @@ HTTP/1.1 %d %s
     states;
     constructor() {
       this.len = 0;
-      this.head = new Op9(noop9, 0, 0);
+      this.head = new Op10(noop10, 0, 0);
       this.tail = this.head;
       this.states = null;
     }
@@ -55399,7 +57334,7 @@ HTTP/1.1 %d %s
      * Pushes a new operation to the queue
      */
     _push(fn, len, val) {
-      this.tail = this.tail.next = new Op9(fn, len, val);
+      this.tail = this.tail.next = new Op10(fn, len, val);
       this.len += len;
       return this;
     }
@@ -55407,14 +57342,14 @@ HTTP/1.1 %d %s
      * Writes an unsigned 32 bit value as a varint
      */
     uint32(value2) {
-      this.len += (this.tail = this.tail.next = new VarintOp9((value2 = value2 >>> 0) < 128 ? 1 : value2 < 16384 ? 2 : value2 < 2097152 ? 3 : value2 < 268435456 ? 4 : 5, value2)).len;
+      this.len += (this.tail = this.tail.next = new VarintOp10((value2 = value2 >>> 0) < 128 ? 1 : value2 < 16384 ? 2 : value2 < 2097152 ? 3 : value2 < 268435456 ? 4 : 5, value2)).len;
       return this;
     }
     /**
      * Writes a signed 32 bit value as a varint`
      */
     int32(value2) {
-      return value2 < 0 ? this._push(writeVarint649, 10, LongBits9.fromNumber(value2)) : this.uint32(value2);
+      return value2 < 0 ? this._push(writeVarint6410, 10, LongBits10.fromNumber(value2)) : this.uint32(value2);
     }
     /**
      * Writes a 32 bit value as a varint, zig-zag encoded
@@ -55426,8 +57361,8 @@ HTTP/1.1 %d %s
      * Writes an unsigned 64 bit value as a varint
      */
     uint64(value2) {
-      const bits = LongBits9.fromBigInt(value2);
-      return this._push(writeVarint649, bits.length(), bits);
+      const bits = LongBits10.fromBigInt(value2);
+      return this._push(writeVarint6410, bits.length(), bits);
     }
     /**
      * Writes an unsigned 64 bit value as a varint
@@ -55463,15 +57398,15 @@ HTTP/1.1 %d %s
      * Writes a signed 64 bit value as a varint, zig-zag encoded
      */
     sint64(value2) {
-      const bits = LongBits9.fromBigInt(value2).zzEncode();
-      return this._push(writeVarint649, bits.length(), bits);
+      const bits = LongBits10.fromBigInt(value2).zzEncode();
+      return this._push(writeVarint6410, bits.length(), bits);
     }
     /**
      * Writes a signed 64 bit value as a varint, zig-zag encoded
      */
     sint64Number(value2) {
-      const bits = LongBits9.fromNumber(value2).zzEncode();
-      return this._push(writeVarint649, bits.length(), bits);
+      const bits = LongBits10.fromNumber(value2).zzEncode();
+      return this._push(writeVarint6410, bits.length(), bits);
     }
     /**
      * Writes a signed 64 bit value as a varint, zig-zag encoded
@@ -55483,13 +57418,13 @@ HTTP/1.1 %d %s
      * Writes a boolish value as a varint
      */
     bool(value2) {
-      return this._push(writeByte9, 1, value2 ? 1 : 0);
+      return this._push(writeByte10, 1, value2 ? 1 : 0);
     }
     /**
      * Writes an unsigned 32 bit value as fixed 32 bits
      */
     fixed32(value2) {
-      return this._push(writeFixed329, 4, value2 >>> 0);
+      return this._push(writeFixed3210, 4, value2 >>> 0);
     }
     /**
      * Writes a signed 32 bit value as fixed 32 bits
@@ -55501,15 +57436,15 @@ HTTP/1.1 %d %s
      * Writes an unsigned 64 bit value as fixed 64 bits
      */
     fixed64(value2) {
-      const bits = LongBits9.fromBigInt(value2);
-      return this._push(writeFixed329, 4, bits.lo)._push(writeFixed329, 4, bits.hi);
+      const bits = LongBits10.fromBigInt(value2);
+      return this._push(writeFixed3210, 4, bits.lo)._push(writeFixed3210, 4, bits.hi);
     }
     /**
      * Writes an unsigned 64 bit value as fixed 64 bits
      */
     fixed64Number(value2) {
-      const bits = LongBits9.fromNumber(value2);
-      return this._push(writeFixed329, 4, bits.lo)._push(writeFixed329, 4, bits.hi);
+      const bits = LongBits10.fromNumber(value2);
+      return this._push(writeFixed3210, 4, bits.lo)._push(writeFixed3210, 4, bits.hi);
     }
     /**
      * Writes an unsigned 64 bit value as fixed 64 bits
@@ -55539,7 +57474,7 @@ HTTP/1.1 %d %s
      * Writes a float (32 bit)
      */
     float(value2) {
-      return this._push(writeFloatLE9, 4, value2);
+      return this._push(writeFloatLE10, 4, value2);
     }
     /**
      * Writes a double (64 bit float).
@@ -55549,7 +57484,7 @@ HTTP/1.1 %d %s
      * @returns {Writer} `this`
      */
     double(value2) {
-      return this._push(writeDoubleLE9, 8, value2);
+      return this._push(writeDoubleLE10, 8, value2);
     }
     /**
      * Writes a sequence of bytes
@@ -55557,24 +57492,24 @@ HTTP/1.1 %d %s
     bytes(value2) {
       const len = value2.length >>> 0;
       if (len === 0) {
-        return this._push(writeByte9, 1, 0);
+        return this._push(writeByte10, 1, 0);
       }
-      return this.uint32(len)._push(writeBytes9, len, value2);
+      return this.uint32(len)._push(writeBytes10, len, value2);
     }
     /**
      * Writes a string
      */
     string(value2) {
-      const len = length11(value2);
-      return len !== 0 ? this.uint32(len)._push(write9, len, value2) : this._push(writeByte9, 1, 0);
+      const len = length12(value2);
+      return len !== 0 ? this.uint32(len)._push(write10, len, value2) : this._push(writeByte10, 1, 0);
     }
     /**
      * Forks this writer's state by pushing it to a stack.
      * Calling {@link Writer#reset|reset} or {@link Writer#ldelim|ldelim} resets the writer to the previous state.
      */
     fork() {
-      this.states = new State9(this);
-      this.head = this.tail = new Op9(noop9, 0, 0);
+      this.states = new State10(this);
+      this.head = this.tail = new Op10(noop10, 0, 0);
       this.len = 0;
       return this;
     }
@@ -55588,7 +57523,7 @@ HTTP/1.1 %d %s
         this.len = this.states.len;
         this.states = this.states.next;
       } else {
-        this.head = this.tail = new Op9(noop9, 0, 0);
+        this.head = this.tail = new Op10(noop10, 0, 0);
         this.len = 0;
       }
       return this;
@@ -55613,7 +57548,7 @@ HTTP/1.1 %d %s
      */
     finish() {
       let head = this.head.next;
-      const buf = alloc25(this.len);
+      const buf = alloc26(this.len);
       let pos = 0;
       while (head != null) {
         head.fn(head.val, buf, pos);
@@ -55623,24 +57558,24 @@ HTTP/1.1 %d %s
       return buf;
     }
   };
-  function writeByte9(val, buf, pos) {
+  function writeByte10(val, buf, pos) {
     buf[pos] = val & 255;
   }
-  function writeVarint329(val, buf, pos) {
+  function writeVarint3210(val, buf, pos) {
     while (val > 127) {
       buf[pos++] = val & 127 | 128;
       val >>>= 7;
     }
     buf[pos] = val;
   }
-  var VarintOp9 = class extends Op9 {
+  var VarintOp10 = class extends Op10 {
     next;
     constructor(len, val) {
-      super(writeVarint329, len, val);
+      super(writeVarint3210, len, val);
       this.next = void 0;
     }
   };
-  function writeVarint649(val, buf, pos) {
+  function writeVarint6410(val, buf, pos) {
     while (val.hi !== 0) {
       buf[pos++] = val.lo & 127 | 128;
       val.lo = (val.lo >>> 7 | val.hi << 25) >>> 0;
@@ -55652,52 +57587,52 @@ HTTP/1.1 %d %s
     }
     buf[pos++] = val.lo;
   }
-  function writeFixed329(val, buf, pos) {
+  function writeFixed3210(val, buf, pos) {
     buf[pos] = val & 255;
     buf[pos + 1] = val >>> 8 & 255;
     buf[pos + 2] = val >>> 16 & 255;
     buf[pos + 3] = val >>> 24;
   }
-  function writeBytes9(val, buf, pos) {
+  function writeBytes10(val, buf, pos) {
     buf.set(val, pos);
   }
   if (globalThis.Buffer != null) {
-    Uint8ArrayWriter9.prototype.bytes = function(value2) {
+    Uint8ArrayWriter10.prototype.bytes = function(value2) {
       const len = value2.length >>> 0;
       this.uint32(len);
       if (len > 0) {
-        this._push(writeBytesBuffer9, len, value2);
+        this._push(writeBytesBuffer10, len, value2);
       }
       return this;
     };
-    Uint8ArrayWriter9.prototype.string = function(value2) {
+    Uint8ArrayWriter10.prototype.string = function(value2) {
       const len = globalThis.Buffer.byteLength(value2);
       this.uint32(len);
       if (len > 0) {
-        this._push(writeStringBuffer9, len, value2);
+        this._push(writeStringBuffer10, len, value2);
       }
       return this;
     };
   }
-  function writeBytesBuffer9(val, buf, pos) {
+  function writeBytesBuffer10(val, buf, pos) {
     buf.set(val, pos);
   }
-  function writeStringBuffer9(val, buf, pos) {
+  function writeStringBuffer10(val, buf, pos) {
     if (val.length < 40) {
-      write9(val, buf, pos);
+      write10(val, buf, pos);
     } else if (buf.utf8Write != null) {
       buf.utf8Write(val, pos);
     } else {
-      buf.set(fromString23(val), pos);
+      buf.set(fromString24(val), pos);
     }
   }
-  function createWriter9() {
-    return new Uint8ArrayWriter9();
+  function createWriter10() {
+    return new Uint8ArrayWriter10();
   }
 
   // node_modules/@libp2p/peer-store/node_modules/protons-runtime/dist/src/encode.js
-  function encodeMessage9(message15, codec) {
-    const w2 = createWriter9();
+  function encodeMessage10(message15, codec) {
+    const w2 = createWriter10();
     codec.encode(message15, w2, {
       lengthDelimited: false
     });
@@ -55705,13 +57640,13 @@ HTTP/1.1 %d %s
   }
 
   // node_modules/@libp2p/peer-store/node_modules/protons-runtime/dist/src/stream.js
-  function* streamMessage8(buf, codec, opts) {
-    const reader = createReader9(buf);
+  function* streamMessage9(buf, codec, opts) {
+    const reader = createReader10(buf);
     yield* codec.stream(reader, void 0, "$", opts);
   }
 
   // node_modules/@libp2p/peer-store/node_modules/protons-runtime/dist/src/codec.js
-  var CODEC_TYPES9 = {
+  var CODEC_TYPES10 = {
     VARINT: 0,
     BIT64: 1,
     LENGTH_DELIMITED: 2,
@@ -55719,7 +57654,7 @@ HTTP/1.1 %d %s
     END_GROUP: 4,
     BIT32: 5
   };
-  function createCodec29(name10, type, encode19, decode20, stream) {
+  function createCodec31(name10, type, encode19, decode20, stream) {
     return {
       name: name10,
       type,
@@ -55730,12 +57665,12 @@ HTTP/1.1 %d %s
   }
 
   // node_modules/@libp2p/peer-store/node_modules/protons-runtime/dist/src/codecs/message.js
-  function message9(encode19, decode20, stream) {
-    return createCodec29("message", CODEC_TYPES9.LENGTH_DELIMITED, encode19, decode20, stream);
+  function message10(encode19, decode20, stream) {
+    return createCodec31("message", CODEC_TYPES10.LENGTH_DELIMITED, encode19, decode20, stream);
   }
 
   // node_modules/@libp2p/peer-store/node_modules/protons-runtime/dist/src/index.js
-  var MaxLengthError6 = class extends Error {
+  var MaxLengthError7 = class extends Error {
     /**
      * This will be removed in a future release
      *
@@ -55762,7 +57697,7 @@ HTTP/1.1 %d %s
       let _codec2;
       Peer$metadataEntry2.codec = () => {
         if (_codec2 == null) {
-          _codec2 = message9((obj, w2, opts = {}) => {
+          _codec2 = message10((obj, w2, opts = {}) => {
             if (opts.lengthDelimited !== false) {
               w2.fork();
             }
@@ -55780,7 +57715,7 @@ HTTP/1.1 %d %s
           }, (reader, length18, opts = {}) => {
             const obj = {
               key: "",
-              value: alloc24(0)
+              value: alloc25(0)
             };
             const end = length18 == null ? reader.len : reader.pos + length18;
             while (reader.pos < end) {
@@ -55831,15 +57766,15 @@ HTTP/1.1 %d %s
         return _codec2;
       };
       function encode20(obj) {
-        return encodeMessage9(obj, Peer$metadataEntry2.codec());
+        return encodeMessage10(obj, Peer$metadataEntry2.codec());
       }
       Peer$metadataEntry2.encode = encode20;
       function decode21(buf, opts) {
-        return decodeMessage9(buf, Peer$metadataEntry2.codec(), opts);
+        return decodeMessage10(buf, Peer$metadataEntry2.codec(), opts);
       }
       Peer$metadataEntry2.decode = decode21;
       function stream2(buf, opts) {
-        return streamMessage8(buf, Peer$metadataEntry2.codec(), opts);
+        return streamMessage9(buf, Peer$metadataEntry2.codec(), opts);
       }
       Peer$metadataEntry2.stream = stream2;
     })(Peer$metadataEntry = Peer3.Peer$metadataEntry || (Peer3.Peer$metadataEntry = {}));
@@ -55848,7 +57783,7 @@ HTTP/1.1 %d %s
       let _codec2;
       Peer$tagsEntry2.codec = () => {
         if (_codec2 == null) {
-          _codec2 = message9((obj, w2, opts = {}) => {
+          _codec2 = message10((obj, w2, opts = {}) => {
             if (opts.lengthDelimited !== false) {
               w2.fork();
             }
@@ -55917,22 +57852,22 @@ HTTP/1.1 %d %s
         return _codec2;
       };
       function encode20(obj) {
-        return encodeMessage9(obj, Peer$tagsEntry2.codec());
+        return encodeMessage10(obj, Peer$tagsEntry2.codec());
       }
       Peer$tagsEntry2.encode = encode20;
       function decode21(buf, opts) {
-        return decodeMessage9(buf, Peer$tagsEntry2.codec(), opts);
+        return decodeMessage10(buf, Peer$tagsEntry2.codec(), opts);
       }
       Peer$tagsEntry2.decode = decode21;
       function stream2(buf, opts) {
-        return streamMessage8(buf, Peer$tagsEntry2.codec(), opts);
+        return streamMessage9(buf, Peer$tagsEntry2.codec(), opts);
       }
       Peer$tagsEntry2.stream = stream2;
     })(Peer$tagsEntry = Peer3.Peer$tagsEntry || (Peer3.Peer$tagsEntry = {}));
     let _codec;
     Peer3.codec = () => {
       if (_codec == null) {
-        _codec = message9((obj, w2, opts = {}) => {
+        _codec = message10((obj, w2, opts = {}) => {
           if (opts.lengthDelimited !== false) {
             w2.fork();
           }
@@ -55988,7 +57923,7 @@ HTTP/1.1 %d %s
             switch (tag >>> 3) {
               case 1: {
                 if (opts.limits?.addresses != null && obj.addresses.length === opts.limits.addresses) {
-                  throw new MaxLengthError6('Decode error - repeated field "addresses" had too many elements');
+                  throw new MaxLengthError7('Decode error - repeated field "addresses" had too many elements');
                 }
                 obj.addresses.push(Address.codec().decode(reader, reader.uint32(), {
                   limits: opts.limits?.addresses$
@@ -55997,7 +57932,7 @@ HTTP/1.1 %d %s
               }
               case 2: {
                 if (opts.limits?.protocols != null && obj.protocols.length === opts.limits.protocols) {
-                  throw new MaxLengthError6('Decode error - repeated field "protocols" had too many elements');
+                  throw new MaxLengthError7('Decode error - repeated field "protocols" had too many elements');
                 }
                 obj.protocols.push(reader.string());
                 break;
@@ -56058,7 +57993,7 @@ HTTP/1.1 %d %s
             switch (tag >>> 3) {
               case 1: {
                 if (opts.limits?.addresses != null && obj.addresses === opts.limits.addresses) {
-                  throw new MaxLengthError6('Streaming decode error - repeated field "addresses" had too many elements');
+                  throw new MaxLengthError7('Streaming decode error - repeated field "addresses" had too many elements');
                 }
                 for (const evt of Address.codec().stream(reader, reader.uint32(), `${prefix}.addresses[]`, {
                   limits: opts.limits?.addresses$
@@ -56073,7 +58008,7 @@ HTTP/1.1 %d %s
               }
               case 2: {
                 if (opts.limits?.protocols != null && obj.protocols === opts.limits.protocols) {
-                  throw new MaxLengthError6('Streaming decode error - repeated field "protocols" had too many elements');
+                  throw new MaxLengthError7('Streaming decode error - repeated field "protocols" had too many elements');
                 }
                 yield {
                   field: `${prefix}.protocols[]`,
@@ -56099,7 +58034,7 @@ HTTP/1.1 %d %s
               }
               case 6: {
                 if (opts.limits?.metadata != null && obj.metadata === opts.limits.metadata) {
-                  throw new MaxLengthError6('Decode error - map field "metadata" had too many elements');
+                  throw new MaxLengthError7('Decode error - map field "metadata" had too many elements');
                 }
                 yield* Peer3.Peer$metadataEntry.codec().stream(reader, reader.uint32(), `${prefix}.metadata{}`, {
                   limits: {
@@ -56111,7 +58046,7 @@ HTTP/1.1 %d %s
               }
               case 7: {
                 if (opts.limits?.tags != null && obj.tags === opts.limits.tags) {
-                  throw new MaxLengthError6('Decode error - map field "tags" had too many elements');
+                  throw new MaxLengthError7('Decode error - map field "tags" had too many elements');
                 }
                 yield* Peer3.Peer$tagsEntry.codec().stream(reader, reader.uint32(), `${prefix}.tags{}`, {
                   limits: {
@@ -56139,15 +58074,15 @@ HTTP/1.1 %d %s
       return _codec;
     };
     function encode19(obj) {
-      return encodeMessage9(obj, Peer3.codec());
+      return encodeMessage10(obj, Peer3.codec());
     }
     Peer3.encode = encode19;
     function decode20(buf, opts) {
-      return decodeMessage9(buf, Peer3.codec(), opts);
+      return decodeMessage10(buf, Peer3.codec(), opts);
     }
     Peer3.decode = decode20;
     function stream(buf, opts) {
-      return streamMessage8(buf, Peer3.codec(), opts);
+      return streamMessage9(buf, Peer3.codec(), opts);
     }
     Peer3.stream = stream;
   })(Peer2 || (Peer2 = {}));
@@ -56156,7 +58091,7 @@ HTTP/1.1 %d %s
     let _codec;
     Address2.codec = () => {
       if (_codec == null) {
-        _codec = message9((obj, w2, opts = {}) => {
+        _codec = message10((obj, w2, opts = {}) => {
           if (opts.lengthDelimited !== false) {
             w2.fork();
           }
@@ -56177,7 +58112,7 @@ HTTP/1.1 %d %s
           }
         }, (reader, length18, opts = {}) => {
           const obj = {
-            multiaddr: alloc24(0)
+            multiaddr: alloc25(0)
           };
           const end = length18 == null ? reader.len : reader.pos + length18;
           while (reader.pos < end) {
@@ -56239,15 +58174,15 @@ HTTP/1.1 %d %s
       return _codec;
     };
     function encode19(obj) {
-      return encodeMessage9(obj, Address2.codec());
+      return encodeMessage10(obj, Address2.codec());
     }
     Address2.encode = encode19;
     function decode20(buf, opts) {
-      return decodeMessage9(buf, Address2.codec(), opts);
+      return decodeMessage10(buf, Address2.codec(), opts);
     }
     Address2.decode = decode20;
     function stream(buf, opts) {
-      return streamMessage8(buf, Address2.codec(), opts);
+      return streamMessage9(buf, Address2.codec(), opts);
     }
     Address2.stream = stream;
   })(Address || (Address = {}));
@@ -56256,7 +58191,7 @@ HTTP/1.1 %d %s
     let _codec;
     Tag2.codec = () => {
       if (_codec == null) {
-        _codec = message9((obj, w2, opts = {}) => {
+        _codec = message10((obj, w2, opts = {}) => {
           if (opts.lengthDelimited !== false) {
             w2.fork();
           }
@@ -56324,15 +58259,15 @@ HTTP/1.1 %d %s
       return _codec;
     };
     function encode19(obj) {
-      return encodeMessage9(obj, Tag2.codec());
+      return encodeMessage10(obj, Tag2.codec());
     }
     Tag2.encode = encode19;
     function decode20(buf, opts) {
-      return decodeMessage9(buf, Tag2.codec(), opts);
+      return decodeMessage10(buf, Tag2.codec(), opts);
     }
     Tag2.decode = decode20;
     function stream(buf, opts) {
-      return streamMessage8(buf, Tag2.codec(), opts);
+      return streamMessage9(buf, Tag2.codec(), opts);
     }
     Tag2.stream = stream;
   })(Tag || (Tag = {}));
@@ -56460,12 +58395,12 @@ HTTP/1.1 %d %s
   }
 
   // node_modules/interface-datastore/node_modules/uint8arrays/dist/src/alloc.js
-  function allocUnsafe25(size = 0) {
+  function allocUnsafe26(size = 0) {
     return new Uint8Array(size);
   }
 
   // node_modules/interface-datastore/node_modules/uint8arrays/dist/src/util/bases.js
-  function createCodec30(name10, prefix, encode19, decode20) {
+  function createCodec32(name10, prefix, encode19, decode20) {
     return {
       name: name10,
       prefix,
@@ -56479,14 +58414,14 @@ HTTP/1.1 %d %s
       }
     };
   }
-  var string21 = createCodec30("utf8", "u", (buf) => {
+  var string22 = createCodec32("utf8", "u", (buf) => {
     const decoder = new TextDecoder("utf8");
     return "u" + decoder.decode(buf);
   }, (str) => {
     const encoder2 = new TextEncoder();
     return encoder2.encode(str.substring(1));
   });
-  var ascii21 = createCodec30("ascii", "a", (buf) => {
+  var ascii22 = createCodec32("ascii", "a", (buf) => {
     let string37 = "a";
     for (let i = 0; i < buf.length; i++) {
       string37 += String.fromCharCode(buf[i]);
@@ -56494,26 +58429,26 @@ HTTP/1.1 %d %s
     return string37;
   }, (str) => {
     str = str.substring(1);
-    const buf = allocUnsafe25(str.length);
+    const buf = allocUnsafe26(str.length);
     for (let i = 0; i < str.length; i++) {
       buf[i] = str.charCodeAt(i);
     }
     return buf;
   });
-  var BASES21 = {
-    utf8: string21,
-    "utf-8": string21,
+  var BASES22 = {
+    utf8: string22,
+    "utf-8": string22,
     hex: bases.base16,
-    latin1: ascii21,
-    ascii: ascii21,
-    binary: ascii21,
+    latin1: ascii22,
+    ascii: ascii22,
+    binary: ascii22,
     ...bases
   };
-  var bases_default21 = BASES21;
+  var bases_default22 = BASES22;
 
   // node_modules/interface-datastore/node_modules/uint8arrays/dist/src/from-string.js
-  function fromString24(string37, encoding = "utf8") {
-    const base4 = bases_default21[encoding];
+  function fromString25(string37, encoding = "utf8") {
+    const base4 = bases_default22[encoding];
     if (base4 == null) {
       throw new Error(`Unsupported encoding "${encoding}"`);
     }
@@ -56521,8 +58456,8 @@ HTTP/1.1 %d %s
   }
 
   // node_modules/interface-datastore/node_modules/uint8arrays/dist/src/to-string.js
-  function toString11(array, encoding = "utf8") {
-    const base4 = bases_default21[encoding];
+  function toString12(array, encoding = "utf8") {
+    const base4 = bases_default22[encoding];
     if (base4 == null) {
       throw new Error(`Unsupported encoding "${encoding}"`);
     }
@@ -56541,7 +58476,7 @@ HTTP/1.1 %d %s
      */
     constructor(s2, clean3) {
       if (typeof s2 === "string") {
-        this._buf = fromString24(s2);
+        this._buf = fromString25(s2);
       } else if (s2 instanceof Uint8Array) {
         this._buf = s2;
       } else {
@@ -56564,7 +58499,7 @@ HTTP/1.1 %d %s
      * @returns {string}
      */
     toString(encoding = "utf8") {
-      return toString11(this._buf, encoding);
+      return toString12(this._buf, encoding);
     }
     /**
      * Return the Uint8Array representation of the key
@@ -57521,9 +59456,9 @@ HTTP/1.1 %d %s
           dels.push(key);
         },
         commit: async (options2) => {
-          await src_default11(this.putMany(puts, options2));
+          await src_default10(this.putMany(puts, options2));
           puts = [];
-          await src_default11(this.deleteMany(dels, options2));
+          await src_default10(this.deleteMany(dels, options2));
           dels = [];
         }
       };
@@ -57546,10 +59481,10 @@ HTTP/1.1 %d %s
       let it = this._all(q, options2);
       if (q.prefix != null) {
         const prefix = q.prefix;
-        it = src_default10(it, (e) => e.key.toString().startsWith(prefix));
+        it = src_default11(it, (e) => e.key.toString().startsWith(prefix));
       }
       if (Array.isArray(q.filters)) {
-        it = q.filters.reduce((it2, f) => src_default10(it2, f), it);
+        it = q.filters.reduce((it2, f) => src_default11(it2, f), it);
       }
       if (Array.isArray(q.orders)) {
         it = q.orders.reduce((it2, f) => src_default14(it2, f), it);
@@ -57557,7 +59492,7 @@ HTTP/1.1 %d %s
       if (q.offset != null) {
         let i = 0;
         const offset = q.offset;
-        it = src_default10(it, () => i++ >= offset);
+        it = src_default11(it, () => i++ >= offset);
       }
       if (q.limit != null) {
         it = src_default12(it, q.limit);
@@ -57568,10 +59503,10 @@ HTTP/1.1 %d %s
       let it = this._allKeys(q, options2);
       if (q.prefix != null) {
         const prefix = q.prefix;
-        it = src_default10(it, (key) => key.toString().startsWith(prefix));
+        it = src_default11(it, (key) => key.toString().startsWith(prefix));
       }
       if (Array.isArray(q.filters)) {
-        it = q.filters.reduce((it2, f) => src_default10(it2, f), it);
+        it = q.filters.reduce((it2, f) => src_default11(it2, f), it);
       }
       if (Array.isArray(q.orders)) {
         it = q.orders.reduce((it2, f) => src_default14(it2, f), it);
@@ -57579,7 +59514,7 @@ HTTP/1.1 %d %s
       if (q.offset != null) {
         const offset = q.offset;
         let i = 0;
-        it = src_default10(it, () => i++ >= offset);
+        it = src_default11(it, () => i++ >= offset);
       }
       if (q.limit != null) {
         it = src_default12(it, q.limit);
@@ -57633,7 +59568,7 @@ HTTP/1.1 %d %s
   };
 
   // node_modules/libp2p/node_modules/uint8arrays/dist/src/alloc.js
-  function allocUnsafe26(size = 0) {
+  function allocUnsafe27(size = 0) {
     return new Uint8Array(size);
   }
 
@@ -57654,7 +59589,7 @@ HTTP/1.1 %d %s
     if (length18 == null) {
       length18 = arrays.reduce((acc, curr) => acc + curr.length, 0);
     }
-    const output = allocUnsafe26(length18);
+    const output = allocUnsafe27(length18);
     let offset = 0;
     for (const arr of arrays) {
       output.set(arr, offset);
@@ -57664,7 +59599,7 @@ HTTP/1.1 %d %s
   }
 
   // node_modules/libp2p/node_modules/uint8arrays/dist/src/util/bases.js
-  function createCodec31(name10, prefix, encode19, decode20) {
+  function createCodec33(name10, prefix, encode19, decode20) {
     return {
       name: name10,
       prefix,
@@ -57678,14 +59613,14 @@ HTTP/1.1 %d %s
       }
     };
   }
-  var string22 = createCodec31("utf8", "u", (buf) => {
+  var string23 = createCodec33("utf8", "u", (buf) => {
     const decoder = new TextDecoder("utf8");
     return "u" + decoder.decode(buf);
   }, (str) => {
     const encoder2 = new TextEncoder();
     return encoder2.encode(str.substring(1));
   });
-  var ascii22 = createCodec31("ascii", "a", (buf) => {
+  var ascii23 = createCodec33("ascii", "a", (buf) => {
     let string37 = "a";
     for (let i = 0; i < buf.length; i++) {
       string37 += String.fromCharCode(buf[i]);
@@ -57693,26 +59628,26 @@ HTTP/1.1 %d %s
     return string37;
   }, (str) => {
     str = str.substring(1);
-    const buf = allocUnsafe26(str.length);
+    const buf = allocUnsafe27(str.length);
     for (let i = 0; i < str.length; i++) {
       buf[i] = str.charCodeAt(i);
     }
     return buf;
   });
-  var BASES22 = {
-    utf8: string22,
-    "utf-8": string22,
+  var BASES23 = {
+    utf8: string23,
+    "utf-8": string23,
     hex: bases.base16,
-    latin1: ascii22,
-    ascii: ascii22,
-    binary: ascii22,
+    latin1: ascii23,
+    ascii: ascii23,
+    binary: ascii23,
     ...bases
   };
-  var bases_default22 = BASES22;
+  var bases_default23 = BASES23;
 
   // node_modules/libp2p/node_modules/uint8arrays/dist/src/from-string.js
-  function fromString25(string37, encoding = "utf8") {
-    const base4 = bases_default22[encoding];
+  function fromString26(string37, encoding = "utf8") {
+    const base4 = bases_default23[encoding];
     if (base4 == null) {
       throw new Error(`Unsupported encoding "${encoding}"`);
     }
@@ -58000,7 +59935,7 @@ HTTP/1.1 %d %s
   };
 
   // node_modules/libp2p/dist/src/address-manager/observed-addresses.js
-  var defaultValues2 = {
+  var defaultValues3 = {
     maxObservedAddresses: 10
   };
   var ObservedAddresses = class {
@@ -58013,7 +59948,7 @@ HTTP/1.1 %d %s
         name: "libp2p_address_manager_observed_addresses",
         metrics: components.metrics
       });
-      this.maxObservedAddresses = init.maxObservedAddresses ?? defaultValues2.maxObservedAddresses;
+      this.maxObservedAddresses = init.maxObservedAddresses ?? defaultValues3.maxObservedAddresses;
     }
     has(ma) {
       return this.addresses.has(ma.toString());
@@ -58071,7 +60006,7 @@ HTTP/1.1 %d %s
   };
 
   // node_modules/libp2p/dist/src/address-manager/transport-addresses.js
-  var defaultValues3 = {
+  var defaultValues4 = {
     maxObservedAddresses: 10
   };
   var TransportAddresses = class {
@@ -58084,7 +60019,7 @@ HTTP/1.1 %d %s
         name: "libp2p_address_manager_transport_addresses",
         metrics: components.metrics
       });
-      this.maxObservedAddresses = init.maxObservedAddresses ?? defaultValues3.maxObservedAddresses;
+      this.maxObservedAddresses = init.maxObservedAddresses ?? defaultValues4.maxObservedAddresses;
     }
     get(multiaddr2, ttl) {
       if (isPrivate(multiaddr2)) {
@@ -58161,7 +60096,7 @@ HTTP/1.1 %d %s
 
   // node_modules/libp2p/dist/src/address-manager/index.js
   var ONE_MINUTE = 6e4;
-  var defaultValues4 = {
+  var defaultValues5 = {
     maxObservedAddresses: 10,
     addressVerificationTTL: ONE_MINUTE * 10,
     addressVerificationRetry: ONE_MINUTE * 5
@@ -58211,8 +60146,8 @@ HTTP/1.1 %d %s
       this.transportAddresses = new TransportAddresses(components, init);
       this.announceFilter = init.announceFilter ?? defaultAddressFilter;
       this.observedAddressFilter = createScalableCuckooFilter(1024);
-      this.addressVerificationTTL = init.addressVerificationTTL ?? defaultValues4.addressVerificationTTL;
-      this.addressVerificationRetry = init.addressVerificationRetry ?? defaultValues4.addressVerificationRetry;
+      this.addressVerificationTTL = init.addressVerificationTTL ?? defaultValues5.addressVerificationTTL;
+      this.addressVerificationRetry = init.addressVerificationRetry ?? defaultValues5.addressVerificationRetry;
       this._updatePeerStoreAddresses = debounce(this._updatePeerStoreAddresses.bind(this), 1e3);
       components.events.addEventListener("transport:listening", () => {
         this._updatePeerStoreAddresses();
@@ -59015,12 +60950,12 @@ HTTP/1.1 %d %s
   }
 
   // node_modules/@multiformats/dns/node_modules/uint8arrays/dist/src/alloc.js
-  function allocUnsafe27(size = 0) {
+  function allocUnsafe28(size = 0) {
     return new Uint8Array(size);
   }
 
   // node_modules/@multiformats/dns/node_modules/uint8arrays/dist/src/util/bases.js
-  function createCodec32(name10, prefix, encode19, decode20) {
+  function createCodec34(name10, prefix, encode19, decode20) {
     return {
       name: name10,
       prefix,
@@ -59034,14 +60969,14 @@ HTTP/1.1 %d %s
       }
     };
   }
-  var string23 = createCodec32("utf8", "u", (buf) => {
+  var string24 = createCodec34("utf8", "u", (buf) => {
     const decoder = new TextDecoder("utf8");
     return "u" + decoder.decode(buf);
   }, (str) => {
     const encoder2 = new TextEncoder();
     return encoder2.encode(str.substring(1));
   });
-  var ascii23 = createCodec32("ascii", "a", (buf) => {
+  var ascii24 = createCodec34("ascii", "a", (buf) => {
     let string37 = "a";
     for (let i = 0; i < buf.length; i++) {
       string37 += String.fromCharCode(buf[i]);
@@ -59049,26 +60984,26 @@ HTTP/1.1 %d %s
     return string37;
   }, (str) => {
     str = str.substring(1);
-    const buf = allocUnsafe27(str.length);
+    const buf = allocUnsafe28(str.length);
     for (let i = 0; i < str.length; i++) {
       buf[i] = str.charCodeAt(i);
     }
     return buf;
   });
-  var BASES23 = {
-    utf8: string23,
-    "utf-8": string23,
+  var BASES24 = {
+    utf8: string24,
+    "utf-8": string24,
     hex: bases.base16,
-    latin1: ascii23,
-    ascii: ascii23,
-    binary: ascii23,
+    latin1: ascii24,
+    ascii: ascii24,
+    binary: ascii24,
     ...bases
   };
-  var bases_default23 = BASES23;
+  var bases_default24 = BASES24;
 
   // node_modules/@multiformats/dns/node_modules/uint8arrays/dist/src/to-string.js
-  function toString12(array, encoding = "utf8") {
-    const base4 = bases_default23[encoding];
+  function toString13(array, encoding = "utf8") {
+    const base4 = bases_default24[encoding];
     if (base4 == null) {
       throw new Error(`Unsupported encoding "${encoding}"`);
     }
@@ -59096,7 +61031,7 @@ HTTP/1.1 %d %s
           name: answer.name,
           type: RecordType[answer.type],
           TTL: answer.TTL ?? answer.ttl ?? DEFAULT_TTL,
-          data: answer.data instanceof Uint8Array ? toString12(answer.data) : answer.data
+          data: answer.data instanceof Uint8Array ? toString13(answer.data) : answer.data
         };
       })
     };
@@ -59547,7 +61482,7 @@ HTTP/1.1 %d %s
                   conn.remoteAddr
                 ],
                 metadata: {
-                  [LAST_DIAL_SUCCESS_KEY]: fromString25(Date.now().toString())
+                  [LAST_DIAL_SUCCESS_KEY]: fromString26(Date.now().toString())
                 }
               });
             } catch (err) {
@@ -59561,7 +61496,7 @@ HTTP/1.1 %d %s
               try {
                 await this.components.peerStore.merge(peerId, {
                   metadata: {
-                    [LAST_DIAL_FAILURE_KEY]: fromString25(Date.now().toString())
+                    [LAST_DIAL_FAILURE_KEY]: fromString26(Date.now().toString())
                   }
                 });
               } catch (err2) {
@@ -59804,11 +61739,11 @@ HTTP/1.1 %d %s
     timeout = Math.min(timeout, options2.maxTimeout);
     return timeout;
   }
-  function calculateRemainingTime(start2, max) {
+  function calculateRemainingTime(start3, max) {
     if (!Number.isFinite(max)) {
       return max;
     }
-    return max - (performance.now() - start2);
+    return max - (performance.now() - start3);
   }
   async function delayForRetry(delay2, options2) {
     if (delay2 <= 0) {
@@ -60486,7 +62421,7 @@ HTTP/1.1 %d %s
       this.heartbeatInterval = setInterval(() => {
         this.components.connectionManager.getConnections().forEach((conn) => {
           Promise.resolve().then(async () => {
-            let start2 = Date.now();
+            let start3 = Date.now();
             const signal = this.timeout.getTimeoutSignal({
               signal: this.abortController?.signal
             });
@@ -60497,7 +62432,7 @@ HTTP/1.1 %d %s
                 runOnLimitedConnection: true
               });
               const bs = byteStream(stream);
-              start2 = Date.now();
+              start3 = Date.now();
               await Promise.all([
                 bs.write(crypto.getRandomValues(new Uint8Array(PING_LENGTH)), {
                   signal
@@ -60507,7 +62442,7 @@ HTTP/1.1 %d %s
                   signal
                 })
               ]);
-              conn.rtt = Date.now() - start2;
+              conn.rtt = Date.now() - start3;
               await stream.close({
                 signal
               });
@@ -60516,7 +62451,7 @@ HTTP/1.1 %d %s
               if (err.name !== "UnsupportedProtocolError") {
                 throw err;
               }
-              conn.rtt = (Date.now() - start2) / 2;
+              conn.rtt = (Date.now() - start3) / 2;
             } finally {
               this.timeout.cleanUp(signal);
             }
@@ -60541,8 +62476,8 @@ HTTP/1.1 %d %s
   };
 
   // node_modules/libp2p/node_modules/uint8arrays/dist/src/to-string.js
-  function toString13(array, encoding = "utf8") {
-    const base4 = bases_default22[encoding];
+  function toString14(array, encoding = "utf8") {
+    const base4 = bases_default23[encoding];
     if (base4 == null) {
       throw new Error(`Unsupported encoding "${encoding}"`);
     }
@@ -60595,7 +62530,7 @@ HTTP/1.1 %d %s
         optionsIndex: 2,
         getAttributesFromArgs: ([key]) => {
           return {
-            key: toString13(key, "base36")
+            key: toString14(key, "base36")
           };
         }
       }) ?? this.put;
@@ -60603,7 +62538,7 @@ HTTP/1.1 %d %s
         optionsIndex: 1,
         getAttributesFromArgs: ([key]) => {
           return {
-            key: toString13(key, "base36")
+            key: toString14(key, "base36")
           };
         }
       }) ?? this.get;
@@ -60713,7 +62648,7 @@ HTTP/1.1 %d %s
         getAttributesFromArgs: ([key], attrs) => {
           return {
             ...attrs,
-            key: toString13(key, "base36")
+            key: toString14(key, "base36")
           };
         },
         getAttributesFromYieldedValue: (value2, attrs) => {
@@ -60866,7 +62801,7 @@ HTTP/1.1 %d %s
       setMaxListeners(Infinity, this.walkController.signal);
       const signal = anySignal([this.walkController.signal, this.shutdownController.signal]);
       setMaxListeners(Infinity, signal);
-      const start2 = Date.now();
+      const start3 = Date.now();
       let found = 0;
       Promise.resolve().then(async () => {
         this.log("start walk");
@@ -60902,7 +62837,7 @@ HTTP/1.1 %d %s
       }).catch((err) => {
         this.log.error("random walk errored - %e", err);
       }).finally(() => {
-        this.log("finished walk, found %d peers after %dms", found, Date.now() - start2);
+        this.log("finished walk, found %d peers after %dms", found, Date.now() - start3);
         this.walking = false;
       });
     }
@@ -61399,15 +63334,15 @@ ${[...listenStats.errors.entries()].map(([addr, err]) => {
   var MAX_PROTOCOL_LENGTH = 1024;
 
   // node_modules/@libp2p/multistream-select/node_modules/uint8arrays/dist/src/alloc.js
-  function alloc26(size = 0) {
+  function alloc27(size = 0) {
     return new Uint8Array(size);
   }
-  function allocUnsafe28(size = 0) {
+  function allocUnsafe29(size = 0) {
     return new Uint8Array(size);
   }
 
   // node_modules/@libp2p/multistream-select/node_modules/uint8arrays/dist/src/util/bases.js
-  function createCodec33(name10, prefix, encode19, decode20) {
+  function createCodec35(name10, prefix, encode19, decode20) {
     return {
       name: name10,
       prefix,
@@ -61421,14 +63356,14 @@ ${[...listenStats.errors.entries()].map(([addr, err]) => {
       }
     };
   }
-  var string24 = createCodec33("utf8", "u", (buf) => {
+  var string25 = createCodec35("utf8", "u", (buf) => {
     const decoder = new TextDecoder("utf8");
     return "u" + decoder.decode(buf);
   }, (str) => {
     const encoder2 = new TextEncoder();
     return encoder2.encode(str.substring(1));
   });
-  var ascii24 = createCodec33("ascii", "a", (buf) => {
+  var ascii25 = createCodec35("ascii", "a", (buf) => {
     let string37 = "a";
     for (let i = 0; i < buf.length; i++) {
       string37 += String.fromCharCode(buf[i]);
@@ -61436,26 +63371,26 @@ ${[...listenStats.errors.entries()].map(([addr, err]) => {
     return string37;
   }, (str) => {
     str = str.substring(1);
-    const buf = allocUnsafe28(str.length);
+    const buf = allocUnsafe29(str.length);
     for (let i = 0; i < str.length; i++) {
       buf[i] = str.charCodeAt(i);
     }
     return buf;
   });
-  var BASES24 = {
-    utf8: string24,
-    "utf-8": string24,
+  var BASES25 = {
+    utf8: string25,
+    "utf-8": string25,
     hex: bases.base16,
-    latin1: ascii24,
-    ascii: ascii24,
-    binary: ascii24,
+    latin1: ascii25,
+    ascii: ascii25,
+    binary: ascii25,
     ...bases
   };
-  var bases_default24 = BASES24;
+  var bases_default25 = BASES25;
 
   // node_modules/@libp2p/multistream-select/node_modules/uint8arrays/dist/src/from-string.js
-  function fromString26(string37, encoding = "utf8") {
-    const base4 = bases_default24[encoding];
+  function fromString27(string37, encoding = "utf8") {
+    const base4 = bases_default25[encoding];
     if (base4 == null) {
       throw new Error(`Unsupported encoding "${encoding}"`);
     }
@@ -61463,8 +63398,8 @@ ${[...listenStats.errors.entries()].map(([addr, err]) => {
   }
 
   // node_modules/@libp2p/multistream-select/node_modules/uint8arrays/dist/src/to-string.js
-  function toString14(array, encoding = "utf8") {
-    const base4 = bases_default24[encoding];
+  function toString15(array, encoding = "utf8") {
+    const base4 = bases_default25[encoding];
     if (base4 == null) {
       throw new Error(`Unsupported encoding "${encoding}"`);
     }
@@ -61472,14 +63407,14 @@ ${[...listenStats.errors.entries()].map(([addr, err]) => {
   }
 
   // node_modules/@libp2p/multistream-select/dist/src/multistream.js
-  var NewLine = fromString26("\n");
+  var NewLine = fromString27("\n");
   async function readString(reader, options2) {
     const buf = await reader.read(options2);
     const arr = buf.subarray();
     if (arr.byteLength === 0 || arr[arr.length - 1] !== NewLine[0]) {
       throw new InvalidMessageError("Missing newline");
     }
-    return toString14(arr).trimEnd();
+    return toString15(arr).trimEnd();
   }
 
   // node_modules/@libp2p/multistream-select/dist/src/select.js
@@ -61498,9 +63433,9 @@ ${[...listenStats.errors.entries()].map(([addr, err]) => {
       let response;
       if (i === 0) {
         log14.trace('write ["%s", "%s"]', PROTOCOL_ID, protocol);
-        const p1 = fromString26(`${PROTOCOL_ID}
+        const p1 = fromString27(`${PROTOCOL_ID}
 `);
-        const p2 = fromString26(`${protocol}
+        const p2 = fromString27(`${protocol}
 `);
         await lp.writeV([p1, p2], options2);
         log14.trace("reading multistream-select header");
@@ -61512,7 +63447,7 @@ ${[...listenStats.errors.entries()].map(([addr, err]) => {
         }
       } else {
         log14.trace('write "%s"', protocol);
-        await lp.write(fromString26(`${protocol}
+        await lp.write(fromString27(`${protocol}
 `), options2);
       }
       log14.trace("reading protocol response");
@@ -61544,7 +63479,7 @@ ${[...listenStats.errors.entries()].map(([addr, err]) => {
     if (length18 == null) {
       length18 = arrays.reduce((acc, curr) => acc + curr.length, 0);
     }
-    const output = allocUnsafe28(length18);
+    const output = allocUnsafe29(length18);
     let offset = 0;
     for (const arr of arrays) {
       output.set(arr, offset);
@@ -61783,8 +63718,8 @@ ${[...listenStats.errors.entries()].map(([addr, err]) => {
             bufs.push(buf);
             break;
           }
-          const start2 = beginInclusive - bufStart;
-          bufs.push(buf.subarray(start2, start2 + (endExclusive - beginInclusive)));
+          const start3 = beginInclusive - bufStart;
+          bufs.push(buf.subarray(start3, start3 + (endExclusive - beginInclusive)));
           break;
         }
         if (sliceStartInBuf) {
@@ -61862,7 +63797,7 @@ ${[...listenStats.errors.entries()].map(([addr, err]) => {
       return view.getInt8(0);
     }
     setInt8(byteOffset, value2) {
-      const buf = allocUnsafe28(1);
+      const buf = allocUnsafe29(1);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setInt8(0, value2);
       this.write(buf, byteOffset);
@@ -61873,7 +63808,7 @@ ${[...listenStats.errors.entries()].map(([addr, err]) => {
       return view.getInt16(0, littleEndian);
     }
     setInt16(byteOffset, value2, littleEndian) {
-      const buf = alloc26(2);
+      const buf = alloc27(2);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setInt16(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -61884,7 +63819,7 @@ ${[...listenStats.errors.entries()].map(([addr, err]) => {
       return view.getInt32(0, littleEndian);
     }
     setInt32(byteOffset, value2, littleEndian) {
-      const buf = alloc26(4);
+      const buf = alloc27(4);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setInt32(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -61895,7 +63830,7 @@ ${[...listenStats.errors.entries()].map(([addr, err]) => {
       return view.getBigInt64(0, littleEndian);
     }
     setBigInt64(byteOffset, value2, littleEndian) {
-      const buf = alloc26(8);
+      const buf = alloc27(8);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setBigInt64(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -61906,7 +63841,7 @@ ${[...listenStats.errors.entries()].map(([addr, err]) => {
       return view.getUint8(0);
     }
     setUint8(byteOffset, value2) {
-      const buf = allocUnsafe28(1);
+      const buf = allocUnsafe29(1);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setUint8(0, value2);
       this.write(buf, byteOffset);
@@ -61917,7 +63852,7 @@ ${[...listenStats.errors.entries()].map(([addr, err]) => {
       return view.getUint16(0, littleEndian);
     }
     setUint16(byteOffset, value2, littleEndian) {
-      const buf = alloc26(2);
+      const buf = alloc27(2);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setUint16(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -61928,7 +63863,7 @@ ${[...listenStats.errors.entries()].map(([addr, err]) => {
       return view.getUint32(0, littleEndian);
     }
     setUint32(byteOffset, value2, littleEndian) {
-      const buf = alloc26(4);
+      const buf = alloc27(4);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setUint32(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -61939,7 +63874,7 @@ ${[...listenStats.errors.entries()].map(([addr, err]) => {
       return view.getBigUint64(0, littleEndian);
     }
     setBigUint64(byteOffset, value2, littleEndian) {
-      const buf = alloc26(8);
+      const buf = alloc27(8);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setBigUint64(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -61950,7 +63885,7 @@ ${[...listenStats.errors.entries()].map(([addr, err]) => {
       return view.getFloat32(0, littleEndian);
     }
     setFloat32(byteOffset, value2, littleEndian) {
-      const buf = alloc26(4);
+      const buf = alloc27(4);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setFloat32(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -61961,7 +63896,7 @@ ${[...listenStats.errors.entries()].map(([addr, err]) => {
       return view.getFloat64(0, littleEndian);
     }
     setFloat64(byteOffset, value2, littleEndian) {
-      const buf = alloc26(8);
+      const buf = alloc27(8);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setFloat64(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -62014,29 +63949,29 @@ ${[...listenStats.errors.entries()].map(([addr, err]) => {
       log14.trace('read "%s"', protocol);
       if (protocol === PROTOCOL_ID) {
         log14.trace('respond with "%s" for "%s"', PROTOCOL_ID, protocol);
-        await lp.write(fromString26(`${PROTOCOL_ID}
+        await lp.write(fromString27(`${PROTOCOL_ID}
 `), options2);
         log14.trace('responded with "%s" for "%s"', PROTOCOL_ID, protocol);
         continue;
       }
       if (protocols.includes(protocol)) {
         log14.trace('respond with "%s" for "%s"', protocol, protocol);
-        await lp.write(fromString26(`${protocol}
+        await lp.write(fromString27(`${protocol}
 `), options2);
         log14.trace('responded with "%s" for "%s"', protocol, protocol);
         lp.unwrap();
         return protocol;
       }
       if (protocol === "ls") {
-        const protos = new Uint8ArrayList13(...protocols.map((p) => encode9.single(fromString26(`${p}
-`))), fromString26("\n"));
+        const protos = new Uint8ArrayList13(...protocols.map((p) => encode9.single(fromString27(`${p}
+`))), fromString27("\n"));
         log14.trace('respond with "%s" for %s', protocols, protocol);
         await lp.write(protos, options2);
         log14.trace('responded with "%s" for %s', protocols, protocol);
         continue;
       }
       log14.trace('respond with "na" for "%s"', protocol);
-      await lp.write(fromString26("na\n"), options2);
+      await lp.write(fromString27("na\n"), options2);
       log14('responded with "na" for "%s"', protocol);
     }
   }
@@ -62840,7 +64775,7 @@ ${[...listenStats.errors.entries()].map(([addr, err]) => {
         }
       }
       const peerKey = concat18([
-        fromString25("/pk/"),
+        fromString26("/pk/"),
         peer.toMultihash().bytes
       ]);
       const bytes = await this.contentRouting.get(peerKey, options2);
@@ -62926,11 +64861,11 @@ ${[...listenStats.errors.entries()].map(([addr, err]) => {
   }
 
   // node_modules/@helia/libp2p/node_modules/uint8arrays/dist/src/with-array-buffer.js
-  function isArrayBufferBacked13(arr) {
+  function isArrayBufferBacked14(arr) {
     return arr.buffer instanceof ArrayBuffer;
   }
-  function withArrayBuffer13(arr) {
-    if (isArrayBufferBacked13(arr)) {
+  function withArrayBuffer14(arr) {
+    if (isArrayBufferBacked14(arr)) {
       return arr;
     }
     return arr.slice();
@@ -62973,7 +64908,7 @@ ${[...listenStats.errors.entries()].map(([addr, err]) => {
       await this.libp2p.contentRouting.put(key, value2, options2);
     }
     async get(key, options2) {
-      return withArrayBuffer13(await this.libp2p.contentRouting.get(key, options2));
+      return withArrayBuffer14(await this.libp2p.contentRouting.get(key, options2));
     }
     async findPeer(peerId, options2) {
       return peerInfoToPeer(await this.libp2p.peerRouting.findPeer(peerIdFromCID(peerId), options2));
@@ -63167,12 +65102,12 @@ ${[...listenStats.errors.entries()].map(([addr, err]) => {
   var import_sanitize_filename = __toESM(require_sanitize_filename(), 1);
 
   // node_modules/@libp2p/keychain/node_modules/uint8arrays/dist/src/alloc.js
-  function allocUnsafe29(size = 0) {
+  function allocUnsafe30(size = 0) {
     return new Uint8Array(size);
   }
 
   // node_modules/@libp2p/keychain/node_modules/uint8arrays/dist/src/util/bases.js
-  function createCodec34(name10, prefix, encode19, decode20) {
+  function createCodec36(name10, prefix, encode19, decode20) {
     return {
       name: name10,
       prefix,
@@ -63186,14 +65121,14 @@ ${[...listenStats.errors.entries()].map(([addr, err]) => {
       }
     };
   }
-  var string25 = createCodec34("utf8", "u", (buf) => {
+  var string26 = createCodec36("utf8", "u", (buf) => {
     const decoder = new TextDecoder("utf8");
     return "u" + decoder.decode(buf);
   }, (str) => {
     const encoder2 = new TextEncoder();
     return encoder2.encode(str.substring(1));
   });
-  var ascii25 = createCodec34("ascii", "a", (buf) => {
+  var ascii26 = createCodec36("ascii", "a", (buf) => {
     let string37 = "a";
     for (let i = 0; i < buf.length; i++) {
       string37 += String.fromCharCode(buf[i]);
@@ -63201,26 +65136,26 @@ ${[...listenStats.errors.entries()].map(([addr, err]) => {
     return string37;
   }, (str) => {
     str = str.substring(1);
-    const buf = allocUnsafe29(str.length);
+    const buf = allocUnsafe30(str.length);
     for (let i = 0; i < str.length; i++) {
       buf[i] = str.charCodeAt(i);
     }
     return buf;
   });
-  var BASES25 = {
-    utf8: string25,
-    "utf-8": string25,
+  var BASES26 = {
+    utf8: string26,
+    "utf-8": string26,
     hex: bases.base16,
-    latin1: ascii25,
-    ascii: ascii25,
-    binary: ascii25,
+    latin1: ascii26,
+    ascii: ascii26,
+    binary: ascii26,
     ...bases
   };
-  var bases_default25 = BASES25;
+  var bases_default26 = BASES26;
 
   // node_modules/@libp2p/keychain/node_modules/uint8arrays/dist/src/from-string.js
-  function fromString27(string37, encoding = "utf8") {
-    const base4 = bases_default25[encoding];
+  function fromString28(string37, encoding = "utf8") {
+    const base4 = bases_default26[encoding];
     if (base4 == null) {
       throw new Error(`Unsupported encoding "${encoding}"`);
     }
@@ -63228,8 +65163,8 @@ ${[...listenStats.errors.entries()].map(([addr, err]) => {
   }
 
   // node_modules/@libp2p/keychain/node_modules/uint8arrays/dist/src/to-string.js
-  function toString15(array, encoding = "utf8") {
-    const base4 = bases_default25[encoding];
+  function toString16(array, encoding = "utf8") {
+    const base4 = bases_default26[encoding];
     if (base4 == null) {
       throw new Error(`Unsupported encoding "${encoding}"`);
     }
@@ -66147,11 +68082,11 @@ ${values.join("\n")}` : `${blockName} :`;
   TIME.NAME = "TIME";
 
   // node_modules/@libp2p/keychain/node_modules/uint8arrays/dist/src/with-array-buffer.js
-  function isArrayBufferBacked14(arr) {
+  function isArrayBufferBacked15(arr) {
     return arr.buffer instanceof ArrayBuffer;
   }
-  function withArrayBuffer14(arr) {
-    if (isArrayBufferBacked14(arr)) {
+  function withArrayBuffer15(arr) {
+    if (isArrayBufferBacked15(arr)) {
       return arr;
     }
     return arr.slice();
@@ -66243,11 +68178,11 @@ ${values.join("\n")}` : `${blockName} :`;
       dkLen: KEY_SIZE
     });
     const iv = crypto2.getRandomValues(new Uint8Array(16));
-    const cryptoKey = await crypto2.subtle.importKey("raw", withArrayBuffer14(encryptionKey), "AES-CBC", false, ["encrypt"]);
+    const cryptoKey = await crypto2.subtle.importKey("raw", withArrayBuffer15(encryptionKey), "AES-CBC", false, ["encrypt"]);
     const encrypted = await crypto2.subtle.encrypt({
       name: "AES-CBC",
-      iv: withArrayBuffer14(iv)
-    }, cryptoKey, withArrayBuffer14(keyArr));
+      iv: withArrayBuffer15(iv)
+    }, cryptoKey, withArrayBuffer15(keyArr));
     const pbkdf2Params = new Sequence({
       value: [
         // salt
@@ -66312,7 +68247,7 @@ ${values.join("\n")}` : `${blockName} :`;
     const finalWrapperArr = new Uint8Array(finalWrapperBuf, 0, finalWrapperBuf.byteLength);
     return [
       "-----BEGIN ENCRYPTED PRIVATE KEY-----",
-      ...toString15(finalWrapperArr, "base64pad").split(/(.{64})/).filter(Boolean),
+      ...toString16(finalWrapperArr, "base64pad").split(/(.{64})/).filter(Boolean),
       "-----END ENCRYPTED PRIVATE KEY-----"
     ].join("\n");
   }
@@ -66338,22 +68273,22 @@ ${values.join("\n")}` : `${blockName} :`;
     const crypto2 = webcrypto_default.get();
     let plaintext;
     if (pem.includes("-----BEGIN ENCRYPTED PRIVATE KEY-----")) {
-      const key2 = fromString27(pem.replace("-----BEGIN ENCRYPTED PRIVATE KEY-----", "").replace("-----END ENCRYPTED PRIVATE KEY-----", "").replace(/\n/g, "").trim(), "base64pad");
+      const key2 = fromString28(pem.replace("-----BEGIN ENCRYPTED PRIVATE KEY-----", "").replace("-----END ENCRYPTED PRIVATE KEY-----", "").replace(/\n/g, "").trim(), "base64pad");
       const { result } = fromBER(key2);
       const { iv, salt, iterations, keySize, cipherText } = findEncryptedPEMData(result);
       const encryptionKey = await pbkdf2Async(sha5122, password, salt, {
         c: iterations,
         dkLen: keySize
       });
-      const cryptoKey = await crypto2.subtle.importKey("raw", withArrayBuffer14(encryptionKey), "AES-CBC", false, ["decrypt"]);
+      const cryptoKey = await crypto2.subtle.importKey("raw", withArrayBuffer15(encryptionKey), "AES-CBC", false, ["decrypt"]);
       const decrypted = toUint8Array(await crypto2.subtle.decrypt({
         name: "AES-CBC",
-        iv: withArrayBuffer14(iv)
-      }, cryptoKey, withArrayBuffer14(cipherText)));
+        iv: withArrayBuffer15(iv)
+      }, cryptoKey, withArrayBuffer15(cipherText)));
       const { result: decryptedResult } = fromBER(decrypted);
       plaintext = findPEMData(decryptedResult);
     } else if (pem.includes("-----BEGIN PRIVATE KEY-----")) {
-      const key2 = fromString27(pem.replace("-----BEGIN PRIVATE KEY-----", "").replace("-----END PRIVATE KEY-----", "").replace(/\n/g, "").trim(), "base64pad");
+      const key2 = fromString28(pem.replace("-----BEGIN PRIVATE KEY-----", "").replace("-----END PRIVATE KEY-----", "").replace(/\n/g, "").trim(), "base64pad");
       const { result } = fromBER(key2);
       plaintext = findPEMData(result);
     } else {
@@ -66494,7 +68429,7 @@ ${values.join("\n")}` : `${blockName} :`;
       const options2 = Object.assign({}, this.options);
       const saltLength = Math.ceil(NIST.minSaltLength / 3) * 3;
       if (options2.dek != null) {
-        options2.dek.salt = toString15(crypto.getRandomValues(new Uint8Array(saltLength)), "base64");
+        options2.dek.salt = toString16(crypto.getRandomValues(new Uint8Array(saltLength)), "base64");
       }
       return options2;
     }
@@ -66519,7 +68454,7 @@ ${values.join("\n")}` : `${blockName} :`;
       const datastoreName = DsInfoName(name10);
       try {
         const res = await this.components.datastore.get(datastoreName);
-        return JSON.parse(toString15(res));
+        return JSON.parse(toString16(res));
       } catch (err) {
         await randomDelay();
         this.log.error("could not read key from datastore - %e", err);
@@ -66532,7 +68467,7 @@ ${values.join("\n")}` : `${blockName} :`;
           prefix: infoPrefix
         };
         for await (const value2 of this.components.datastore.query(query)) {
-          const key = JSON.parse(toString15(value2.value));
+          const key = JSON.parse(toString16(value2.value));
           if (key.id === id) {
             return key;
           }
@@ -66577,8 +68512,8 @@ ${values.join("\n")}` : `${blockName} :`;
         id: kid
       };
       const batch2 = this.components.datastore.batch();
-      batch2.put(datastoreName, fromString27(pem));
-      batch2.put(DsInfoName(name10), fromString27(JSON.stringify(keyInfo)));
+      batch2.put(datastoreName, fromString28(pem));
+      batch2.put(DsInfoName(name10), fromString28(JSON.stringify(keyInfo)));
       await batch2.commit();
       return keyInfo;
     }
@@ -66590,7 +68525,7 @@ ${values.join("\n")}` : `${blockName} :`;
       const datastoreName = DsName(name10);
       try {
         const res = await this.components.datastore.get(datastoreName);
-        const pem = toString15(res);
+        const pem = toString16(res);
         const cached = privates.get(this);
         if (cached == null) {
           throw new InvalidParametersError("dek missing");
@@ -66626,7 +68561,7 @@ ${values.join("\n")}` : `${blockName} :`;
       };
       const info = [];
       for await (const value2 of this.components.datastore.query(query)) {
-        info.push(JSON.parse(toString15(value2.value)));
+        info.push(JSON.parse(toString16(value2.value)));
       }
       return info;
     }
@@ -66658,11 +68593,11 @@ ${values.join("\n")}` : `${blockName} :`;
       try {
         const pem = await this.components.datastore.get(oldDatastoreName);
         const res = await this.components.datastore.get(oldInfoName);
-        const keyInfo = JSON.parse(toString15(res));
+        const keyInfo = JSON.parse(toString16(res));
         keyInfo.name = newName;
         const batch2 = this.components.datastore.batch();
         batch2.put(newDatastoreName, pem);
-        batch2.put(newInfoName, fromString27(JSON.stringify(keyInfo)));
+        batch2.put(newInfoName, fromString28(JSON.stringify(keyInfo)));
         batch2.delete(oldDatastoreName);
         batch2.delete(oldInfoName);
         await batch2.commit();
@@ -66700,7 +68635,7 @@ ${values.join("\n")}` : `${blockName} :`;
       const keys = await this.listKeys();
       for (const key of keys) {
         const res = await this.components.datastore.get(DsName(key.name));
-        const pem = toString15(res);
+        const pem = toString16(res);
         const privateKey = await importPrivateKey(pem, oldDek);
         const password = newDek.toString();
         const keyAsPEM = await exportPrivateKey(privateKey, password, privateKey.type === "RSA" ? "pkcs-8" : "libp2p-key");
@@ -66709,8 +68644,8 @@ ${values.join("\n")}` : `${blockName} :`;
           name: key.name,
           id: key.id
         };
-        batch2.put(DsName(key.name), fromString27(keyAsPEM));
-        batch2.put(DsInfoName(key.name), fromString27(JSON.stringify(keyInfo)));
+        batch2.put(DsName(key.name), fromString28(keyAsPEM));
+        batch2.put(DsInfoName(key.name), fromString28(JSON.stringify(keyInfo)));
         await batch2.commit();
       }
       this.log("keychain reconstructed");
@@ -66752,62 +68687,62 @@ ${values.join("\n")}` : `${blockName} :`;
   var MAX_MESSAGE_SIZE2 = 8192;
 
   // node_modules/@libp2p/autonat/node_modules/uint8arrays/dist/src/with-array-buffer.js
-  function isArrayBufferBacked15(arr) {
+  function isArrayBufferBacked16(arr) {
     return arr.buffer instanceof ArrayBuffer;
   }
-  function withArrayBuffer15(arr) {
-    if (isArrayBufferBacked15(arr)) {
+  function withArrayBuffer16(arr) {
+    if (isArrayBufferBacked16(arr)) {
       return arr;
     }
     return arr.slice();
   }
 
   // node_modules/@libp2p/autonat/node_modules/protons-runtime/dist/src/utils/float.js
-  var f3210 = new Float32Array([-0]);
-  var f8b10 = new Uint8Array(f3210.buffer);
-  function writeFloatLE10(val, buf, pos) {
-    f3210[0] = val;
-    buf[pos] = f8b10[0];
-    buf[pos + 1] = f8b10[1];
-    buf[pos + 2] = f8b10[2];
-    buf[pos + 3] = f8b10[3];
+  var f3211 = new Float32Array([-0]);
+  var f8b11 = new Uint8Array(f3211.buffer);
+  function writeFloatLE11(val, buf, pos) {
+    f3211[0] = val;
+    buf[pos] = f8b11[0];
+    buf[pos + 1] = f8b11[1];
+    buf[pos + 2] = f8b11[2];
+    buf[pos + 3] = f8b11[3];
   }
-  function readFloatLE10(buf, pos) {
-    f8b10[0] = buf[pos];
-    f8b10[1] = buf[pos + 1];
-    f8b10[2] = buf[pos + 2];
-    f8b10[3] = buf[pos + 3];
-    return f3210[0];
+  function readFloatLE11(buf, pos) {
+    f8b11[0] = buf[pos];
+    f8b11[1] = buf[pos + 1];
+    f8b11[2] = buf[pos + 2];
+    f8b11[3] = buf[pos + 3];
+    return f3211[0];
   }
-  var f6410 = new Float64Array([-0]);
-  var d8b10 = new Uint8Array(f6410.buffer);
-  function writeDoubleLE10(val, buf, pos) {
-    f6410[0] = val;
-    buf[pos] = d8b10[0];
-    buf[pos + 1] = d8b10[1];
-    buf[pos + 2] = d8b10[2];
-    buf[pos + 3] = d8b10[3];
-    buf[pos + 4] = d8b10[4];
-    buf[pos + 5] = d8b10[5];
-    buf[pos + 6] = d8b10[6];
-    buf[pos + 7] = d8b10[7];
+  var f6411 = new Float64Array([-0]);
+  var d8b11 = new Uint8Array(f6411.buffer);
+  function writeDoubleLE11(val, buf, pos) {
+    f6411[0] = val;
+    buf[pos] = d8b11[0];
+    buf[pos + 1] = d8b11[1];
+    buf[pos + 2] = d8b11[2];
+    buf[pos + 3] = d8b11[3];
+    buf[pos + 4] = d8b11[4];
+    buf[pos + 5] = d8b11[5];
+    buf[pos + 6] = d8b11[6];
+    buf[pos + 7] = d8b11[7];
   }
-  function readDoubleLE10(buf, pos) {
-    d8b10[0] = buf[pos];
-    d8b10[1] = buf[pos + 1];
-    d8b10[2] = buf[pos + 2];
-    d8b10[3] = buf[pos + 3];
-    d8b10[4] = buf[pos + 4];
-    d8b10[5] = buf[pos + 5];
-    d8b10[6] = buf[pos + 6];
-    d8b10[7] = buf[pos + 7];
-    return f6410[0];
+  function readDoubleLE11(buf, pos) {
+    d8b11[0] = buf[pos];
+    d8b11[1] = buf[pos + 1];
+    d8b11[2] = buf[pos + 2];
+    d8b11[3] = buf[pos + 3];
+    d8b11[4] = buf[pos + 4];
+    d8b11[5] = buf[pos + 5];
+    d8b11[6] = buf[pos + 6];
+    d8b11[7] = buf[pos + 7];
+    return f6411[0];
   }
 
   // node_modules/@libp2p/autonat/node_modules/protons-runtime/dist/src/utils/longbits.js
-  var MAX_SAFE_NUMBER_INTEGER10 = BigInt(Number.MAX_SAFE_INTEGER);
-  var MIN_SAFE_NUMBER_INTEGER10 = BigInt(Number.MIN_SAFE_INTEGER);
-  var LongBits10 = class _LongBits {
+  var MAX_SAFE_NUMBER_INTEGER11 = BigInt(Number.MAX_SAFE_INTEGER);
+  var MIN_SAFE_NUMBER_INTEGER11 = BigInt(Number.MIN_SAFE_INTEGER);
+  var LongBits11 = class _LongBits {
     lo;
     hi;
     constructor(lo, hi) {
@@ -66883,9 +68818,9 @@ ${values.join("\n")}` : `${blockName} :`;
      */
     static fromBigInt(value2) {
       if (value2 === 0n) {
-        return zero10;
+        return zero11;
       }
-      if (value2 < MAX_SAFE_NUMBER_INTEGER10 && value2 > MIN_SAFE_NUMBER_INTEGER10) {
+      if (value2 < MAX_SAFE_NUMBER_INTEGER11 && value2 > MIN_SAFE_NUMBER_INTEGER11) {
         return this.fromNumber(Number(value2));
       }
       const negative = value2 < 0n;
@@ -66897,9 +68832,9 @@ ${values.join("\n")}` : `${blockName} :`;
       if (negative) {
         hi = ~hi | 0n;
         lo = ~lo | 0n;
-        if (++lo > TWO_3210) {
+        if (++lo > TWO_3211) {
           lo = 0n;
-          if (++hi > TWO_3210) {
+          if (++hi > TWO_3211) {
             hi = 0n;
           }
         }
@@ -66911,7 +68846,7 @@ ${values.join("\n")}` : `${blockName} :`;
      */
     static fromNumber(value2) {
       if (value2 === 0) {
-        return zero10;
+        return zero11;
       }
       const sign = value2 < 0;
       if (sign) {
@@ -66944,23 +68879,23 @@ ${values.join("\n")}` : `${blockName} :`;
       if (typeof value2 === "string") {
         return _LongBits.fromBigInt(BigInt(value2));
       }
-      return value2.low != null || value2.high != null ? new _LongBits(value2.low >>> 0, value2.high >>> 0) : zero10;
+      return value2.low != null || value2.high != null ? new _LongBits(value2.low >>> 0, value2.high >>> 0) : zero11;
     }
   };
-  var zero10 = new LongBits10(0, 0);
-  zero10.toBigInt = function() {
+  var zero11 = new LongBits11(0, 0);
+  zero11.toBigInt = function() {
     return 0n;
   };
-  zero10.zzEncode = zero10.zzDecode = function() {
+  zero11.zzEncode = zero11.zzDecode = function() {
     return this;
   };
-  zero10.length = function() {
+  zero11.length = function() {
     return 1;
   };
-  var TWO_3210 = 4294967296n;
+  var TWO_3211 = 4294967296n;
 
   // node_modules/@libp2p/autonat/node_modules/protons-runtime/dist/src/utils/utf8.js
-  function length12(string37) {
+  function length13(string37) {
     let len = 0;
     let c = 0;
     for (let i = 0; i < string37.length; ++i) {
@@ -66978,8 +68913,8 @@ ${values.join("\n")}` : `${blockName} :`;
     }
     return len;
   }
-  function read12(buffer2, start2, end) {
-    const len = end - start2;
+  function read13(buffer2, start3, end) {
+    const len = end - start3;
     if (len < 1) {
       return "";
     }
@@ -66987,18 +68922,18 @@ ${values.join("\n")}` : `${blockName} :`;
     const chunk = [];
     let i = 0;
     let t;
-    while (start2 < end) {
-      t = buffer2[start2++];
+    while (start3 < end) {
+      t = buffer2[start3++];
       if (t < 128) {
         chunk[i++] = t;
       } else if (t > 191 && t < 224) {
-        chunk[i++] = (t & 31) << 6 | buffer2[start2++] & 63;
+        chunk[i++] = (t & 31) << 6 | buffer2[start3++] & 63;
       } else if (t > 239 && t < 365) {
-        t = ((t & 7) << 18 | (buffer2[start2++] & 63) << 12 | (buffer2[start2++] & 63) << 6 | buffer2[start2++] & 63) - 65536;
+        t = ((t & 7) << 18 | (buffer2[start3++] & 63) << 12 | (buffer2[start3++] & 63) << 6 | buffer2[start3++] & 63) - 65536;
         chunk[i++] = 55296 + (t >> 10);
         chunk[i++] = 56320 + (t & 1023);
       } else {
-        chunk[i++] = (t & 15) << 12 | (buffer2[start2++] & 63) << 6 | buffer2[start2++] & 63;
+        chunk[i++] = (t & 15) << 12 | (buffer2[start3++] & 63) << 6 | buffer2[start3++] & 63;
       }
       if (i > 8191) {
         (parts ?? (parts = [])).push(String.fromCharCode.apply(String, chunk));
@@ -67013,8 +68948,8 @@ ${values.join("\n")}` : `${blockName} :`;
     }
     return String.fromCharCode.apply(String, chunk.slice(0, i));
   }
-  function write10(string37, buffer2, offset) {
-    const start2 = offset;
+  function write11(string37, buffer2, offset) {
+    const start3 = offset;
     let c1;
     let c2;
     for (let i = 0; i < string37.length; ++i) {
@@ -67037,23 +68972,23 @@ ${values.join("\n")}` : `${blockName} :`;
         buffer2[offset++] = c1 & 63 | 128;
       }
     }
-    return offset - start2;
+    return offset - start3;
   }
 
   // node_modules/@libp2p/autonat/node_modules/protons-runtime/dist/src/utils/reader.js
-  function indexOutOfRange10(reader, writeLength) {
+  function indexOutOfRange11(reader, writeLength) {
     return RangeError(`index out of range: ${reader.pos} + ${writeLength ?? 1} > ${reader.len}`);
   }
-  function readFixed32End10(buf, end) {
+  function readFixed32End11(buf, end) {
     return (buf[end - 4] | buf[end - 3] << 8 | buf[end - 2] << 16 | buf[end - 1] << 24) >>> 0;
   }
-  var Uint8ArrayReader10 = class {
+  var Uint8ArrayReader11 = class {
     buf;
     pos;
     len;
     _slice = Uint8Array.prototype.subarray;
     constructor(buffer2) {
-      this.buf = withArrayBuffer15(buffer2);
+      this.buf = withArrayBuffer16(buffer2);
       this.pos = 0;
       this.len = buffer2.length;
     }
@@ -67084,7 +69019,7 @@ ${values.join("\n")}` : `${blockName} :`;
       }
       if ((this.pos += 5) > this.len) {
         this.pos = this.len;
-        throw indexOutOfRange10(this, 10);
+        throw indexOutOfRange11(this, 10);
       }
       return value2;
     }
@@ -67112,9 +69047,9 @@ ${values.join("\n")}` : `${blockName} :`;
      */
     fixed32() {
       if (this.pos + 4 > this.len) {
-        throw indexOutOfRange10(this, 4);
+        throw indexOutOfRange11(this, 4);
       }
-      const res = readFixed32End10(this.buf, this.pos += 4);
+      const res = readFixed32End11(this.buf, this.pos += 4);
       return res;
     }
     /**
@@ -67122,9 +69057,9 @@ ${values.join("\n")}` : `${blockName} :`;
      */
     sfixed32() {
       if (this.pos + 4 > this.len) {
-        throw indexOutOfRange10(this, 4);
+        throw indexOutOfRange11(this, 4);
       }
-      const res = readFixed32End10(this.buf, this.pos += 4) | 0;
+      const res = readFixed32End11(this.buf, this.pos += 4) | 0;
       return res;
     }
     /**
@@ -67132,9 +69067,9 @@ ${values.join("\n")}` : `${blockName} :`;
      */
     float() {
       if (this.pos + 4 > this.len) {
-        throw indexOutOfRange10(this, 4);
+        throw indexOutOfRange11(this, 4);
       }
-      const value2 = readFloatLE10(this.buf, this.pos);
+      const value2 = readFloatLE11(this.buf, this.pos);
       this.pos += 4;
       return value2;
     }
@@ -67143,9 +69078,9 @@ ${values.join("\n")}` : `${blockName} :`;
      */
     double() {
       if (this.pos + 8 > this.len) {
-        throw indexOutOfRange10(this, 4);
+        throw indexOutOfRange11(this, 4);
       }
-      const value2 = readDoubleLE10(this.buf, this.pos);
+      const value2 = readDoubleLE11(this.buf, this.pos);
       this.pos += 8;
       return value2;
     }
@@ -67154,20 +69089,20 @@ ${values.join("\n")}` : `${blockName} :`;
      */
     bytes() {
       const length18 = this.uint32();
-      const start2 = this.pos;
+      const start3 = this.pos;
       const end = this.pos + length18;
       if (end > this.len) {
-        throw indexOutOfRange10(this, length18);
+        throw indexOutOfRange11(this, length18);
       }
       this.pos += length18;
-      return start2 === end ? new Uint8Array(0) : this.buf.subarray(start2, end);
+      return start3 === end ? new Uint8Array(0) : this.buf.subarray(start3, end);
     }
     /**
      * Reads a string preceded by its byte length as a varint
      */
     string() {
       const bytes = this.bytes();
-      return read12(bytes, 0, bytes.length);
+      return read13(bytes, 0, bytes.length);
     }
     /**
      * Skips the specified number of bytes if specified, otherwise skips a varint
@@ -67175,13 +69110,13 @@ ${values.join("\n")}` : `${blockName} :`;
     skip(length18) {
       if (typeof length18 === "number") {
         if (this.pos + length18 > this.len) {
-          throw indexOutOfRange10(this, length18);
+          throw indexOutOfRange11(this, length18);
         }
         this.pos += length18;
       } else {
         do {
           if (this.pos >= this.len) {
-            throw indexOutOfRange10(this);
+            throw indexOutOfRange11(this);
           }
         } while ((this.buf[this.pos++] & 128) !== 0);
       }
@@ -67216,7 +69151,7 @@ ${values.join("\n")}` : `${blockName} :`;
       return this;
     }
     readLongVarint() {
-      const bits = new LongBits10(0, 0);
+      const bits = new LongBits11(0, 0);
       let i = 0;
       if (this.len - this.pos > 4) {
         for (; i < 4; ++i) {
@@ -67234,7 +69169,7 @@ ${values.join("\n")}` : `${blockName} :`;
       } else {
         for (; i < 3; ++i) {
           if (this.pos >= this.len) {
-            throw indexOutOfRange10(this);
+            throw indexOutOfRange11(this);
           }
           bits.lo = (bits.lo | (this.buf[this.pos] & 127) << i * 7) >>> 0;
           if (this.buf[this.pos++] < 128) {
@@ -67254,7 +69189,7 @@ ${values.join("\n")}` : `${blockName} :`;
       } else {
         for (; i < 5; ++i) {
           if (this.pos >= this.len) {
-            throw indexOutOfRange10(this);
+            throw indexOutOfRange11(this);
           }
           bits.hi = (bits.hi | (this.buf[this.pos] & 127) << i * 7 + 3) >>> 0;
           if (this.buf[this.pos++] < 128) {
@@ -67266,11 +69201,11 @@ ${values.join("\n")}` : `${blockName} :`;
     }
     readFixed64() {
       if (this.pos + 8 > this.len) {
-        throw indexOutOfRange10(this, 8);
+        throw indexOutOfRange11(this, 8);
       }
-      const lo = readFixed32End10(this.buf, this.pos += 4);
-      const hi = readFixed32End10(this.buf, this.pos += 4);
-      return new LongBits10(lo, hi);
+      const lo = readFixed32End11(this.buf, this.pos += 4);
+      const hi = readFixed32End11(this.buf, this.pos += 4);
+      return new LongBits11(lo, hi);
     }
     /**
      * Reads a varint as a signed 64 bit value
@@ -67370,23 +69305,23 @@ ${values.join("\n")}` : `${blockName} :`;
       return this.readFixed64().toString();
     }
   };
-  function createReader10(buf) {
-    return new Uint8ArrayReader10(buf instanceof Uint8Array ? buf : buf.subarray());
+  function createReader11(buf) {
+    return new Uint8ArrayReader11(buf instanceof Uint8Array ? buf : buf.subarray());
   }
 
   // node_modules/@libp2p/autonat/node_modules/protons-runtime/dist/src/decode.js
-  function decodeMessage10(buf, codec, opts) {
-    const reader = createReader10(buf);
+  function decodeMessage11(buf, codec, opts) {
+    const reader = createReader11(buf);
     return codec.decode(reader, void 0, opts);
   }
 
   // node_modules/@libp2p/autonat/node_modules/uint8arrays/dist/src/alloc.js
-  function allocUnsafe30(size = 0) {
+  function allocUnsafe31(size = 0) {
     return new Uint8Array(size);
   }
 
   // node_modules/@libp2p/autonat/node_modules/uint8arrays/dist/src/util/bases.js
-  function createCodec35(name10, prefix, encode19, decode20) {
+  function createCodec37(name10, prefix, encode19, decode20) {
     return {
       name: name10,
       prefix,
@@ -67400,14 +69335,14 @@ ${values.join("\n")}` : `${blockName} :`;
       }
     };
   }
-  var string26 = createCodec35("utf8", "u", (buf) => {
+  var string27 = createCodec37("utf8", "u", (buf) => {
     const decoder = new TextDecoder("utf8");
     return "u" + decoder.decode(buf);
   }, (str) => {
     const encoder2 = new TextEncoder();
     return encoder2.encode(str.substring(1));
   });
-  var ascii26 = createCodec35("ascii", "a", (buf) => {
+  var ascii27 = createCodec37("ascii", "a", (buf) => {
     let string37 = "a";
     for (let i = 0; i < buf.length; i++) {
       string37 += String.fromCharCode(buf[i]);
@@ -67415,26 +69350,26 @@ ${values.join("\n")}` : `${blockName} :`;
     return string37;
   }, (str) => {
     str = str.substring(1);
-    const buf = allocUnsafe30(str.length);
+    const buf = allocUnsafe31(str.length);
     for (let i = 0; i < str.length; i++) {
       buf[i] = str.charCodeAt(i);
     }
     return buf;
   });
-  var BASES26 = {
-    utf8: string26,
-    "utf-8": string26,
+  var BASES27 = {
+    utf8: string27,
+    "utf-8": string27,
     hex: bases.base16,
-    latin1: ascii26,
-    ascii: ascii26,
-    binary: ascii26,
+    latin1: ascii27,
+    ascii: ascii27,
+    binary: ascii27,
     ...bases
   };
-  var bases_default26 = BASES26;
+  var bases_default27 = BASES27;
 
   // node_modules/@libp2p/autonat/node_modules/uint8arrays/dist/src/from-string.js
-  function fromString28(string37, encoding = "utf8") {
-    const base4 = bases_default26[encoding];
+  function fromString29(string37, encoding = "utf8") {
+    const base4 = bases_default27[encoding];
     if (base4 == null) {
       throw new Error(`Unsupported encoding "${encoding}"`);
     }
@@ -67442,17 +69377,17 @@ ${values.join("\n")}` : `${blockName} :`;
   }
 
   // node_modules/@libp2p/autonat/node_modules/protons-runtime/dist/src/utils/pool.js
-  function pool10(size) {
+  function pool11(size) {
     const SIZE = size ?? 8192;
     const MAX = SIZE >>> 1;
     let slab;
     let offset = SIZE;
     return function poolAlloc(size2) {
       if (size2 < 1 || size2 > MAX) {
-        return allocUnsafe30(size2);
+        return allocUnsafe31(size2);
       }
       if (offset + size2 > SIZE) {
-        slab = allocUnsafe30(SIZE);
+        slab = allocUnsafe31(SIZE);
         offset = 0;
       }
       const buf = slab.subarray(offset, offset += size2);
@@ -67464,7 +69399,7 @@ ${values.join("\n")}` : `${blockName} :`;
   }
 
   // node_modules/@libp2p/autonat/node_modules/protons-runtime/dist/src/utils/writer.js
-  var Op10 = class {
+  var Op11 = class {
     /**
      * Function to call
      */
@@ -67488,9 +69423,9 @@ ${values.join("\n")}` : `${blockName} :`;
       this.val = val;
     }
   };
-  function noop10() {
+  function noop11() {
   }
-  var State10 = class {
+  var State11 = class {
     /**
      * Current head
      */
@@ -67514,14 +69449,14 @@ ${values.join("\n")}` : `${blockName} :`;
       this.next = writer.states;
     }
   };
-  var bufferPool10 = pool10();
-  function alloc27(size) {
+  var bufferPool11 = pool11();
+  function alloc28(size) {
     if (globalThis.Buffer != null) {
-      return allocUnsafe30(size);
+      return allocUnsafe31(size);
     }
-    return bufferPool10(size);
+    return bufferPool11(size);
   }
-  var Uint8ArrayWriter10 = class {
+  var Uint8ArrayWriter11 = class {
     /**
      * Current length
      */
@@ -67540,7 +69475,7 @@ ${values.join("\n")}` : `${blockName} :`;
     states;
     constructor() {
       this.len = 0;
-      this.head = new Op10(noop10, 0, 0);
+      this.head = new Op11(noop11, 0, 0);
       this.tail = this.head;
       this.states = null;
     }
@@ -67548,7 +69483,7 @@ ${values.join("\n")}` : `${blockName} :`;
      * Pushes a new operation to the queue
      */
     _push(fn, len, val) {
-      this.tail = this.tail.next = new Op10(fn, len, val);
+      this.tail = this.tail.next = new Op11(fn, len, val);
       this.len += len;
       return this;
     }
@@ -67556,14 +69491,14 @@ ${values.join("\n")}` : `${blockName} :`;
      * Writes an unsigned 32 bit value as a varint
      */
     uint32(value2) {
-      this.len += (this.tail = this.tail.next = new VarintOp10((value2 = value2 >>> 0) < 128 ? 1 : value2 < 16384 ? 2 : value2 < 2097152 ? 3 : value2 < 268435456 ? 4 : 5, value2)).len;
+      this.len += (this.tail = this.tail.next = new VarintOp11((value2 = value2 >>> 0) < 128 ? 1 : value2 < 16384 ? 2 : value2 < 2097152 ? 3 : value2 < 268435456 ? 4 : 5, value2)).len;
       return this;
     }
     /**
      * Writes a signed 32 bit value as a varint`
      */
     int32(value2) {
-      return value2 < 0 ? this._push(writeVarint6410, 10, LongBits10.fromNumber(value2)) : this.uint32(value2);
+      return value2 < 0 ? this._push(writeVarint6411, 10, LongBits11.fromNumber(value2)) : this.uint32(value2);
     }
     /**
      * Writes a 32 bit value as a varint, zig-zag encoded
@@ -67575,8 +69510,8 @@ ${values.join("\n")}` : `${blockName} :`;
      * Writes an unsigned 64 bit value as a varint
      */
     uint64(value2) {
-      const bits = LongBits10.fromBigInt(value2);
-      return this._push(writeVarint6410, bits.length(), bits);
+      const bits = LongBits11.fromBigInt(value2);
+      return this._push(writeVarint6411, bits.length(), bits);
     }
     /**
      * Writes an unsigned 64 bit value as a varint
@@ -67612,15 +69547,15 @@ ${values.join("\n")}` : `${blockName} :`;
      * Writes a signed 64 bit value as a varint, zig-zag encoded
      */
     sint64(value2) {
-      const bits = LongBits10.fromBigInt(value2).zzEncode();
-      return this._push(writeVarint6410, bits.length(), bits);
+      const bits = LongBits11.fromBigInt(value2).zzEncode();
+      return this._push(writeVarint6411, bits.length(), bits);
     }
     /**
      * Writes a signed 64 bit value as a varint, zig-zag encoded
      */
     sint64Number(value2) {
-      const bits = LongBits10.fromNumber(value2).zzEncode();
-      return this._push(writeVarint6410, bits.length(), bits);
+      const bits = LongBits11.fromNumber(value2).zzEncode();
+      return this._push(writeVarint6411, bits.length(), bits);
     }
     /**
      * Writes a signed 64 bit value as a varint, zig-zag encoded
@@ -67632,13 +69567,13 @@ ${values.join("\n")}` : `${blockName} :`;
      * Writes a boolish value as a varint
      */
     bool(value2) {
-      return this._push(writeByte10, 1, value2 ? 1 : 0);
+      return this._push(writeByte11, 1, value2 ? 1 : 0);
     }
     /**
      * Writes an unsigned 32 bit value as fixed 32 bits
      */
     fixed32(value2) {
-      return this._push(writeFixed3210, 4, value2 >>> 0);
+      return this._push(writeFixed3211, 4, value2 >>> 0);
     }
     /**
      * Writes a signed 32 bit value as fixed 32 bits
@@ -67650,15 +69585,15 @@ ${values.join("\n")}` : `${blockName} :`;
      * Writes an unsigned 64 bit value as fixed 64 bits
      */
     fixed64(value2) {
-      const bits = LongBits10.fromBigInt(value2);
-      return this._push(writeFixed3210, 4, bits.lo)._push(writeFixed3210, 4, bits.hi);
+      const bits = LongBits11.fromBigInt(value2);
+      return this._push(writeFixed3211, 4, bits.lo)._push(writeFixed3211, 4, bits.hi);
     }
     /**
      * Writes an unsigned 64 bit value as fixed 64 bits
      */
     fixed64Number(value2) {
-      const bits = LongBits10.fromNumber(value2);
-      return this._push(writeFixed3210, 4, bits.lo)._push(writeFixed3210, 4, bits.hi);
+      const bits = LongBits11.fromNumber(value2);
+      return this._push(writeFixed3211, 4, bits.lo)._push(writeFixed3211, 4, bits.hi);
     }
     /**
      * Writes an unsigned 64 bit value as fixed 64 bits
@@ -67688,7 +69623,7 @@ ${values.join("\n")}` : `${blockName} :`;
      * Writes a float (32 bit)
      */
     float(value2) {
-      return this._push(writeFloatLE10, 4, value2);
+      return this._push(writeFloatLE11, 4, value2);
     }
     /**
      * Writes a double (64 bit float).
@@ -67698,7 +69633,7 @@ ${values.join("\n")}` : `${blockName} :`;
      * @returns {Writer} `this`
      */
     double(value2) {
-      return this._push(writeDoubleLE10, 8, value2);
+      return this._push(writeDoubleLE11, 8, value2);
     }
     /**
      * Writes a sequence of bytes
@@ -67706,24 +69641,24 @@ ${values.join("\n")}` : `${blockName} :`;
     bytes(value2) {
       const len = value2.length >>> 0;
       if (len === 0) {
-        return this._push(writeByte10, 1, 0);
+        return this._push(writeByte11, 1, 0);
       }
-      return this.uint32(len)._push(writeBytes10, len, value2);
+      return this.uint32(len)._push(writeBytes11, len, value2);
     }
     /**
      * Writes a string
      */
     string(value2) {
-      const len = length12(value2);
-      return len !== 0 ? this.uint32(len)._push(write10, len, value2) : this._push(writeByte10, 1, 0);
+      const len = length13(value2);
+      return len !== 0 ? this.uint32(len)._push(write11, len, value2) : this._push(writeByte11, 1, 0);
     }
     /**
      * Forks this writer's state by pushing it to a stack.
      * Calling {@link Writer#reset|reset} or {@link Writer#ldelim|ldelim} resets the writer to the previous state.
      */
     fork() {
-      this.states = new State10(this);
-      this.head = this.tail = new Op10(noop10, 0, 0);
+      this.states = new State11(this);
+      this.head = this.tail = new Op11(noop11, 0, 0);
       this.len = 0;
       return this;
     }
@@ -67737,7 +69672,7 @@ ${values.join("\n")}` : `${blockName} :`;
         this.len = this.states.len;
         this.states = this.states.next;
       } else {
-        this.head = this.tail = new Op10(noop10, 0, 0);
+        this.head = this.tail = new Op11(noop11, 0, 0);
         this.len = 0;
       }
       return this;
@@ -67762,7 +69697,7 @@ ${values.join("\n")}` : `${blockName} :`;
      */
     finish() {
       let head = this.head.next;
-      const buf = alloc27(this.len);
+      const buf = alloc28(this.len);
       let pos = 0;
       while (head != null) {
         head.fn(head.val, buf, pos);
@@ -67772,24 +69707,24 @@ ${values.join("\n")}` : `${blockName} :`;
       return buf;
     }
   };
-  function writeByte10(val, buf, pos) {
+  function writeByte11(val, buf, pos) {
     buf[pos] = val & 255;
   }
-  function writeVarint3210(val, buf, pos) {
+  function writeVarint3211(val, buf, pos) {
     while (val > 127) {
       buf[pos++] = val & 127 | 128;
       val >>>= 7;
     }
     buf[pos] = val;
   }
-  var VarintOp10 = class extends Op10 {
+  var VarintOp11 = class extends Op11 {
     next;
     constructor(len, val) {
-      super(writeVarint3210, len, val);
+      super(writeVarint3211, len, val);
       this.next = void 0;
     }
   };
-  function writeVarint6410(val, buf, pos) {
+  function writeVarint6411(val, buf, pos) {
     while (val.hi !== 0) {
       buf[pos++] = val.lo & 127 | 128;
       val.lo = (val.lo >>> 7 | val.hi << 25) >>> 0;
@@ -67801,52 +69736,52 @@ ${values.join("\n")}` : `${blockName} :`;
     }
     buf[pos++] = val.lo;
   }
-  function writeFixed3210(val, buf, pos) {
+  function writeFixed3211(val, buf, pos) {
     buf[pos] = val & 255;
     buf[pos + 1] = val >>> 8 & 255;
     buf[pos + 2] = val >>> 16 & 255;
     buf[pos + 3] = val >>> 24;
   }
-  function writeBytes10(val, buf, pos) {
+  function writeBytes11(val, buf, pos) {
     buf.set(val, pos);
   }
   if (globalThis.Buffer != null) {
-    Uint8ArrayWriter10.prototype.bytes = function(value2) {
+    Uint8ArrayWriter11.prototype.bytes = function(value2) {
       const len = value2.length >>> 0;
       this.uint32(len);
       if (len > 0) {
-        this._push(writeBytesBuffer10, len, value2);
+        this._push(writeBytesBuffer11, len, value2);
       }
       return this;
     };
-    Uint8ArrayWriter10.prototype.string = function(value2) {
+    Uint8ArrayWriter11.prototype.string = function(value2) {
       const len = globalThis.Buffer.byteLength(value2);
       this.uint32(len);
       if (len > 0) {
-        this._push(writeStringBuffer10, len, value2);
+        this._push(writeStringBuffer11, len, value2);
       }
       return this;
     };
   }
-  function writeBytesBuffer10(val, buf, pos) {
+  function writeBytesBuffer11(val, buf, pos) {
     buf.set(val, pos);
   }
-  function writeStringBuffer10(val, buf, pos) {
+  function writeStringBuffer11(val, buf, pos) {
     if (val.length < 40) {
-      write10(val, buf, pos);
+      write11(val, buf, pos);
     } else if (buf.utf8Write != null) {
       buf.utf8Write(val, pos);
     } else {
-      buf.set(fromString28(val), pos);
+      buf.set(fromString29(val), pos);
     }
   }
-  function createWriter10() {
-    return new Uint8ArrayWriter10();
+  function createWriter11() {
+    return new Uint8ArrayWriter11();
   }
 
   // node_modules/@libp2p/autonat/node_modules/protons-runtime/dist/src/encode.js
-  function encodeMessage10(message15, codec) {
-    const w2 = createWriter10();
+  function encodeMessage11(message15, codec) {
+    const w2 = createWriter11();
     codec.encode(message15, w2, {
       lengthDelimited: false
     });
@@ -67854,13 +69789,13 @@ ${values.join("\n")}` : `${blockName} :`;
   }
 
   // node_modules/@libp2p/autonat/node_modules/protons-runtime/dist/src/stream.js
-  function* streamMessage9(buf, codec, opts) {
-    const reader = createReader10(buf);
+  function* streamMessage10(buf, codec, opts) {
+    const reader = createReader11(buf);
     yield* codec.stream(reader, void 0, "$", opts);
   }
 
   // node_modules/@libp2p/autonat/node_modules/protons-runtime/dist/src/codec.js
-  var CODEC_TYPES10 = {
+  var CODEC_TYPES11 = {
     VARINT: 0,
     BIT64: 1,
     LENGTH_DELIMITED: 2,
@@ -67868,7 +69803,7 @@ ${values.join("\n")}` : `${blockName} :`;
     END_GROUP: 4,
     BIT32: 5
   };
-  function createCodec36(name10, type, encode19, decode20, stream) {
+  function createCodec38(name10, type, encode19, decode20, stream) {
     return {
       name: name10,
       type,
@@ -67879,7 +69814,7 @@ ${values.join("\n")}` : `${blockName} :`;
   }
 
   // node_modules/@libp2p/autonat/node_modules/protons-runtime/dist/src/codecs/enum.js
-  function enumeration10(v) {
+  function enumeration11(v) {
     function findValue(val) {
       if (v[val.toString()] == null) {
         throw new Error("Invalid enum value");
@@ -67898,16 +69833,16 @@ ${values.join("\n")}` : `${blockName} :`;
       const val = reader.int32();
       yield findValue(val);
     };
-    return createCodec36("enum", CODEC_TYPES10.VARINT, encode19, decode20, stream);
+    return createCodec38("enum", CODEC_TYPES11.VARINT, encode19, decode20, stream);
   }
 
   // node_modules/@libp2p/autonat/node_modules/protons-runtime/dist/src/codecs/message.js
-  function message10(encode19, decode20, stream) {
-    return createCodec36("message", CODEC_TYPES10.LENGTH_DELIMITED, encode19, decode20, stream);
+  function message11(encode19, decode20, stream) {
+    return createCodec38("message", CODEC_TYPES11.LENGTH_DELIMITED, encode19, decode20, stream);
   }
 
   // node_modules/@libp2p/autonat/node_modules/protons-runtime/dist/src/index.js
-  var MaxLengthError7 = class extends Error {
+  var MaxLengthError8 = class extends Error {
     /**
      * This will be removed in a future release
      *
@@ -67932,7 +69867,7 @@ ${values.join("\n")}` : `${blockName} :`;
     })(__MessageTypeValues2 || (__MessageTypeValues2 = {}));
     (function(MessageType3) {
       MessageType3.codec = () => {
-        return enumeration10(__MessageTypeValues2);
+        return enumeration11(__MessageTypeValues2);
       };
     })(MessageType2 = Message5.MessageType || (Message5.MessageType = {}));
     let ResponseStatus;
@@ -67953,7 +69888,7 @@ ${values.join("\n")}` : `${blockName} :`;
     })(__ResponseStatusValues || (__ResponseStatusValues = {}));
     (function(ResponseStatus2) {
       ResponseStatus2.codec = () => {
-        return enumeration10(__ResponseStatusValues);
+        return enumeration11(__ResponseStatusValues);
       };
     })(ResponseStatus = Message5.ResponseStatus || (Message5.ResponseStatus = {}));
     let PeerInfo2;
@@ -67961,7 +69896,7 @@ ${values.join("\n")}` : `${blockName} :`;
       let _codec2;
       PeerInfo3.codec = () => {
         if (_codec2 == null) {
-          _codec2 = message10((obj, w2, opts = {}) => {
+          _codec2 = message11((obj, w2, opts = {}) => {
             if (opts.lengthDelimited !== false) {
               w2.fork();
             }
@@ -67992,7 +69927,7 @@ ${values.join("\n")}` : `${blockName} :`;
                 }
                 case 2: {
                   if (opts.limits?.addrs != null && obj.addrs.length === opts.limits.addrs) {
-                    throw new MaxLengthError7('Decode error - repeated field "addrs" had too many elements');
+                    throw new MaxLengthError8('Decode error - repeated field "addrs" had too many elements');
                   }
                   obj.addrs.push(reader.bytes());
                   break;
@@ -68021,7 +69956,7 @@ ${values.join("\n")}` : `${blockName} :`;
                 }
                 case 2: {
                   if (opts.limits?.addrs != null && obj.addrs === opts.limits.addrs) {
-                    throw new MaxLengthError7('Streaming decode error - repeated field "addrs" had too many elements');
+                    throw new MaxLengthError8('Streaming decode error - repeated field "addrs" had too many elements');
                   }
                   yield {
                     field: `${prefix}.addrs[]`,
@@ -68042,15 +69977,15 @@ ${values.join("\n")}` : `${blockName} :`;
         return _codec2;
       };
       function encode20(obj) {
-        return encodeMessage10(obj, PeerInfo3.codec());
+        return encodeMessage11(obj, PeerInfo3.codec());
       }
       PeerInfo3.encode = encode20;
       function decode21(buf, opts) {
-        return decodeMessage10(buf, PeerInfo3.codec(), opts);
+        return decodeMessage11(buf, PeerInfo3.codec(), opts);
       }
       PeerInfo3.decode = decode21;
       function stream2(buf, opts) {
-        return streamMessage9(buf, PeerInfo3.codec(), opts);
+        return streamMessage10(buf, PeerInfo3.codec(), opts);
       }
       PeerInfo3.stream = stream2;
     })(PeerInfo2 = Message5.PeerInfo || (Message5.PeerInfo = {}));
@@ -68059,7 +69994,7 @@ ${values.join("\n")}` : `${blockName} :`;
       let _codec2;
       Dial2.codec = () => {
         if (_codec2 == null) {
-          _codec2 = message10((obj, w2, opts = {}) => {
+          _codec2 = message11((obj, w2, opts = {}) => {
             if (opts.lengthDelimited !== false) {
               w2.fork();
             }
@@ -68111,15 +70046,15 @@ ${values.join("\n")}` : `${blockName} :`;
         return _codec2;
       };
       function encode20(obj) {
-        return encodeMessage10(obj, Dial2.codec());
+        return encodeMessage11(obj, Dial2.codec());
       }
       Dial2.encode = encode20;
       function decode21(buf, opts) {
-        return decodeMessage10(buf, Dial2.codec(), opts);
+        return decodeMessage11(buf, Dial2.codec(), opts);
       }
       Dial2.decode = decode21;
       function stream2(buf, opts) {
-        return streamMessage9(buf, Dial2.codec(), opts);
+        return streamMessage10(buf, Dial2.codec(), opts);
       }
       Dial2.stream = stream2;
     })(Dial = Message5.Dial || (Message5.Dial = {}));
@@ -68128,7 +70063,7 @@ ${values.join("\n")}` : `${blockName} :`;
       let _codec2;
       DialResponse2.codec = () => {
         if (_codec2 == null) {
-          _codec2 = message10((obj, w2, opts = {}) => {
+          _codec2 = message11((obj, w2, opts = {}) => {
             if (opts.lengthDelimited !== false) {
               w2.fork();
             }
@@ -68209,22 +70144,22 @@ ${values.join("\n")}` : `${blockName} :`;
         return _codec2;
       };
       function encode20(obj) {
-        return encodeMessage10(obj, DialResponse2.codec());
+        return encodeMessage11(obj, DialResponse2.codec());
       }
       DialResponse2.encode = encode20;
       function decode21(buf, opts) {
-        return decodeMessage10(buf, DialResponse2.codec(), opts);
+        return decodeMessage11(buf, DialResponse2.codec(), opts);
       }
       DialResponse2.decode = decode21;
       function stream2(buf, opts) {
-        return streamMessage9(buf, DialResponse2.codec(), opts);
+        return streamMessage10(buf, DialResponse2.codec(), opts);
       }
       DialResponse2.stream = stream2;
     })(DialResponse = Message5.DialResponse || (Message5.DialResponse = {}));
     let _codec;
     Message5.codec = () => {
       if (_codec == null) {
-        _codec = message10((obj, w2, opts = {}) => {
+        _codec = message11((obj, w2, opts = {}) => {
           if (opts.lengthDelimited !== false) {
             w2.fork();
           }
@@ -68307,15 +70242,15 @@ ${values.join("\n")}` : `${blockName} :`;
       return _codec;
     };
     function encode19(obj) {
-      return encodeMessage10(obj, Message5.codec());
+      return encodeMessage11(obj, Message5.codec());
     }
     Message5.encode = encode19;
     function decode20(buf, opts) {
-      return decodeMessage10(buf, Message5.codec(), opts);
+      return decodeMessage11(buf, Message5.codec(), opts);
     }
     Message5.decode = decode20;
     function stream(buf, opts) {
-      return streamMessage9(buf, Message5.codec(), opts);
+      return streamMessage10(buf, Message5.codec(), opts);
     }
     Message5.stream = stream;
   })(Message3 || (Message3 = {}));
@@ -68852,164 +70787,63 @@ ${values.join("\n")}` : `${blockName} :`;
     };
   }
 
-  // node_modules/@libp2p/bootstrap/dist/src/index.js
-  var DEFAULT_BOOTSTRAP_TAG_NAME = "bootstrap";
-  var DEFAULT_BOOTSTRAP_TAG_VALUE = 50;
-  var DEFAULT_BOOTSTRAP_DISCOVERY_TIMEOUT = 1e3;
-  var Bootstrap = class extends TypedEventEmitter {
-    static tag = "bootstrap";
-    log;
-    timer;
-    list;
-    timeout;
-    components;
-    _init;
-    constructor(components, options2 = { list: [] }) {
-      if (options2.list == null || options2.list.length === 0) {
-        throw new Error("Bootstrap requires a list of peer addresses");
-      }
-      super();
-      this.components = components;
-      this.log = components.logger.forComponent("libp2p:bootstrap");
-      this.timeout = options2.timeout ?? DEFAULT_BOOTSTRAP_DISCOVERY_TIMEOUT;
-      this.list = options2.list.map((str) => multiaddr(str)).filter((ma) => {
-        if (!P2P.matches(ma)) {
-          this.log.error("invalid multiaddr %a", ma);
-          return false;
-        }
-        const peerIdStr = ma.getComponents().findLast((c) => c.code === CODE_P2P)?.value;
-        if (peerIdStr == null) {
-          this.log.error("invalid bootstrap multiaddr without peer id");
-          return false;
-        }
-        return true;
-      }).map((ma) => {
-        return {
-          id: peerIdFromString(ma.getComponents().findLast((c) => c.code === CODE_P2P)?.value ?? ""),
-          multiaddrs: [ma]
-        };
-      });
-      this._init = options2;
-    }
-    [peerDiscoverySymbol] = this;
-    [Symbol.toStringTag] = "@libp2p/bootstrap";
-    [serviceCapabilities] = [
-      "@libp2p/peer-discovery"
-    ];
-    isStarted() {
-      return Boolean(this.timer);
-    }
-    /**
-     * Start emitting events
-     */
-    start() {
-      if (this.isStarted()) {
-        return;
-      }
-      this.log("Starting bootstrap node discovery, discovering peers after %s ms", this.timeout);
-      this.timer = setTimeout(() => {
-        void this._discoverBootstrapPeers().catch((err) => {
-          this.log.error("failed to discover bootstrap peers - %e", err);
-        });
-      }, this.timeout);
-    }
-    /**
-     * Emit each address in the list as a PeerInfo
-     */
-    async _discoverBootstrapPeers() {
-      if (this.timer == null) {
-        return;
-      }
-      for (const peerData of this.list) {
-        await this.components.peerStore.merge(peerData.id, {
-          tags: {
-            [this._init.tagName ?? DEFAULT_BOOTSTRAP_TAG_NAME]: {
-              value: this._init.tagValue ?? DEFAULT_BOOTSTRAP_TAG_VALUE,
-              ttl: this._init.tagTTL
-            }
-          },
-          multiaddrs: peerData.multiaddrs
-        });
-        if (this.timer == null) {
-          return;
-        }
-        this.safeDispatchEvent("peer", { detail: peerData });
-        this.components.connectionManager.openConnection(peerData.id).catch((err) => {
-          this.log.error("could not dial bootstrap peer %p - %e", peerData.id, err);
-        });
-      }
-    }
-    /**
-     * Stop emitting events
-     */
-    stop() {
-      if (this.timer != null) {
-        clearTimeout(this.timer);
-      }
-      this.timer = void 0;
-    }
-  };
-  function bootstrap(init) {
-    return (components) => new Bootstrap(components, init);
-  }
-
   // node_modules/@libp2p/dcutr/node_modules/uint8arrays/dist/src/with-array-buffer.js
-  function isArrayBufferBacked16(arr) {
+  function isArrayBufferBacked17(arr) {
     return arr.buffer instanceof ArrayBuffer;
   }
-  function withArrayBuffer16(arr) {
-    if (isArrayBufferBacked16(arr)) {
+  function withArrayBuffer17(arr) {
+    if (isArrayBufferBacked17(arr)) {
       return arr;
     }
     return arr.slice();
   }
 
   // node_modules/@libp2p/dcutr/node_modules/protons-runtime/dist/src/utils/float.js
-  var f3211 = new Float32Array([-0]);
-  var f8b11 = new Uint8Array(f3211.buffer);
-  function writeFloatLE11(val, buf, pos) {
-    f3211[0] = val;
-    buf[pos] = f8b11[0];
-    buf[pos + 1] = f8b11[1];
-    buf[pos + 2] = f8b11[2];
-    buf[pos + 3] = f8b11[3];
+  var f3212 = new Float32Array([-0]);
+  var f8b12 = new Uint8Array(f3212.buffer);
+  function writeFloatLE12(val, buf, pos) {
+    f3212[0] = val;
+    buf[pos] = f8b12[0];
+    buf[pos + 1] = f8b12[1];
+    buf[pos + 2] = f8b12[2];
+    buf[pos + 3] = f8b12[3];
   }
-  function readFloatLE11(buf, pos) {
-    f8b11[0] = buf[pos];
-    f8b11[1] = buf[pos + 1];
-    f8b11[2] = buf[pos + 2];
-    f8b11[3] = buf[pos + 3];
-    return f3211[0];
+  function readFloatLE12(buf, pos) {
+    f8b12[0] = buf[pos];
+    f8b12[1] = buf[pos + 1];
+    f8b12[2] = buf[pos + 2];
+    f8b12[3] = buf[pos + 3];
+    return f3212[0];
   }
-  var f6411 = new Float64Array([-0]);
-  var d8b11 = new Uint8Array(f6411.buffer);
-  function writeDoubleLE11(val, buf, pos) {
-    f6411[0] = val;
-    buf[pos] = d8b11[0];
-    buf[pos + 1] = d8b11[1];
-    buf[pos + 2] = d8b11[2];
-    buf[pos + 3] = d8b11[3];
-    buf[pos + 4] = d8b11[4];
-    buf[pos + 5] = d8b11[5];
-    buf[pos + 6] = d8b11[6];
-    buf[pos + 7] = d8b11[7];
+  var f6412 = new Float64Array([-0]);
+  var d8b12 = new Uint8Array(f6412.buffer);
+  function writeDoubleLE12(val, buf, pos) {
+    f6412[0] = val;
+    buf[pos] = d8b12[0];
+    buf[pos + 1] = d8b12[1];
+    buf[pos + 2] = d8b12[2];
+    buf[pos + 3] = d8b12[3];
+    buf[pos + 4] = d8b12[4];
+    buf[pos + 5] = d8b12[5];
+    buf[pos + 6] = d8b12[6];
+    buf[pos + 7] = d8b12[7];
   }
-  function readDoubleLE11(buf, pos) {
-    d8b11[0] = buf[pos];
-    d8b11[1] = buf[pos + 1];
-    d8b11[2] = buf[pos + 2];
-    d8b11[3] = buf[pos + 3];
-    d8b11[4] = buf[pos + 4];
-    d8b11[5] = buf[pos + 5];
-    d8b11[6] = buf[pos + 6];
-    d8b11[7] = buf[pos + 7];
-    return f6411[0];
+  function readDoubleLE12(buf, pos) {
+    d8b12[0] = buf[pos];
+    d8b12[1] = buf[pos + 1];
+    d8b12[2] = buf[pos + 2];
+    d8b12[3] = buf[pos + 3];
+    d8b12[4] = buf[pos + 4];
+    d8b12[5] = buf[pos + 5];
+    d8b12[6] = buf[pos + 6];
+    d8b12[7] = buf[pos + 7];
+    return f6412[0];
   }
 
   // node_modules/@libp2p/dcutr/node_modules/protons-runtime/dist/src/utils/longbits.js
-  var MAX_SAFE_NUMBER_INTEGER11 = BigInt(Number.MAX_SAFE_INTEGER);
-  var MIN_SAFE_NUMBER_INTEGER11 = BigInt(Number.MIN_SAFE_INTEGER);
-  var LongBits11 = class _LongBits {
+  var MAX_SAFE_NUMBER_INTEGER12 = BigInt(Number.MAX_SAFE_INTEGER);
+  var MIN_SAFE_NUMBER_INTEGER12 = BigInt(Number.MIN_SAFE_INTEGER);
+  var LongBits12 = class _LongBits {
     lo;
     hi;
     constructor(lo, hi) {
@@ -69085,9 +70919,9 @@ ${values.join("\n")}` : `${blockName} :`;
      */
     static fromBigInt(value2) {
       if (value2 === 0n) {
-        return zero11;
+        return zero12;
       }
-      if (value2 < MAX_SAFE_NUMBER_INTEGER11 && value2 > MIN_SAFE_NUMBER_INTEGER11) {
+      if (value2 < MAX_SAFE_NUMBER_INTEGER12 && value2 > MIN_SAFE_NUMBER_INTEGER12) {
         return this.fromNumber(Number(value2));
       }
       const negative = value2 < 0n;
@@ -69099,9 +70933,9 @@ ${values.join("\n")}` : `${blockName} :`;
       if (negative) {
         hi = ~hi | 0n;
         lo = ~lo | 0n;
-        if (++lo > TWO_3211) {
+        if (++lo > TWO_3212) {
           lo = 0n;
-          if (++hi > TWO_3211) {
+          if (++hi > TWO_3212) {
             hi = 0n;
           }
         }
@@ -69113,7 +70947,7 @@ ${values.join("\n")}` : `${blockName} :`;
      */
     static fromNumber(value2) {
       if (value2 === 0) {
-        return zero11;
+        return zero12;
       }
       const sign = value2 < 0;
       if (sign) {
@@ -69146,23 +70980,23 @@ ${values.join("\n")}` : `${blockName} :`;
       if (typeof value2 === "string") {
         return _LongBits.fromBigInt(BigInt(value2));
       }
-      return value2.low != null || value2.high != null ? new _LongBits(value2.low >>> 0, value2.high >>> 0) : zero11;
+      return value2.low != null || value2.high != null ? new _LongBits(value2.low >>> 0, value2.high >>> 0) : zero12;
     }
   };
-  var zero11 = new LongBits11(0, 0);
-  zero11.toBigInt = function() {
+  var zero12 = new LongBits12(0, 0);
+  zero12.toBigInt = function() {
     return 0n;
   };
-  zero11.zzEncode = zero11.zzDecode = function() {
+  zero12.zzEncode = zero12.zzDecode = function() {
     return this;
   };
-  zero11.length = function() {
+  zero12.length = function() {
     return 1;
   };
-  var TWO_3211 = 4294967296n;
+  var TWO_3212 = 4294967296n;
 
   // node_modules/@libp2p/dcutr/node_modules/protons-runtime/dist/src/utils/utf8.js
-  function length13(string37) {
+  function length14(string37) {
     let len = 0;
     let c = 0;
     for (let i = 0; i < string37.length; ++i) {
@@ -69180,8 +71014,8 @@ ${values.join("\n")}` : `${blockName} :`;
     }
     return len;
   }
-  function read13(buffer2, start2, end) {
-    const len = end - start2;
+  function read14(buffer2, start3, end) {
+    const len = end - start3;
     if (len < 1) {
       return "";
     }
@@ -69189,18 +71023,18 @@ ${values.join("\n")}` : `${blockName} :`;
     const chunk = [];
     let i = 0;
     let t;
-    while (start2 < end) {
-      t = buffer2[start2++];
+    while (start3 < end) {
+      t = buffer2[start3++];
       if (t < 128) {
         chunk[i++] = t;
       } else if (t > 191 && t < 224) {
-        chunk[i++] = (t & 31) << 6 | buffer2[start2++] & 63;
+        chunk[i++] = (t & 31) << 6 | buffer2[start3++] & 63;
       } else if (t > 239 && t < 365) {
-        t = ((t & 7) << 18 | (buffer2[start2++] & 63) << 12 | (buffer2[start2++] & 63) << 6 | buffer2[start2++] & 63) - 65536;
+        t = ((t & 7) << 18 | (buffer2[start3++] & 63) << 12 | (buffer2[start3++] & 63) << 6 | buffer2[start3++] & 63) - 65536;
         chunk[i++] = 55296 + (t >> 10);
         chunk[i++] = 56320 + (t & 1023);
       } else {
-        chunk[i++] = (t & 15) << 12 | (buffer2[start2++] & 63) << 6 | buffer2[start2++] & 63;
+        chunk[i++] = (t & 15) << 12 | (buffer2[start3++] & 63) << 6 | buffer2[start3++] & 63;
       }
       if (i > 8191) {
         (parts ?? (parts = [])).push(String.fromCharCode.apply(String, chunk));
@@ -69215,8 +71049,8 @@ ${values.join("\n")}` : `${blockName} :`;
     }
     return String.fromCharCode.apply(String, chunk.slice(0, i));
   }
-  function write11(string37, buffer2, offset) {
-    const start2 = offset;
+  function write12(string37, buffer2, offset) {
+    const start3 = offset;
     let c1;
     let c2;
     for (let i = 0; i < string37.length; ++i) {
@@ -69239,23 +71073,23 @@ ${values.join("\n")}` : `${blockName} :`;
         buffer2[offset++] = c1 & 63 | 128;
       }
     }
-    return offset - start2;
+    return offset - start3;
   }
 
   // node_modules/@libp2p/dcutr/node_modules/protons-runtime/dist/src/utils/reader.js
-  function indexOutOfRange11(reader, writeLength) {
+  function indexOutOfRange12(reader, writeLength) {
     return RangeError(`index out of range: ${reader.pos} + ${writeLength ?? 1} > ${reader.len}`);
   }
-  function readFixed32End11(buf, end) {
+  function readFixed32End12(buf, end) {
     return (buf[end - 4] | buf[end - 3] << 8 | buf[end - 2] << 16 | buf[end - 1] << 24) >>> 0;
   }
-  var Uint8ArrayReader11 = class {
+  var Uint8ArrayReader12 = class {
     buf;
     pos;
     len;
     _slice = Uint8Array.prototype.subarray;
     constructor(buffer2) {
-      this.buf = withArrayBuffer16(buffer2);
+      this.buf = withArrayBuffer17(buffer2);
       this.pos = 0;
       this.len = buffer2.length;
     }
@@ -69286,7 +71120,7 @@ ${values.join("\n")}` : `${blockName} :`;
       }
       if ((this.pos += 5) > this.len) {
         this.pos = this.len;
-        throw indexOutOfRange11(this, 10);
+        throw indexOutOfRange12(this, 10);
       }
       return value2;
     }
@@ -69314,9 +71148,9 @@ ${values.join("\n")}` : `${blockName} :`;
      */
     fixed32() {
       if (this.pos + 4 > this.len) {
-        throw indexOutOfRange11(this, 4);
+        throw indexOutOfRange12(this, 4);
       }
-      const res = readFixed32End11(this.buf, this.pos += 4);
+      const res = readFixed32End12(this.buf, this.pos += 4);
       return res;
     }
     /**
@@ -69324,9 +71158,9 @@ ${values.join("\n")}` : `${blockName} :`;
      */
     sfixed32() {
       if (this.pos + 4 > this.len) {
-        throw indexOutOfRange11(this, 4);
+        throw indexOutOfRange12(this, 4);
       }
-      const res = readFixed32End11(this.buf, this.pos += 4) | 0;
+      const res = readFixed32End12(this.buf, this.pos += 4) | 0;
       return res;
     }
     /**
@@ -69334,9 +71168,9 @@ ${values.join("\n")}` : `${blockName} :`;
      */
     float() {
       if (this.pos + 4 > this.len) {
-        throw indexOutOfRange11(this, 4);
+        throw indexOutOfRange12(this, 4);
       }
-      const value2 = readFloatLE11(this.buf, this.pos);
+      const value2 = readFloatLE12(this.buf, this.pos);
       this.pos += 4;
       return value2;
     }
@@ -69345,9 +71179,9 @@ ${values.join("\n")}` : `${blockName} :`;
      */
     double() {
       if (this.pos + 8 > this.len) {
-        throw indexOutOfRange11(this, 4);
+        throw indexOutOfRange12(this, 4);
       }
-      const value2 = readDoubleLE11(this.buf, this.pos);
+      const value2 = readDoubleLE12(this.buf, this.pos);
       this.pos += 8;
       return value2;
     }
@@ -69356,20 +71190,20 @@ ${values.join("\n")}` : `${blockName} :`;
      */
     bytes() {
       const length18 = this.uint32();
-      const start2 = this.pos;
+      const start3 = this.pos;
       const end = this.pos + length18;
       if (end > this.len) {
-        throw indexOutOfRange11(this, length18);
+        throw indexOutOfRange12(this, length18);
       }
       this.pos += length18;
-      return start2 === end ? new Uint8Array(0) : this.buf.subarray(start2, end);
+      return start3 === end ? new Uint8Array(0) : this.buf.subarray(start3, end);
     }
     /**
      * Reads a string preceded by its byte length as a varint
      */
     string() {
       const bytes = this.bytes();
-      return read13(bytes, 0, bytes.length);
+      return read14(bytes, 0, bytes.length);
     }
     /**
      * Skips the specified number of bytes if specified, otherwise skips a varint
@@ -69377,13 +71211,13 @@ ${values.join("\n")}` : `${blockName} :`;
     skip(length18) {
       if (typeof length18 === "number") {
         if (this.pos + length18 > this.len) {
-          throw indexOutOfRange11(this, length18);
+          throw indexOutOfRange12(this, length18);
         }
         this.pos += length18;
       } else {
         do {
           if (this.pos >= this.len) {
-            throw indexOutOfRange11(this);
+            throw indexOutOfRange12(this);
           }
         } while ((this.buf[this.pos++] & 128) !== 0);
       }
@@ -69418,7 +71252,7 @@ ${values.join("\n")}` : `${blockName} :`;
       return this;
     }
     readLongVarint() {
-      const bits = new LongBits11(0, 0);
+      const bits = new LongBits12(0, 0);
       let i = 0;
       if (this.len - this.pos > 4) {
         for (; i < 4; ++i) {
@@ -69436,7 +71270,7 @@ ${values.join("\n")}` : `${blockName} :`;
       } else {
         for (; i < 3; ++i) {
           if (this.pos >= this.len) {
-            throw indexOutOfRange11(this);
+            throw indexOutOfRange12(this);
           }
           bits.lo = (bits.lo | (this.buf[this.pos] & 127) << i * 7) >>> 0;
           if (this.buf[this.pos++] < 128) {
@@ -69456,7 +71290,7 @@ ${values.join("\n")}` : `${blockName} :`;
       } else {
         for (; i < 5; ++i) {
           if (this.pos >= this.len) {
-            throw indexOutOfRange11(this);
+            throw indexOutOfRange12(this);
           }
           bits.hi = (bits.hi | (this.buf[this.pos] & 127) << i * 7 + 3) >>> 0;
           if (this.buf[this.pos++] < 128) {
@@ -69468,11 +71302,11 @@ ${values.join("\n")}` : `${blockName} :`;
     }
     readFixed64() {
       if (this.pos + 8 > this.len) {
-        throw indexOutOfRange11(this, 8);
+        throw indexOutOfRange12(this, 8);
       }
-      const lo = readFixed32End11(this.buf, this.pos += 4);
-      const hi = readFixed32End11(this.buf, this.pos += 4);
-      return new LongBits11(lo, hi);
+      const lo = readFixed32End12(this.buf, this.pos += 4);
+      const hi = readFixed32End12(this.buf, this.pos += 4);
+      return new LongBits12(lo, hi);
     }
     /**
      * Reads a varint as a signed 64 bit value
@@ -69572,23 +71406,23 @@ ${values.join("\n")}` : `${blockName} :`;
       return this.readFixed64().toString();
     }
   };
-  function createReader11(buf) {
-    return new Uint8ArrayReader11(buf instanceof Uint8Array ? buf : buf.subarray());
+  function createReader12(buf) {
+    return new Uint8ArrayReader12(buf instanceof Uint8Array ? buf : buf.subarray());
   }
 
   // node_modules/@libp2p/dcutr/node_modules/protons-runtime/dist/src/decode.js
-  function decodeMessage11(buf, codec, opts) {
-    const reader = createReader11(buf);
+  function decodeMessage12(buf, codec, opts) {
+    const reader = createReader12(buf);
     return codec.decode(reader, void 0, opts);
   }
 
   // node_modules/@libp2p/dcutr/node_modules/uint8arrays/dist/src/alloc.js
-  function allocUnsafe31(size = 0) {
+  function allocUnsafe32(size = 0) {
     return new Uint8Array(size);
   }
 
   // node_modules/@libp2p/dcutr/node_modules/uint8arrays/dist/src/util/bases.js
-  function createCodec37(name10, prefix, encode19, decode20) {
+  function createCodec39(name10, prefix, encode19, decode20) {
     return {
       name: name10,
       prefix,
@@ -69602,14 +71436,14 @@ ${values.join("\n")}` : `${blockName} :`;
       }
     };
   }
-  var string27 = createCodec37("utf8", "u", (buf) => {
+  var string28 = createCodec39("utf8", "u", (buf) => {
     const decoder = new TextDecoder("utf8");
     return "u" + decoder.decode(buf);
   }, (str) => {
     const encoder2 = new TextEncoder();
     return encoder2.encode(str.substring(1));
   });
-  var ascii27 = createCodec37("ascii", "a", (buf) => {
+  var ascii28 = createCodec39("ascii", "a", (buf) => {
     let string37 = "a";
     for (let i = 0; i < buf.length; i++) {
       string37 += String.fromCharCode(buf[i]);
@@ -69617,26 +71451,26 @@ ${values.join("\n")}` : `${blockName} :`;
     return string37;
   }, (str) => {
     str = str.substring(1);
-    const buf = allocUnsafe31(str.length);
+    const buf = allocUnsafe32(str.length);
     for (let i = 0; i < str.length; i++) {
       buf[i] = str.charCodeAt(i);
     }
     return buf;
   });
-  var BASES27 = {
-    utf8: string27,
-    "utf-8": string27,
+  var BASES28 = {
+    utf8: string28,
+    "utf-8": string28,
     hex: bases.base16,
-    latin1: ascii27,
-    ascii: ascii27,
-    binary: ascii27,
+    latin1: ascii28,
+    ascii: ascii28,
+    binary: ascii28,
     ...bases
   };
-  var bases_default27 = BASES27;
+  var bases_default28 = BASES28;
 
   // node_modules/@libp2p/dcutr/node_modules/uint8arrays/dist/src/from-string.js
-  function fromString29(string37, encoding = "utf8") {
-    const base4 = bases_default27[encoding];
+  function fromString30(string37, encoding = "utf8") {
+    const base4 = bases_default28[encoding];
     if (base4 == null) {
       throw new Error(`Unsupported encoding "${encoding}"`);
     }
@@ -69644,17 +71478,17 @@ ${values.join("\n")}` : `${blockName} :`;
   }
 
   // node_modules/@libp2p/dcutr/node_modules/protons-runtime/dist/src/utils/pool.js
-  function pool11(size) {
+  function pool12(size) {
     const SIZE = size ?? 8192;
     const MAX = SIZE >>> 1;
     let slab;
     let offset = SIZE;
     return function poolAlloc(size2) {
       if (size2 < 1 || size2 > MAX) {
-        return allocUnsafe31(size2);
+        return allocUnsafe32(size2);
       }
       if (offset + size2 > SIZE) {
-        slab = allocUnsafe31(SIZE);
+        slab = allocUnsafe32(SIZE);
         offset = 0;
       }
       const buf = slab.subarray(offset, offset += size2);
@@ -69666,7 +71500,7 @@ ${values.join("\n")}` : `${blockName} :`;
   }
 
   // node_modules/@libp2p/dcutr/node_modules/protons-runtime/dist/src/utils/writer.js
-  var Op11 = class {
+  var Op12 = class {
     /**
      * Function to call
      */
@@ -69690,9 +71524,9 @@ ${values.join("\n")}` : `${blockName} :`;
       this.val = val;
     }
   };
-  function noop11() {
+  function noop12() {
   }
-  var State11 = class {
+  var State12 = class {
     /**
      * Current head
      */
@@ -69716,14 +71550,14 @@ ${values.join("\n")}` : `${blockName} :`;
       this.next = writer.states;
     }
   };
-  var bufferPool11 = pool11();
-  function alloc28(size) {
+  var bufferPool12 = pool12();
+  function alloc29(size) {
     if (globalThis.Buffer != null) {
-      return allocUnsafe31(size);
+      return allocUnsafe32(size);
     }
-    return bufferPool11(size);
+    return bufferPool12(size);
   }
-  var Uint8ArrayWriter11 = class {
+  var Uint8ArrayWriter12 = class {
     /**
      * Current length
      */
@@ -69742,7 +71576,7 @@ ${values.join("\n")}` : `${blockName} :`;
     states;
     constructor() {
       this.len = 0;
-      this.head = new Op11(noop11, 0, 0);
+      this.head = new Op12(noop12, 0, 0);
       this.tail = this.head;
       this.states = null;
     }
@@ -69750,7 +71584,7 @@ ${values.join("\n")}` : `${blockName} :`;
      * Pushes a new operation to the queue
      */
     _push(fn, len, val) {
-      this.tail = this.tail.next = new Op11(fn, len, val);
+      this.tail = this.tail.next = new Op12(fn, len, val);
       this.len += len;
       return this;
     }
@@ -69758,14 +71592,14 @@ ${values.join("\n")}` : `${blockName} :`;
      * Writes an unsigned 32 bit value as a varint
      */
     uint32(value2) {
-      this.len += (this.tail = this.tail.next = new VarintOp11((value2 = value2 >>> 0) < 128 ? 1 : value2 < 16384 ? 2 : value2 < 2097152 ? 3 : value2 < 268435456 ? 4 : 5, value2)).len;
+      this.len += (this.tail = this.tail.next = new VarintOp12((value2 = value2 >>> 0) < 128 ? 1 : value2 < 16384 ? 2 : value2 < 2097152 ? 3 : value2 < 268435456 ? 4 : 5, value2)).len;
       return this;
     }
     /**
      * Writes a signed 32 bit value as a varint`
      */
     int32(value2) {
-      return value2 < 0 ? this._push(writeVarint6411, 10, LongBits11.fromNumber(value2)) : this.uint32(value2);
+      return value2 < 0 ? this._push(writeVarint6412, 10, LongBits12.fromNumber(value2)) : this.uint32(value2);
     }
     /**
      * Writes a 32 bit value as a varint, zig-zag encoded
@@ -69777,8 +71611,8 @@ ${values.join("\n")}` : `${blockName} :`;
      * Writes an unsigned 64 bit value as a varint
      */
     uint64(value2) {
-      const bits = LongBits11.fromBigInt(value2);
-      return this._push(writeVarint6411, bits.length(), bits);
+      const bits = LongBits12.fromBigInt(value2);
+      return this._push(writeVarint6412, bits.length(), bits);
     }
     /**
      * Writes an unsigned 64 bit value as a varint
@@ -69814,15 +71648,15 @@ ${values.join("\n")}` : `${blockName} :`;
      * Writes a signed 64 bit value as a varint, zig-zag encoded
      */
     sint64(value2) {
-      const bits = LongBits11.fromBigInt(value2).zzEncode();
-      return this._push(writeVarint6411, bits.length(), bits);
+      const bits = LongBits12.fromBigInt(value2).zzEncode();
+      return this._push(writeVarint6412, bits.length(), bits);
     }
     /**
      * Writes a signed 64 bit value as a varint, zig-zag encoded
      */
     sint64Number(value2) {
-      const bits = LongBits11.fromNumber(value2).zzEncode();
-      return this._push(writeVarint6411, bits.length(), bits);
+      const bits = LongBits12.fromNumber(value2).zzEncode();
+      return this._push(writeVarint6412, bits.length(), bits);
     }
     /**
      * Writes a signed 64 bit value as a varint, zig-zag encoded
@@ -69834,13 +71668,13 @@ ${values.join("\n")}` : `${blockName} :`;
      * Writes a boolish value as a varint
      */
     bool(value2) {
-      return this._push(writeByte11, 1, value2 ? 1 : 0);
+      return this._push(writeByte12, 1, value2 ? 1 : 0);
     }
     /**
      * Writes an unsigned 32 bit value as fixed 32 bits
      */
     fixed32(value2) {
-      return this._push(writeFixed3211, 4, value2 >>> 0);
+      return this._push(writeFixed3212, 4, value2 >>> 0);
     }
     /**
      * Writes a signed 32 bit value as fixed 32 bits
@@ -69852,15 +71686,15 @@ ${values.join("\n")}` : `${blockName} :`;
      * Writes an unsigned 64 bit value as fixed 64 bits
      */
     fixed64(value2) {
-      const bits = LongBits11.fromBigInt(value2);
-      return this._push(writeFixed3211, 4, bits.lo)._push(writeFixed3211, 4, bits.hi);
+      const bits = LongBits12.fromBigInt(value2);
+      return this._push(writeFixed3212, 4, bits.lo)._push(writeFixed3212, 4, bits.hi);
     }
     /**
      * Writes an unsigned 64 bit value as fixed 64 bits
      */
     fixed64Number(value2) {
-      const bits = LongBits11.fromNumber(value2);
-      return this._push(writeFixed3211, 4, bits.lo)._push(writeFixed3211, 4, bits.hi);
+      const bits = LongBits12.fromNumber(value2);
+      return this._push(writeFixed3212, 4, bits.lo)._push(writeFixed3212, 4, bits.hi);
     }
     /**
      * Writes an unsigned 64 bit value as fixed 64 bits
@@ -69890,7 +71724,7 @@ ${values.join("\n")}` : `${blockName} :`;
      * Writes a float (32 bit)
      */
     float(value2) {
-      return this._push(writeFloatLE11, 4, value2);
+      return this._push(writeFloatLE12, 4, value2);
     }
     /**
      * Writes a double (64 bit float).
@@ -69900,7 +71734,7 @@ ${values.join("\n")}` : `${blockName} :`;
      * @returns {Writer} `this`
      */
     double(value2) {
-      return this._push(writeDoubleLE11, 8, value2);
+      return this._push(writeDoubleLE12, 8, value2);
     }
     /**
      * Writes a sequence of bytes
@@ -69908,24 +71742,24 @@ ${values.join("\n")}` : `${blockName} :`;
     bytes(value2) {
       const len = value2.length >>> 0;
       if (len === 0) {
-        return this._push(writeByte11, 1, 0);
+        return this._push(writeByte12, 1, 0);
       }
-      return this.uint32(len)._push(writeBytes11, len, value2);
+      return this.uint32(len)._push(writeBytes12, len, value2);
     }
     /**
      * Writes a string
      */
     string(value2) {
-      const len = length13(value2);
-      return len !== 0 ? this.uint32(len)._push(write11, len, value2) : this._push(writeByte11, 1, 0);
+      const len = length14(value2);
+      return len !== 0 ? this.uint32(len)._push(write12, len, value2) : this._push(writeByte12, 1, 0);
     }
     /**
      * Forks this writer's state by pushing it to a stack.
      * Calling {@link Writer#reset|reset} or {@link Writer#ldelim|ldelim} resets the writer to the previous state.
      */
     fork() {
-      this.states = new State11(this);
-      this.head = this.tail = new Op11(noop11, 0, 0);
+      this.states = new State12(this);
+      this.head = this.tail = new Op12(noop12, 0, 0);
       this.len = 0;
       return this;
     }
@@ -69939,7 +71773,7 @@ ${values.join("\n")}` : `${blockName} :`;
         this.len = this.states.len;
         this.states = this.states.next;
       } else {
-        this.head = this.tail = new Op11(noop11, 0, 0);
+        this.head = this.tail = new Op12(noop12, 0, 0);
         this.len = 0;
       }
       return this;
@@ -69964,7 +71798,7 @@ ${values.join("\n")}` : `${blockName} :`;
      */
     finish() {
       let head = this.head.next;
-      const buf = alloc28(this.len);
+      const buf = alloc29(this.len);
       let pos = 0;
       while (head != null) {
         head.fn(head.val, buf, pos);
@@ -69974,24 +71808,24 @@ ${values.join("\n")}` : `${blockName} :`;
       return buf;
     }
   };
-  function writeByte11(val, buf, pos) {
+  function writeByte12(val, buf, pos) {
     buf[pos] = val & 255;
   }
-  function writeVarint3211(val, buf, pos) {
+  function writeVarint3212(val, buf, pos) {
     while (val > 127) {
       buf[pos++] = val & 127 | 128;
       val >>>= 7;
     }
     buf[pos] = val;
   }
-  var VarintOp11 = class extends Op11 {
+  var VarintOp12 = class extends Op12 {
     next;
     constructor(len, val) {
-      super(writeVarint3211, len, val);
+      super(writeVarint3212, len, val);
       this.next = void 0;
     }
   };
-  function writeVarint6411(val, buf, pos) {
+  function writeVarint6412(val, buf, pos) {
     while (val.hi !== 0) {
       buf[pos++] = val.lo & 127 | 128;
       val.lo = (val.lo >>> 7 | val.hi << 25) >>> 0;
@@ -70003,52 +71837,52 @@ ${values.join("\n")}` : `${blockName} :`;
     }
     buf[pos++] = val.lo;
   }
-  function writeFixed3211(val, buf, pos) {
+  function writeFixed3212(val, buf, pos) {
     buf[pos] = val & 255;
     buf[pos + 1] = val >>> 8 & 255;
     buf[pos + 2] = val >>> 16 & 255;
     buf[pos + 3] = val >>> 24;
   }
-  function writeBytes11(val, buf, pos) {
+  function writeBytes12(val, buf, pos) {
     buf.set(val, pos);
   }
   if (globalThis.Buffer != null) {
-    Uint8ArrayWriter11.prototype.bytes = function(value2) {
+    Uint8ArrayWriter12.prototype.bytes = function(value2) {
       const len = value2.length >>> 0;
       this.uint32(len);
       if (len > 0) {
-        this._push(writeBytesBuffer11, len, value2);
+        this._push(writeBytesBuffer12, len, value2);
       }
       return this;
     };
-    Uint8ArrayWriter11.prototype.string = function(value2) {
+    Uint8ArrayWriter12.prototype.string = function(value2) {
       const len = globalThis.Buffer.byteLength(value2);
       this.uint32(len);
       if (len > 0) {
-        this._push(writeStringBuffer11, len, value2);
+        this._push(writeStringBuffer12, len, value2);
       }
       return this;
     };
   }
-  function writeBytesBuffer11(val, buf, pos) {
+  function writeBytesBuffer12(val, buf, pos) {
     buf.set(val, pos);
   }
-  function writeStringBuffer11(val, buf, pos) {
+  function writeStringBuffer12(val, buf, pos) {
     if (val.length < 40) {
-      write11(val, buf, pos);
+      write12(val, buf, pos);
     } else if (buf.utf8Write != null) {
       buf.utf8Write(val, pos);
     } else {
-      buf.set(fromString29(val), pos);
+      buf.set(fromString30(val), pos);
     }
   }
-  function createWriter11() {
-    return new Uint8ArrayWriter11();
+  function createWriter12() {
+    return new Uint8ArrayWriter12();
   }
 
   // node_modules/@libp2p/dcutr/node_modules/protons-runtime/dist/src/encode.js
-  function encodeMessage11(message15, codec) {
-    const w2 = createWriter11();
+  function encodeMessage12(message15, codec) {
+    const w2 = createWriter12();
     codec.encode(message15, w2, {
       lengthDelimited: false
     });
@@ -70056,13 +71890,13 @@ ${values.join("\n")}` : `${blockName} :`;
   }
 
   // node_modules/@libp2p/dcutr/node_modules/protons-runtime/dist/src/stream.js
-  function* streamMessage10(buf, codec, opts) {
-    const reader = createReader11(buf);
+  function* streamMessage11(buf, codec, opts) {
+    const reader = createReader12(buf);
     yield* codec.stream(reader, void 0, "$", opts);
   }
 
   // node_modules/@libp2p/dcutr/node_modules/protons-runtime/dist/src/codec.js
-  var CODEC_TYPES11 = {
+  var CODEC_TYPES12 = {
     VARINT: 0,
     BIT64: 1,
     LENGTH_DELIMITED: 2,
@@ -70070,7 +71904,7 @@ ${values.join("\n")}` : `${blockName} :`;
     END_GROUP: 4,
     BIT32: 5
   };
-  function createCodec38(name10, type, encode19, decode20, stream) {
+  function createCodec40(name10, type, encode19, decode20, stream) {
     return {
       name: name10,
       type,
@@ -70081,7 +71915,7 @@ ${values.join("\n")}` : `${blockName} :`;
   }
 
   // node_modules/@libp2p/dcutr/node_modules/protons-runtime/dist/src/codecs/enum.js
-  function enumeration11(v) {
+  function enumeration12(v) {
     function findValue(val) {
       if (v[val.toString()] == null) {
         throw new Error("Invalid enum value");
@@ -70100,16 +71934,16 @@ ${values.join("\n")}` : `${blockName} :`;
       const val = reader.int32();
       yield findValue(val);
     };
-    return createCodec38("enum", CODEC_TYPES11.VARINT, encode19, decode20, stream);
+    return createCodec40("enum", CODEC_TYPES12.VARINT, encode19, decode20, stream);
   }
 
   // node_modules/@libp2p/dcutr/node_modules/protons-runtime/dist/src/codecs/message.js
-  function message11(encode19, decode20, stream) {
-    return createCodec38("message", CODEC_TYPES11.LENGTH_DELIMITED, encode19, decode20, stream);
+  function message12(encode19, decode20, stream) {
+    return createCodec40("message", CODEC_TYPES12.LENGTH_DELIMITED, encode19, decode20, stream);
   }
 
   // node_modules/@libp2p/dcutr/node_modules/protons-runtime/dist/src/index.js
-  var MaxLengthError8 = class extends Error {
+  var MaxLengthError9 = class extends Error {
     /**
      * This will be removed in a future release
      *
@@ -70136,13 +71970,13 @@ ${values.join("\n")}` : `${blockName} :`;
     })(__TypeValues || (__TypeValues = {}));
     (function(Type3) {
       Type3.codec = () => {
-        return enumeration11(__TypeValues);
+        return enumeration12(__TypeValues);
       };
     })(Type2 = HolePunch2.Type || (HolePunch2.Type = {}));
     let _codec;
     HolePunch2.codec = () => {
       if (_codec == null) {
-        _codec = message11((obj, w2, opts = {}) => {
+        _codec = message12((obj, w2, opts = {}) => {
           if (opts.lengthDelimited !== false) {
             w2.fork();
           }
@@ -70173,7 +72007,7 @@ ${values.join("\n")}` : `${blockName} :`;
               }
               case 2: {
                 if (opts.limits?.observedAddresses != null && obj.observedAddresses.length === opts.limits.observedAddresses) {
-                  throw new MaxLengthError8('Decode error - repeated field "observedAddresses" had too many elements');
+                  throw new MaxLengthError9('Decode error - repeated field "observedAddresses" had too many elements');
                 }
                 obj.observedAddresses.push(reader.bytes());
                 break;
@@ -70202,7 +72036,7 @@ ${values.join("\n")}` : `${blockName} :`;
               }
               case 2: {
                 if (opts.limits?.observedAddresses != null && obj.observedAddresses === opts.limits.observedAddresses) {
-                  throw new MaxLengthError8('Streaming decode error - repeated field "observedAddresses" had too many elements');
+                  throw new MaxLengthError9('Streaming decode error - repeated field "observedAddresses" had too many elements');
                 }
                 yield {
                   field: `${prefix}.observedAddresses[]`,
@@ -70223,15 +72057,15 @@ ${values.join("\n")}` : `${blockName} :`;
       return _codec;
     };
     function encode19(obj) {
-      return encodeMessage11(obj, HolePunch2.codec());
+      return encodeMessage12(obj, HolePunch2.codec());
     }
     HolePunch2.encode = encode19;
     function decode20(buf, opts) {
-      return decodeMessage11(buf, HolePunch2.codec(), opts);
+      return decodeMessage12(buf, HolePunch2.codec(), opts);
     }
     HolePunch2.decode = decode20;
     function stream(buf, opts) {
-      return streamMessage10(buf, HolePunch2.codec(), opts);
+      return streamMessage11(buf, HolePunch2.codec(), opts);
     }
     HolePunch2.stream = stream;
   })(HolePunch || (HolePunch = {}));
@@ -70257,7 +72091,7 @@ ${values.join("\n")}` : `${blockName} :`;
   // node_modules/@libp2p/dcutr/dist/src/dcutr.js
   var MAX_DCUTR_MESSAGE_SIZE = 1024 * 4;
   var DCUTR_DIAL_PRIORITY = 100;
-  var defaultValues5 = {
+  var defaultValues6 = {
     // https://github.com/libp2p/go-libp2p/blob/8d2e54e1637041d5cf4fac1e531287560bd1f4ac/p2p/protocol/holepunch/holepuncher.go#L27
     timeout: 5e3,
     // https://github.com/libp2p/go-libp2p/blob/8d2e54e1637041d5cf4fac1e531287560bd1f4ac/p2p/protocol/holepunch/holepuncher.go#L28
@@ -70286,10 +72120,10 @@ ${values.join("\n")}` : `${blockName} :`;
       this.addressManager = components.addressManager;
       this.connectionManager = components.connectionManager;
       this.transportManager = components.transportManager;
-      this.timeout = init.timeout ?? defaultValues5.timeout;
-      this.retries = init.retries ?? defaultValues5.retries;
-      this.maxInboundStreams = init.maxInboundStreams ?? defaultValues5.maxInboundStreams;
-      this.maxOutboundStreams = init.maxOutboundStreams ?? defaultValues5.maxOutboundStreams;
+      this.timeout = init.timeout ?? defaultValues6.timeout;
+      this.retries = init.retries ?? defaultValues6.retries;
+      this.maxInboundStreams = init.maxInboundStreams ?? defaultValues6.maxInboundStreams;
+      this.maxOutboundStreams = init.maxOutboundStreams ?? defaultValues6.maxOutboundStreams;
       this.handleIncomingUpgrade = this.handleIncomingUpgrade.bind(this);
     }
     [Symbol.toStringTag] = "@libp2p/dcutr";
@@ -70611,15 +72445,15 @@ ${values.join("\n")}` : `${blockName} :`;
     RESPONSE_LINE: true,
     HEADER: true
   };
-  HTTPParser.prototype.execute = function(chunk, start2, length18) {
+  HTTPParser.prototype.execute = function(chunk, start3, length18) {
     if (!(this instanceof HTTPParser)) {
       throw new TypeError("not a HTTPParser");
     }
-    start2 = start2 || 0;
+    start3 = start3 || 0;
     length18 = typeof length18 === "number" ? length18 : chunk.length;
     this.chunk = chunk;
-    this.offset = start2;
-    var end = this.end = start2 + length18;
+    this.offset = start3;
+    var end = this.end = start3 + length18;
     try {
       while (this.offset < end) {
         if (this[this.state]()) {
@@ -70634,7 +72468,7 @@ ${values.join("\n")}` : `${blockName} :`;
       return err;
     }
     this.chunk = null;
-    length18 = this.offset - start2;
+    length18 = this.offset - start3;
     if (headerState[this.state]) {
       this.headerSize += length18;
       if (this.headerSize > (this.maxHeaderSize || HTTPParser.maxHeaderSize)) {
@@ -70975,10 +72809,10 @@ ${values.join("\n")}` : `${blockName} :`;
   });
 
   // node_modules/@libp2p/http-utils/node_modules/uint8arrays/dist/src/alloc.js
-  function alloc29(size = 0) {
+  function alloc30(size = 0) {
     return new Uint8Array(size);
   }
-  function allocUnsafe32(size = 0) {
+  function allocUnsafe33(size = 0) {
     return new Uint8Array(size);
   }
 
@@ -70999,7 +72833,7 @@ ${values.join("\n")}` : `${blockName} :`;
     if (length18 == null) {
       length18 = arrays.reduce((acc, curr) => acc + curr.length, 0);
     }
-    const output = allocUnsafe32(length18);
+    const output = allocUnsafe33(length18);
     let offset = 0;
     for (const arr of arrays) {
       output.set(arr, offset);
@@ -71238,8 +73072,8 @@ ${values.join("\n")}` : `${blockName} :`;
             bufs.push(buf);
             break;
           }
-          const start2 = beginInclusive - bufStart;
-          bufs.push(buf.subarray(start2, start2 + (endExclusive - beginInclusive)));
+          const start3 = beginInclusive - bufStart;
+          bufs.push(buf.subarray(start3, start3 + (endExclusive - beginInclusive)));
           break;
         }
         if (sliceStartInBuf) {
@@ -71317,7 +73151,7 @@ ${values.join("\n")}` : `${blockName} :`;
       return view.getInt8(0);
     }
     setInt8(byteOffset, value2) {
-      const buf = allocUnsafe32(1);
+      const buf = allocUnsafe33(1);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setInt8(0, value2);
       this.write(buf, byteOffset);
@@ -71328,7 +73162,7 @@ ${values.join("\n")}` : `${blockName} :`;
       return view.getInt16(0, littleEndian);
     }
     setInt16(byteOffset, value2, littleEndian) {
-      const buf = alloc29(2);
+      const buf = alloc30(2);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setInt16(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -71339,7 +73173,7 @@ ${values.join("\n")}` : `${blockName} :`;
       return view.getInt32(0, littleEndian);
     }
     setInt32(byteOffset, value2, littleEndian) {
-      const buf = alloc29(4);
+      const buf = alloc30(4);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setInt32(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -71350,7 +73184,7 @@ ${values.join("\n")}` : `${blockName} :`;
       return view.getBigInt64(0, littleEndian);
     }
     setBigInt64(byteOffset, value2, littleEndian) {
-      const buf = alloc29(8);
+      const buf = alloc30(8);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setBigInt64(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -71361,7 +73195,7 @@ ${values.join("\n")}` : `${blockName} :`;
       return view.getUint8(0);
     }
     setUint8(byteOffset, value2) {
-      const buf = allocUnsafe32(1);
+      const buf = allocUnsafe33(1);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setUint8(0, value2);
       this.write(buf, byteOffset);
@@ -71372,7 +73206,7 @@ ${values.join("\n")}` : `${blockName} :`;
       return view.getUint16(0, littleEndian);
     }
     setUint16(byteOffset, value2, littleEndian) {
-      const buf = alloc29(2);
+      const buf = alloc30(2);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setUint16(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -71383,7 +73217,7 @@ ${values.join("\n")}` : `${blockName} :`;
       return view.getUint32(0, littleEndian);
     }
     setUint32(byteOffset, value2, littleEndian) {
-      const buf = alloc29(4);
+      const buf = alloc30(4);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setUint32(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -71394,7 +73228,7 @@ ${values.join("\n")}` : `${blockName} :`;
       return view.getBigUint64(0, littleEndian);
     }
     setBigUint64(byteOffset, value2, littleEndian) {
-      const buf = alloc29(8);
+      const buf = alloc30(8);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setBigUint64(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -71405,7 +73239,7 @@ ${values.join("\n")}` : `${blockName} :`;
       return view.getFloat32(0, littleEndian);
     }
     setFloat32(byteOffset, value2, littleEndian) {
-      const buf = alloc29(4);
+      const buf = alloc30(4);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setFloat32(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -71416,7 +73250,7 @@ ${values.join("\n")}` : `${blockName} :`;
       return view.getFloat64(0, littleEndian);
     }
     setFloat64(byteOffset, value2, littleEndian) {
-      const buf = alloc29(8);
+      const buf = alloc30(8);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setFloat64(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -71454,7 +73288,7 @@ ${values.join("\n")}` : `${blockName} :`;
   };
 
   // node_modules/@libp2p/http-utils/node_modules/uint8arrays/dist/src/util/bases.js
-  function createCodec39(name10, prefix, encode19, decode20) {
+  function createCodec41(name10, prefix, encode19, decode20) {
     return {
       name: name10,
       prefix,
@@ -71468,14 +73302,14 @@ ${values.join("\n")}` : `${blockName} :`;
       }
     };
   }
-  var string28 = createCodec39("utf8", "u", (buf) => {
+  var string29 = createCodec41("utf8", "u", (buf) => {
     const decoder = new TextDecoder("utf8");
     return "u" + decoder.decode(buf);
   }, (str) => {
     const encoder2 = new TextEncoder();
     return encoder2.encode(str.substring(1));
   });
-  var ascii28 = createCodec39("ascii", "a", (buf) => {
+  var ascii29 = createCodec41("ascii", "a", (buf) => {
     let string37 = "a";
     for (let i = 0; i < buf.length; i++) {
       string37 += String.fromCharCode(buf[i]);
@@ -71483,26 +73317,26 @@ ${values.join("\n")}` : `${blockName} :`;
     return string37;
   }, (str) => {
     str = str.substring(1);
-    const buf = allocUnsafe32(str.length);
+    const buf = allocUnsafe33(str.length);
     for (let i = 0; i < str.length; i++) {
       buf[i] = str.charCodeAt(i);
     }
     return buf;
   });
-  var BASES28 = {
-    utf8: string28,
-    "utf-8": string28,
+  var BASES29 = {
+    utf8: string29,
+    "utf-8": string29,
     hex: bases.base16,
-    latin1: ascii28,
-    ascii: ascii28,
-    binary: ascii28,
+    latin1: ascii29,
+    ascii: ascii29,
+    binary: ascii29,
     ...bases
   };
-  var bases_default28 = BASES28;
+  var bases_default29 = BASES29;
 
   // node_modules/@libp2p/http-utils/node_modules/uint8arrays/dist/src/from-string.js
-  function fromString30(string37, encoding = "utf8") {
-    const base4 = bases_default28[encoding];
+  function fromString31(string37, encoding = "utf8") {
+    const base4 = bases_default29[encoding];
     if (base4 == null) {
       throw new Error(`Unsupported encoding "${encoding}"`);
     }
@@ -71726,7 +73560,7 @@ ${values.join("\n")}` : `${blockName} :`;
     return new Request(normalizeUrl(info).toString(), init);
   }
   async function responseToStream(res, stream) {
-    stream.send(fromString30([
+    stream.send(fromString31([
       `HTTP/1.1 ${res.status} ${res.statusText}`,
       ...writeHeaders(res.headers),
       "",
@@ -71754,25 +73588,25 @@ ${values.join("\n")}` : `${blockName} :`;
       stream.abort(err);
     });
   }
-  var NOT_FOUND_RESPONSE = fromString30([
+  var NOT_FOUND_RESPONSE = fromString31([
     "HTTP/1.1 404 Not Found",
     "Connection: close",
     "",
     ""
   ].join("\r\n"));
-  var BAD_REQUEST = fromString30([
+  var BAD_REQUEST = fromString31([
     "HTTP/1.1 400 Bad Request",
     "Connection: close",
     "",
     ""
   ].join("\r\n"));
-  var INTERNAL_SERVER_ERROR = fromString30([
+  var INTERNAL_SERVER_ERROR = fromString31([
     "HTTP/1.1 500 Internal Server Error",
     "Connection: close",
     "",
     ""
   ].join("\r\n"));
-  var NOT_IMPLEMENTED_ERROR = fromString30([
+  var NOT_IMPLEMENTED_ERROR = fromString31([
     "HTTP/1.1 501 Not Implemented",
     "Connection: close",
     "",
@@ -71993,7 +73827,7 @@ ${values.join("\n")}` : `${blockName} :`;
       throw new ProtocolError("Missing sec-websocket-key");
     }
     const token = `${secWebSocketKey}258EAFA5-E914-47DA-95CA-C5AB0DC85B11`;
-    const hash = await sha12.digest(fromString30(token));
+    const hash = await sha12.digest(fromString31(token));
     const webSocketAccept = base64pad.encode(hash.digest).substring(1);
     return new Headers({
       Upgrade: "websocket",
@@ -72110,12 +73944,12 @@ ${values.join("\n")}` : `${blockName} :`;
   }
 
   // node_modules/@libp2p/http-fetch/node_modules/uint8arrays/dist/src/alloc.js
-  function allocUnsafe33(size = 0) {
+  function allocUnsafe34(size = 0) {
     return new Uint8Array(size);
   }
 
   // node_modules/@libp2p/http-fetch/node_modules/uint8arrays/dist/src/util/bases.js
-  function createCodec40(name10, prefix, encode19, decode20) {
+  function createCodec42(name10, prefix, encode19, decode20) {
     return {
       name: name10,
       prefix,
@@ -72129,14 +73963,14 @@ ${values.join("\n")}` : `${blockName} :`;
       }
     };
   }
-  var string29 = createCodec40("utf8", "u", (buf) => {
+  var string30 = createCodec42("utf8", "u", (buf) => {
     const decoder = new TextDecoder("utf8");
     return "u" + decoder.decode(buf);
   }, (str) => {
     const encoder2 = new TextEncoder();
     return encoder2.encode(str.substring(1));
   });
-  var ascii29 = createCodec40("ascii", "a", (buf) => {
+  var ascii30 = createCodec42("ascii", "a", (buf) => {
     let string37 = "a";
     for (let i = 0; i < buf.length; i++) {
       string37 += String.fromCharCode(buf[i]);
@@ -72144,26 +73978,26 @@ ${values.join("\n")}` : `${blockName} :`;
     return string37;
   }, (str) => {
     str = str.substring(1);
-    const buf = allocUnsafe33(str.length);
+    const buf = allocUnsafe34(str.length);
     for (let i = 0; i < str.length; i++) {
       buf[i] = str.charCodeAt(i);
     }
     return buf;
   });
-  var BASES29 = {
-    utf8: string29,
-    "utf-8": string29,
+  var BASES30 = {
+    utf8: string30,
+    "utf-8": string30,
     hex: bases.base16,
-    latin1: ascii29,
-    ascii: ascii29,
-    binary: ascii29,
+    latin1: ascii30,
+    ascii: ascii30,
+    binary: ascii30,
     ...bases
   };
-  var bases_default29 = BASES29;
+  var bases_default30 = BASES30;
 
   // node_modules/@libp2p/http-fetch/node_modules/uint8arrays/dist/src/from-string.js
-  function fromString31(string37, encoding = "utf8") {
-    const base4 = bases_default29[encoding];
+  function fromString32(string37, encoding = "utf8") {
+    const base4 = bases_default30[encoding];
     if (base4 == null) {
       throw new Error(`Unsupported encoding "${encoding}"`);
     }
@@ -72203,7 +74037,7 @@ ${values.join("\n")}` : `${blockName} :`;
       header.push(`Content-Disposition: form-data; name="${name10}"; filename="${encodeURIComponent(entry.name)}"`, "Content-Type: application/octet-stream", `Content-Length: ${entry.size}`, "");
       contentLength = entry.size + trailingLinebreak;
     }
-    const buf = fromString31(header.join("\r\n"));
+    const buf = fromString32(header.join("\r\n"));
     return buf.byteLength + contentLength;
   }
   function formDataBody(formData, headers) {
@@ -72226,7 +74060,7 @@ ${values.join("\n")}` : `${blockName} :`;
         header.push(`Content-Disposition: form-data; name="${name10}"; filename="${encodeURIComponent(entry.name)}"`, "Content-Type: application/octet-stream", `Content-Length: ${entry.size}`, "");
         fileDataReader = entry.stream().getReader();
       }
-      controller.enqueue(fromString31(header.join("\r\n")));
+      controller.enqueue(fromString32(header.join("\r\n")));
     }
     async function getNext(controller, boundary2) {
       if (fileDataReader != null) {
@@ -72235,7 +74069,7 @@ ${values.join("\n")}` : `${blockName} :`;
           controller.enqueue(result.value);
         }
         if (result.done) {
-          controller.enqueue(fromString31("\r\n"));
+          controller.enqueue(fromString32("\r\n"));
           fileDataReader = void 0;
         }
         return;
@@ -72265,13 +74099,13 @@ ${values.join("\n")}` : `${blockName} :`;
       async pull(controller) {
         const { done, value: value2 } = await reader.read();
         if (value2 != null) {
-          controller.enqueue(fromString31(`${value2.byteLength}\r
+          controller.enqueue(fromString32(`${value2.byteLength}\r
 `));
           controller.enqueue(value2);
-          controller.enqueue(fromString31("\r\n"));
+          controller.enqueue(fromString32("\r\n"));
         }
         if (done) {
-          controller.enqueue(fromString31("0\r\n\r\n"));
+          controller.enqueue(fromString32("0\r\n\r\n"));
           controller.close();
         }
       }
@@ -72284,7 +74118,7 @@ ${values.join("\n")}` : `${blockName} :`;
     headers.set("Content-Type", 'text/plain; charset="UTF-8"');
     return new ReadableStream({
       start(controller) {
-        controller.enqueue(fromString31(str));
+        controller.enqueue(fromString32(str));
         controller.close();
       }
     });
@@ -72332,7 +74166,7 @@ ${values.join("\n")}` : `${blockName} :`;
       "",
       ""
     ];
-    if (!stream.send(fromString31(req.join("\r\n")))) {
+    if (!stream.send(fromString32(req.join("\r\n")))) {
       await stream.onDrain({
         signal: init.signal ?? void 0
       });
@@ -72382,10 +74216,10 @@ ${values.join("\n")}` : `${blockName} :`;
   }
 
   // node_modules/@libp2p/http-websocket/node_modules/uint8arrays/dist/src/alloc.js
-  function alloc30(size = 0) {
+  function alloc31(size = 0) {
     return new Uint8Array(size);
   }
-  function allocUnsafe34(size = 0) {
+  function allocUnsafe35(size = 0) {
     return new Uint8Array(size);
   }
 
@@ -72406,7 +74240,7 @@ ${values.join("\n")}` : `${blockName} :`;
     if (length18 == null) {
       length18 = arrays.reduce((acc, curr) => acc + curr.length, 0);
     }
-    const output = allocUnsafe34(length18);
+    const output = allocUnsafe35(length18);
     let offset = 0;
     for (const arr of arrays) {
       output.set(arr, offset);
@@ -72645,8 +74479,8 @@ ${values.join("\n")}` : `${blockName} :`;
             bufs.push(buf);
             break;
           }
-          const start2 = beginInclusive - bufStart;
-          bufs.push(buf.subarray(start2, start2 + (endExclusive - beginInclusive)));
+          const start3 = beginInclusive - bufStart;
+          bufs.push(buf.subarray(start3, start3 + (endExclusive - beginInclusive)));
           break;
         }
         if (sliceStartInBuf) {
@@ -72724,7 +74558,7 @@ ${values.join("\n")}` : `${blockName} :`;
       return view.getInt8(0);
     }
     setInt8(byteOffset, value2) {
-      const buf = allocUnsafe34(1);
+      const buf = allocUnsafe35(1);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setInt8(0, value2);
       this.write(buf, byteOffset);
@@ -72735,7 +74569,7 @@ ${values.join("\n")}` : `${blockName} :`;
       return view.getInt16(0, littleEndian);
     }
     setInt16(byteOffset, value2, littleEndian) {
-      const buf = alloc30(2);
+      const buf = alloc31(2);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setInt16(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -72746,7 +74580,7 @@ ${values.join("\n")}` : `${blockName} :`;
       return view.getInt32(0, littleEndian);
     }
     setInt32(byteOffset, value2, littleEndian) {
-      const buf = alloc30(4);
+      const buf = alloc31(4);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setInt32(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -72757,7 +74591,7 @@ ${values.join("\n")}` : `${blockName} :`;
       return view.getBigInt64(0, littleEndian);
     }
     setBigInt64(byteOffset, value2, littleEndian) {
-      const buf = alloc30(8);
+      const buf = alloc31(8);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setBigInt64(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -72768,7 +74602,7 @@ ${values.join("\n")}` : `${blockName} :`;
       return view.getUint8(0);
     }
     setUint8(byteOffset, value2) {
-      const buf = allocUnsafe34(1);
+      const buf = allocUnsafe35(1);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setUint8(0, value2);
       this.write(buf, byteOffset);
@@ -72779,7 +74613,7 @@ ${values.join("\n")}` : `${blockName} :`;
       return view.getUint16(0, littleEndian);
     }
     setUint16(byteOffset, value2, littleEndian) {
-      const buf = alloc30(2);
+      const buf = alloc31(2);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setUint16(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -72790,7 +74624,7 @@ ${values.join("\n")}` : `${blockName} :`;
       return view.getUint32(0, littleEndian);
     }
     setUint32(byteOffset, value2, littleEndian) {
-      const buf = alloc30(4);
+      const buf = alloc31(4);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setUint32(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -72801,7 +74635,7 @@ ${values.join("\n")}` : `${blockName} :`;
       return view.getBigUint64(0, littleEndian);
     }
     setBigUint64(byteOffset, value2, littleEndian) {
-      const buf = alloc30(8);
+      const buf = alloc31(8);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setBigUint64(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -72812,7 +74646,7 @@ ${values.join("\n")}` : `${blockName} :`;
       return view.getFloat32(0, littleEndian);
     }
     setFloat32(byteOffset, value2, littleEndian) {
-      const buf = alloc30(4);
+      const buf = alloc31(4);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setFloat32(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -72823,7 +74657,7 @@ ${values.join("\n")}` : `${blockName} :`;
       return view.getFloat64(0, littleEndian);
     }
     setFloat64(byteOffset, value2, littleEndian) {
-      const buf = alloc30(8);
+      const buf = alloc31(8);
       const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       view.setFloat64(0, value2, littleEndian);
       this.write(buf, byteOffset);
@@ -72917,7 +74751,7 @@ ${values.join("\n")}` : `${blockName} :`;
     INTERNAL_SERVER_ERROR: 1011,
     TLS_HANDSHAKE: 1015
   };
-  function decodeMessage12(buf) {
+  function decodeMessage13(buf) {
     let offset = 0;
     if (buf.byteLength < offset + 1) {
       return;
@@ -72987,7 +74821,7 @@ ${values.join("\n")}` : `${blockName} :`;
     }
     return data;
   }
-  function encodeMessage12(opcode, data, maskData) {
+  function encodeMessage13(opcode, data, maskData) {
     const fin = true;
     const message15 = new Uint8ArrayList15(Uint8Array.from([
       (fin ? 128 : 0) | OP_CODES[opcode]
@@ -73022,7 +74856,7 @@ ${values.join("\n")}` : `${blockName} :`;
   }
 
   // node_modules/@libp2p/http-websocket/node_modules/uint8arrays/dist/src/util/bases.js
-  function createCodec41(name10, prefix, encode19, decode20) {
+  function createCodec43(name10, prefix, encode19, decode20) {
     return {
       name: name10,
       prefix,
@@ -73036,14 +74870,14 @@ ${values.join("\n")}` : `${blockName} :`;
       }
     };
   }
-  var string30 = createCodec41("utf8", "u", (buf) => {
+  var string31 = createCodec43("utf8", "u", (buf) => {
     const decoder = new TextDecoder("utf8");
     return "u" + decoder.decode(buf);
   }, (str) => {
     const encoder2 = new TextEncoder();
     return encoder2.encode(str.substring(1));
   });
-  var ascii30 = createCodec41("ascii", "a", (buf) => {
+  var ascii31 = createCodec43("ascii", "a", (buf) => {
     let string37 = "a";
     for (let i = 0; i < buf.length; i++) {
       string37 += String.fromCharCode(buf[i]);
@@ -73051,26 +74885,26 @@ ${values.join("\n")}` : `${blockName} :`;
     return string37;
   }, (str) => {
     str = str.substring(1);
-    const buf = allocUnsafe34(str.length);
+    const buf = allocUnsafe35(str.length);
     for (let i = 0; i < str.length; i++) {
       buf[i] = str.charCodeAt(i);
     }
     return buf;
   });
-  var BASES30 = {
-    utf8: string30,
-    "utf-8": string30,
+  var BASES31 = {
+    utf8: string31,
+    "utf-8": string31,
     hex: bases.base16,
-    latin1: ascii30,
-    ascii: ascii30,
-    binary: ascii30,
+    latin1: ascii31,
+    ascii: ascii31,
+    binary: ascii31,
     ...bases
   };
-  var bases_default30 = BASES30;
+  var bases_default31 = BASES31;
 
   // node_modules/@libp2p/http-websocket/node_modules/uint8arrays/dist/src/from-string.js
-  function fromString32(string37, encoding = "utf8") {
-    const base4 = bases_default30[encoding];
+  function fromString33(string37, encoding = "utf8") {
+    const base4 = bases_default31[encoding];
     if (base4 == null) {
       throw new Error(`Unsupported encoding "${encoding}"`);
     }
@@ -73086,7 +74920,7 @@ ${values.join("\n")}` : `${blockName} :`;
       return new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
     }
     if (typeof data === "string") {
-      return fromString32(data);
+      return fromString33(data);
     }
     if (data instanceof Blob) {
       return data.arrayBuffer().then((buf) => toUint8Array2(buf));
@@ -73141,7 +74975,7 @@ ${values.join("\n")}` : `${blockName} :`;
     if (protocols.length > 0) {
       headers.set("sec-websocket-protocol", protocols.join(", "));
     }
-    yield fromString32([
+    yield fromString33([
       `GET ${url.pathname ?? "/"} HTTP/1.1`,
       ...[...headers.entries()].map(([key, value2]) => `${key}: ${value2}`),
       "",
@@ -73203,7 +75037,7 @@ ${values.join("\n")}` : `${blockName} :`;
       if (this.readyState !== this.OPEN) {
         return;
       }
-      const message15 = encodeMessage12(type, data, this.isClient);
+      const message15 = encodeMessage13(type, data, this.isClient);
       const byteLength = message15.byteLength;
       this.bufferedAmount += byteLength;
       this._write(message15, (err) => {
@@ -73260,7 +75094,7 @@ ${values.join("\n")}` : `${blockName} :`;
         return;
       }
       while (true) {
-        const message15 = decodeMessage12(this.buffer);
+        const message15 = decodeMessage13(this.buffer);
         if (message15 == null) {
           break;
         }
@@ -73947,1835 +75781,6 @@ ${values.join("\n")}` : `${blockName} :`;
     return (components) => new HTTP2(components, init);
   }
 
-  // node_modules/@libp2p/identify/node_modules/uint8arrays/dist/src/alloc.js
-  function allocUnsafe35(size = 0) {
-    return new Uint8Array(size);
-  }
-
-  // node_modules/@libp2p/identify/node_modules/uint8arrays/dist/src/util/bases.js
-  function createCodec42(name10, prefix, encode19, decode20) {
-    return {
-      name: name10,
-      prefix,
-      encoder: {
-        name: name10,
-        prefix,
-        encode: encode19
-      },
-      decoder: {
-        decode: decode20
-      }
-    };
-  }
-  var string31 = createCodec42("utf8", "u", (buf) => {
-    const decoder = new TextDecoder("utf8");
-    return "u" + decoder.decode(buf);
-  }, (str) => {
-    const encoder2 = new TextEncoder();
-    return encoder2.encode(str.substring(1));
-  });
-  var ascii31 = createCodec42("ascii", "a", (buf) => {
-    let string37 = "a";
-    for (let i = 0; i < buf.length; i++) {
-      string37 += String.fromCharCode(buf[i]);
-    }
-    return string37;
-  }, (str) => {
-    str = str.substring(1);
-    const buf = allocUnsafe35(str.length);
-    for (let i = 0; i < str.length; i++) {
-      buf[i] = str.charCodeAt(i);
-    }
-    return buf;
-  });
-  var BASES31 = {
-    utf8: string31,
-    "utf-8": string31,
-    hex: bases.base16,
-    latin1: ascii31,
-    ascii: ascii31,
-    binary: ascii31,
-    ...bases
-  };
-  var bases_default31 = BASES31;
-
-  // node_modules/@libp2p/identify/node_modules/uint8arrays/dist/src/from-string.js
-  function fromString33(string37, encoding = "utf8") {
-    const base4 = bases_default31[encoding];
-    if (base4 == null) {
-      throw new Error(`Unsupported encoding "${encoding}"`);
-    }
-    return base4.decoder.decode(`${base4.prefix}${string37}`);
-  }
-
-  // node_modules/@libp2p/identify/node_modules/uint8arrays/dist/src/to-string.js
-  function toString16(array, encoding = "utf8") {
-    const base4 = bases_default31[encoding];
-    if (base4 == null) {
-      throw new Error(`Unsupported encoding "${encoding}"`);
-    }
-    return base4.encoder.encode(array).substring(1);
-  }
-
-  // node_modules/@libp2p/identify/dist/src/consts.js
-  var IDENTIFY_PROTOCOL_VERSION = "0.1.0";
-  var MULTICODEC_IDENTIFY_PROTOCOL_NAME = "id";
-  var MULTICODEC_IDENTIFY_PUSH_PROTOCOL_NAME = "id/push";
-  var MULTICODEC_IDENTIFY_PROTOCOL_VERSION = "1.0.0";
-  var MULTICODEC_IDENTIFY_PUSH_PROTOCOL_VERSION = "1.0.0";
-  var MAX_IDENTIFY_MESSAGE_SIZE = 1024 * 8;
-  var MAX_IDENTIFY_MESSAGES = 10;
-  var MAX_PUSH_CONCURRENCY = 32;
-  var PUSH_DEBOUNCE_MS = 1e3;
-
-  // node_modules/@libp2p/identify/node_modules/uint8arrays/dist/src/with-array-buffer.js
-  function isArrayBufferBacked17(arr) {
-    return arr.buffer instanceof ArrayBuffer;
-  }
-  function withArrayBuffer17(arr) {
-    if (isArrayBufferBacked17(arr)) {
-      return arr;
-    }
-    return arr.slice();
-  }
-
-  // node_modules/@libp2p/identify/node_modules/protons-runtime/dist/src/utils/float.js
-  var f3212 = new Float32Array([-0]);
-  var f8b12 = new Uint8Array(f3212.buffer);
-  function writeFloatLE12(val, buf, pos) {
-    f3212[0] = val;
-    buf[pos] = f8b12[0];
-    buf[pos + 1] = f8b12[1];
-    buf[pos + 2] = f8b12[2];
-    buf[pos + 3] = f8b12[3];
-  }
-  function readFloatLE12(buf, pos) {
-    f8b12[0] = buf[pos];
-    f8b12[1] = buf[pos + 1];
-    f8b12[2] = buf[pos + 2];
-    f8b12[3] = buf[pos + 3];
-    return f3212[0];
-  }
-  var f6412 = new Float64Array([-0]);
-  var d8b12 = new Uint8Array(f6412.buffer);
-  function writeDoubleLE12(val, buf, pos) {
-    f6412[0] = val;
-    buf[pos] = d8b12[0];
-    buf[pos + 1] = d8b12[1];
-    buf[pos + 2] = d8b12[2];
-    buf[pos + 3] = d8b12[3];
-    buf[pos + 4] = d8b12[4];
-    buf[pos + 5] = d8b12[5];
-    buf[pos + 6] = d8b12[6];
-    buf[pos + 7] = d8b12[7];
-  }
-  function readDoubleLE12(buf, pos) {
-    d8b12[0] = buf[pos];
-    d8b12[1] = buf[pos + 1];
-    d8b12[2] = buf[pos + 2];
-    d8b12[3] = buf[pos + 3];
-    d8b12[4] = buf[pos + 4];
-    d8b12[5] = buf[pos + 5];
-    d8b12[6] = buf[pos + 6];
-    d8b12[7] = buf[pos + 7];
-    return f6412[0];
-  }
-
-  // node_modules/@libp2p/identify/node_modules/protons-runtime/dist/src/utils/longbits.js
-  var MAX_SAFE_NUMBER_INTEGER12 = BigInt(Number.MAX_SAFE_INTEGER);
-  var MIN_SAFE_NUMBER_INTEGER12 = BigInt(Number.MIN_SAFE_INTEGER);
-  var LongBits12 = class _LongBits {
-    lo;
-    hi;
-    constructor(lo, hi) {
-      this.lo = lo | 0;
-      this.hi = hi | 0;
-    }
-    /**
-     * Converts this long bits to a possibly unsafe JavaScript number
-     */
-    toNumber(unsigned = false) {
-      if (!unsigned && this.hi >>> 31 > 0) {
-        const lo = ~this.lo + 1 >>> 0;
-        let hi = ~this.hi >>> 0;
-        if (lo === 0) {
-          hi = hi + 1 >>> 0;
-        }
-        return -(lo + hi * 4294967296);
-      }
-      return this.lo + this.hi * 4294967296;
-    }
-    /**
-     * Converts this long bits to a bigint
-     */
-    toBigInt(unsigned = false) {
-      if (unsigned) {
-        return BigInt(this.lo >>> 0) + (BigInt(this.hi >>> 0) << 32n);
-      }
-      if (this.hi >>> 31 !== 0) {
-        const lo = ~this.lo + 1 >>> 0;
-        let hi = ~this.hi >>> 0;
-        if (lo === 0) {
-          hi = hi + 1 >>> 0;
-        }
-        return -(BigInt(lo) + (BigInt(hi) << 32n));
-      }
-      return BigInt(this.lo >>> 0) + (BigInt(this.hi >>> 0) << 32n);
-    }
-    /**
-     * Converts this long bits to a string
-     */
-    toString(unsigned = false) {
-      return this.toBigInt(unsigned).toString();
-    }
-    /**
-     * Zig-zag encodes this long bits
-     */
-    zzEncode() {
-      const mask = this.hi >> 31;
-      this.hi = ((this.hi << 1 | this.lo >>> 31) ^ mask) >>> 0;
-      this.lo = (this.lo << 1 ^ mask) >>> 0;
-      return this;
-    }
-    /**
-     * Zig-zag decodes this long bits
-     */
-    zzDecode() {
-      const mask = -(this.lo & 1);
-      this.lo = ((this.lo >>> 1 | this.hi << 31) ^ mask) >>> 0;
-      this.hi = (this.hi >>> 1 ^ mask) >>> 0;
-      return this;
-    }
-    /**
-     * Calculates the length of this longbits when encoded as a varint.
-     */
-    length() {
-      const part0 = this.lo;
-      const part1 = (this.lo >>> 28 | this.hi << 4) >>> 0;
-      const part2 = this.hi >>> 24;
-      return part2 === 0 ? part1 === 0 ? part0 < 16384 ? part0 < 128 ? 1 : 2 : part0 < 2097152 ? 3 : 4 : part1 < 16384 ? part1 < 128 ? 5 : 6 : part1 < 2097152 ? 7 : 8 : part2 < 128 ? 9 : 10;
-    }
-    /**
-     * Constructs new long bits from the specified number
-     */
-    static fromBigInt(value2) {
-      if (value2 === 0n) {
-        return zero12;
-      }
-      if (value2 < MAX_SAFE_NUMBER_INTEGER12 && value2 > MIN_SAFE_NUMBER_INTEGER12) {
-        return this.fromNumber(Number(value2));
-      }
-      const negative = value2 < 0n;
-      if (negative) {
-        value2 = -value2;
-      }
-      let hi = value2 >> 32n;
-      let lo = value2 - (hi << 32n);
-      if (negative) {
-        hi = ~hi | 0n;
-        lo = ~lo | 0n;
-        if (++lo > TWO_3212) {
-          lo = 0n;
-          if (++hi > TWO_3212) {
-            hi = 0n;
-          }
-        }
-      }
-      return new _LongBits(Number(lo), Number(hi));
-    }
-    /**
-     * Constructs new long bits from the specified number
-     */
-    static fromNumber(value2) {
-      if (value2 === 0) {
-        return zero12;
-      }
-      const sign = value2 < 0;
-      if (sign) {
-        value2 = -value2;
-      }
-      let lo = value2 >>> 0;
-      let hi = (value2 - lo) / 4294967296 >>> 0;
-      if (sign) {
-        hi = ~hi >>> 0;
-        lo = ~lo >>> 0;
-        if (++lo > 4294967295) {
-          lo = 0;
-          if (++hi > 4294967295) {
-            hi = 0;
-          }
-        }
-      }
-      return new _LongBits(lo, hi);
-    }
-    /**
-     * Constructs new long bits from a number, long or string
-     */
-    static from(value2) {
-      if (typeof value2 === "number") {
-        return _LongBits.fromNumber(value2);
-      }
-      if (typeof value2 === "bigint") {
-        return _LongBits.fromBigInt(value2);
-      }
-      if (typeof value2 === "string") {
-        return _LongBits.fromBigInt(BigInt(value2));
-      }
-      return value2.low != null || value2.high != null ? new _LongBits(value2.low >>> 0, value2.high >>> 0) : zero12;
-    }
-  };
-  var zero12 = new LongBits12(0, 0);
-  zero12.toBigInt = function() {
-    return 0n;
-  };
-  zero12.zzEncode = zero12.zzDecode = function() {
-    return this;
-  };
-  zero12.length = function() {
-    return 1;
-  };
-  var TWO_3212 = 4294967296n;
-
-  // node_modules/@libp2p/identify/node_modules/protons-runtime/dist/src/utils/utf8.js
-  function length14(string37) {
-    let len = 0;
-    let c = 0;
-    for (let i = 0; i < string37.length; ++i) {
-      c = string37.charCodeAt(i);
-      if (c < 128) {
-        len += 1;
-      } else if (c < 2048) {
-        len += 2;
-      } else if ((c & 64512) === 55296 && (string37.charCodeAt(i + 1) & 64512) === 56320) {
-        ++i;
-        len += 4;
-      } else {
-        len += 3;
-      }
-    }
-    return len;
-  }
-  function read14(buffer2, start2, end) {
-    const len = end - start2;
-    if (len < 1) {
-      return "";
-    }
-    let parts;
-    const chunk = [];
-    let i = 0;
-    let t;
-    while (start2 < end) {
-      t = buffer2[start2++];
-      if (t < 128) {
-        chunk[i++] = t;
-      } else if (t > 191 && t < 224) {
-        chunk[i++] = (t & 31) << 6 | buffer2[start2++] & 63;
-      } else if (t > 239 && t < 365) {
-        t = ((t & 7) << 18 | (buffer2[start2++] & 63) << 12 | (buffer2[start2++] & 63) << 6 | buffer2[start2++] & 63) - 65536;
-        chunk[i++] = 55296 + (t >> 10);
-        chunk[i++] = 56320 + (t & 1023);
-      } else {
-        chunk[i++] = (t & 15) << 12 | (buffer2[start2++] & 63) << 6 | buffer2[start2++] & 63;
-      }
-      if (i > 8191) {
-        (parts ?? (parts = [])).push(String.fromCharCode.apply(String, chunk));
-        i = 0;
-      }
-    }
-    if (parts != null) {
-      if (i > 0) {
-        parts.push(String.fromCharCode.apply(String, chunk.slice(0, i)));
-      }
-      return parts.join("");
-    }
-    return String.fromCharCode.apply(String, chunk.slice(0, i));
-  }
-  function write12(string37, buffer2, offset) {
-    const start2 = offset;
-    let c1;
-    let c2;
-    for (let i = 0; i < string37.length; ++i) {
-      c1 = string37.charCodeAt(i);
-      if (c1 < 128) {
-        buffer2[offset++] = c1;
-      } else if (c1 < 2048) {
-        buffer2[offset++] = c1 >> 6 | 192;
-        buffer2[offset++] = c1 & 63 | 128;
-      } else if ((c1 & 64512) === 55296 && ((c2 = string37.charCodeAt(i + 1)) & 64512) === 56320) {
-        c1 = 65536 + ((c1 & 1023) << 10) + (c2 & 1023);
-        ++i;
-        buffer2[offset++] = c1 >> 18 | 240;
-        buffer2[offset++] = c1 >> 12 & 63 | 128;
-        buffer2[offset++] = c1 >> 6 & 63 | 128;
-        buffer2[offset++] = c1 & 63 | 128;
-      } else {
-        buffer2[offset++] = c1 >> 12 | 224;
-        buffer2[offset++] = c1 >> 6 & 63 | 128;
-        buffer2[offset++] = c1 & 63 | 128;
-      }
-    }
-    return offset - start2;
-  }
-
-  // node_modules/@libp2p/identify/node_modules/protons-runtime/dist/src/utils/reader.js
-  function indexOutOfRange12(reader, writeLength) {
-    return RangeError(`index out of range: ${reader.pos} + ${writeLength ?? 1} > ${reader.len}`);
-  }
-  function readFixed32End12(buf, end) {
-    return (buf[end - 4] | buf[end - 3] << 8 | buf[end - 2] << 16 | buf[end - 1] << 24) >>> 0;
-  }
-  var Uint8ArrayReader12 = class {
-    buf;
-    pos;
-    len;
-    _slice = Uint8Array.prototype.subarray;
-    constructor(buffer2) {
-      this.buf = withArrayBuffer17(buffer2);
-      this.pos = 0;
-      this.len = buffer2.length;
-    }
-    /**
-     * Reads a varint as an unsigned 32 bit value
-     */
-    uint32() {
-      let value2 = 4294967295;
-      value2 = (this.buf[this.pos] & 127) >>> 0;
-      if (this.buf[this.pos++] < 128) {
-        return value2;
-      }
-      value2 = (value2 | (this.buf[this.pos] & 127) << 7) >>> 0;
-      if (this.buf[this.pos++] < 128) {
-        return value2;
-      }
-      value2 = (value2 | (this.buf[this.pos] & 127) << 14) >>> 0;
-      if (this.buf[this.pos++] < 128) {
-        return value2;
-      }
-      value2 = (value2 | (this.buf[this.pos] & 127) << 21) >>> 0;
-      if (this.buf[this.pos++] < 128) {
-        return value2;
-      }
-      value2 = (value2 | (this.buf[this.pos] & 15) << 28) >>> 0;
-      if (this.buf[this.pos++] < 128) {
-        return value2;
-      }
-      if ((this.pos += 5) > this.len) {
-        this.pos = this.len;
-        throw indexOutOfRange12(this, 10);
-      }
-      return value2;
-    }
-    /**
-     * Reads a varint as a signed 32 bit value
-     */
-    int32() {
-      return this.uint32() | 0;
-    }
-    /**
-     * Reads a zig-zag encoded varint as a signed 32 bit value
-     */
-    sint32() {
-      const value2 = this.uint32();
-      return value2 >>> 1 ^ -(value2 & 1) | 0;
-    }
-    /**
-     * Reads a varint as a boolean
-     */
-    bool() {
-      return this.uint32() !== 0;
-    }
-    /**
-     * Reads fixed 32 bits as an unsigned 32 bit integer
-     */
-    fixed32() {
-      if (this.pos + 4 > this.len) {
-        throw indexOutOfRange12(this, 4);
-      }
-      const res = readFixed32End12(this.buf, this.pos += 4);
-      return res;
-    }
-    /**
-     * Reads fixed 32 bits as a signed 32 bit integer
-     */
-    sfixed32() {
-      if (this.pos + 4 > this.len) {
-        throw indexOutOfRange12(this, 4);
-      }
-      const res = readFixed32End12(this.buf, this.pos += 4) | 0;
-      return res;
-    }
-    /**
-     * Reads a float (32 bit) as a number
-     */
-    float() {
-      if (this.pos + 4 > this.len) {
-        throw indexOutOfRange12(this, 4);
-      }
-      const value2 = readFloatLE12(this.buf, this.pos);
-      this.pos += 4;
-      return value2;
-    }
-    /**
-     * Reads a double (64 bit float) as a number
-     */
-    double() {
-      if (this.pos + 8 > this.len) {
-        throw indexOutOfRange12(this, 4);
-      }
-      const value2 = readDoubleLE12(this.buf, this.pos);
-      this.pos += 8;
-      return value2;
-    }
-    /**
-     * Reads a sequence of bytes preceded by its length as a varint
-     */
-    bytes() {
-      const length18 = this.uint32();
-      const start2 = this.pos;
-      const end = this.pos + length18;
-      if (end > this.len) {
-        throw indexOutOfRange12(this, length18);
-      }
-      this.pos += length18;
-      return start2 === end ? new Uint8Array(0) : this.buf.subarray(start2, end);
-    }
-    /**
-     * Reads a string preceded by its byte length as a varint
-     */
-    string() {
-      const bytes = this.bytes();
-      return read14(bytes, 0, bytes.length);
-    }
-    /**
-     * Skips the specified number of bytes if specified, otherwise skips a varint
-     */
-    skip(length18) {
-      if (typeof length18 === "number") {
-        if (this.pos + length18 > this.len) {
-          throw indexOutOfRange12(this, length18);
-        }
-        this.pos += length18;
-      } else {
-        do {
-          if (this.pos >= this.len) {
-            throw indexOutOfRange12(this);
-          }
-        } while ((this.buf[this.pos++] & 128) !== 0);
-      }
-      return this;
-    }
-    /**
-     * Skips the next element of the specified wire type
-     */
-    skipType(wireType) {
-      switch (wireType) {
-        case 0:
-          this.skip();
-          break;
-        case 1:
-          this.skip(8);
-          break;
-        case 2:
-          this.skip(this.uint32());
-          break;
-        case 3:
-          while ((wireType = this.uint32() & 7) !== 4) {
-            this.skipType(wireType);
-          }
-          break;
-        case 5:
-          this.skip(4);
-          break;
-        /* istanbul ignore next */
-        default:
-          throw Error(`invalid wire type ${wireType} at offset ${this.pos}`);
-      }
-      return this;
-    }
-    readLongVarint() {
-      const bits = new LongBits12(0, 0);
-      let i = 0;
-      if (this.len - this.pos > 4) {
-        for (; i < 4; ++i) {
-          bits.lo = (bits.lo | (this.buf[this.pos] & 127) << i * 7) >>> 0;
-          if (this.buf[this.pos++] < 128) {
-            return bits;
-          }
-        }
-        bits.lo = (bits.lo | (this.buf[this.pos] & 127) << 28) >>> 0;
-        bits.hi = (bits.hi | (this.buf[this.pos] & 127) >> 4) >>> 0;
-        if (this.buf[this.pos++] < 128) {
-          return bits;
-        }
-        i = 0;
-      } else {
-        for (; i < 3; ++i) {
-          if (this.pos >= this.len) {
-            throw indexOutOfRange12(this);
-          }
-          bits.lo = (bits.lo | (this.buf[this.pos] & 127) << i * 7) >>> 0;
-          if (this.buf[this.pos++] < 128) {
-            return bits;
-          }
-        }
-        bits.lo = (bits.lo | (this.buf[this.pos++] & 127) << i * 7) >>> 0;
-        return bits;
-      }
-      if (this.len - this.pos > 4) {
-        for (; i < 5; ++i) {
-          bits.hi = (bits.hi | (this.buf[this.pos] & 127) << i * 7 + 3) >>> 0;
-          if (this.buf[this.pos++] < 128) {
-            return bits;
-          }
-        }
-      } else {
-        for (; i < 5; ++i) {
-          if (this.pos >= this.len) {
-            throw indexOutOfRange12(this);
-          }
-          bits.hi = (bits.hi | (this.buf[this.pos] & 127) << i * 7 + 3) >>> 0;
-          if (this.buf[this.pos++] < 128) {
-            return bits;
-          }
-        }
-      }
-      throw Error("invalid varint encoding");
-    }
-    readFixed64() {
-      if (this.pos + 8 > this.len) {
-        throw indexOutOfRange12(this, 8);
-      }
-      const lo = readFixed32End12(this.buf, this.pos += 4);
-      const hi = readFixed32End12(this.buf, this.pos += 4);
-      return new LongBits12(lo, hi);
-    }
-    /**
-     * Reads a varint as a signed 64 bit value
-     */
-    int64() {
-      return this.readLongVarint().toBigInt();
-    }
-    /**
-     * Reads a varint as a signed 64 bit value returned as a possibly unsafe
-     * JavaScript number
-     */
-    int64Number() {
-      return this.readLongVarint().toNumber();
-    }
-    /**
-     * Reads a varint as a signed 64 bit value returned as a string
-     */
-    int64String() {
-      return this.readLongVarint().toString();
-    }
-    /**
-     * Reads a varint as an unsigned 64 bit value
-     */
-    uint64() {
-      return this.readLongVarint().toBigInt(true);
-    }
-    /**
-     * Reads a varint as an unsigned 64 bit value returned as a possibly unsafe
-     * JavaScript number
-     */
-    uint64Number() {
-      const value2 = decodeUint8Array(this.buf, this.pos);
-      this.pos += encodingLength2(value2);
-      return value2;
-    }
-    /**
-     * Reads a varint as an unsigned 64 bit value returned as a string
-     */
-    uint64String() {
-      return this.readLongVarint().toString(true);
-    }
-    /**
-     * Reads a zig-zag encoded varint as a signed 64 bit value
-     */
-    sint64() {
-      return this.readLongVarint().zzDecode().toBigInt();
-    }
-    /**
-     * Reads a zig-zag encoded varint as a signed 64 bit value returned as a
-     * possibly unsafe JavaScript number
-     */
-    sint64Number() {
-      return this.readLongVarint().zzDecode().toNumber();
-    }
-    /**
-     * Reads a zig-zag encoded varint as a signed 64 bit value returned as a
-     * string
-     */
-    sint64String() {
-      return this.readLongVarint().zzDecode().toString();
-    }
-    /**
-     * Reads fixed 64 bits
-     */
-    fixed64() {
-      return this.readFixed64().toBigInt();
-    }
-    /**
-     * Reads fixed 64 bits returned as a possibly unsafe JavaScript number
-     */
-    fixed64Number() {
-      return this.readFixed64().toNumber();
-    }
-    /**
-     * Reads fixed 64 bits returned as a string
-     */
-    fixed64String() {
-      return this.readFixed64().toString();
-    }
-    /**
-     * Reads zig-zag encoded fixed 64 bits
-     */
-    sfixed64() {
-      return this.readFixed64().toBigInt();
-    }
-    /**
-     * Reads zig-zag encoded fixed 64 bits returned as a possibly unsafe
-     * JavaScript number
-     */
-    sfixed64Number() {
-      return this.readFixed64().toNumber();
-    }
-    /**
-     * Reads zig-zag encoded fixed 64 bits returned as a string
-     */
-    sfixed64String() {
-      return this.readFixed64().toString();
-    }
-  };
-  function createReader12(buf) {
-    return new Uint8ArrayReader12(buf instanceof Uint8Array ? buf : buf.subarray());
-  }
-
-  // node_modules/@libp2p/identify/node_modules/protons-runtime/dist/src/decode.js
-  function decodeMessage13(buf, codec, opts) {
-    const reader = createReader12(buf);
-    return codec.decode(reader, void 0, opts);
-  }
-
-  // node_modules/@libp2p/identify/node_modules/protons-runtime/dist/src/utils/pool.js
-  function pool12(size) {
-    const SIZE = size ?? 8192;
-    const MAX = SIZE >>> 1;
-    let slab;
-    let offset = SIZE;
-    return function poolAlloc(size2) {
-      if (size2 < 1 || size2 > MAX) {
-        return allocUnsafe35(size2);
-      }
-      if (offset + size2 > SIZE) {
-        slab = allocUnsafe35(SIZE);
-        offset = 0;
-      }
-      const buf = slab.subarray(offset, offset += size2);
-      if ((offset & 7) !== 0) {
-        offset = (offset | 7) + 1;
-      }
-      return buf;
-    };
-  }
-
-  // node_modules/@libp2p/identify/node_modules/protons-runtime/dist/src/utils/writer.js
-  var Op12 = class {
-    /**
-     * Function to call
-     */
-    fn;
-    /**
-     * Value byte length
-     */
-    len;
-    /**
-     * Next operation
-     */
-    next;
-    /**
-     * Value to write
-     */
-    val;
-    constructor(fn, len, val) {
-      this.fn = fn;
-      this.len = len;
-      this.next = void 0;
-      this.val = val;
-    }
-  };
-  function noop12() {
-  }
-  var State12 = class {
-    /**
-     * Current head
-     */
-    head;
-    /**
-     * Current tail
-     */
-    tail;
-    /**
-     * Current buffer length
-     */
-    len;
-    /**
-     * Next state
-     */
-    next;
-    constructor(writer) {
-      this.head = writer.head;
-      this.tail = writer.tail;
-      this.len = writer.len;
-      this.next = writer.states;
-    }
-  };
-  var bufferPool12 = pool12();
-  function alloc31(size) {
-    if (globalThis.Buffer != null) {
-      return allocUnsafe35(size);
-    }
-    return bufferPool12(size);
-  }
-  var Uint8ArrayWriter12 = class {
-    /**
-     * Current length
-     */
-    len;
-    /**
-     * Operations head
-     */
-    head;
-    /**
-     * Operations tail
-     */
-    tail;
-    /**
-     * Linked forked states
-     */
-    states;
-    constructor() {
-      this.len = 0;
-      this.head = new Op12(noop12, 0, 0);
-      this.tail = this.head;
-      this.states = null;
-    }
-    /**
-     * Pushes a new operation to the queue
-     */
-    _push(fn, len, val) {
-      this.tail = this.tail.next = new Op12(fn, len, val);
-      this.len += len;
-      return this;
-    }
-    /**
-     * Writes an unsigned 32 bit value as a varint
-     */
-    uint32(value2) {
-      this.len += (this.tail = this.tail.next = new VarintOp12((value2 = value2 >>> 0) < 128 ? 1 : value2 < 16384 ? 2 : value2 < 2097152 ? 3 : value2 < 268435456 ? 4 : 5, value2)).len;
-      return this;
-    }
-    /**
-     * Writes a signed 32 bit value as a varint`
-     */
-    int32(value2) {
-      return value2 < 0 ? this._push(writeVarint6412, 10, LongBits12.fromNumber(value2)) : this.uint32(value2);
-    }
-    /**
-     * Writes a 32 bit value as a varint, zig-zag encoded
-     */
-    sint32(value2) {
-      return this.uint32((value2 << 1 ^ value2 >> 31) >>> 0);
-    }
-    /**
-     * Writes an unsigned 64 bit value as a varint
-     */
-    uint64(value2) {
-      const bits = LongBits12.fromBigInt(value2);
-      return this._push(writeVarint6412, bits.length(), bits);
-    }
-    /**
-     * Writes an unsigned 64 bit value as a varint
-     */
-    uint64Number(value2) {
-      return this._push(encodeUint8Array, encodingLength2(value2), value2);
-    }
-    /**
-     * Writes an unsigned 64 bit value as a varint
-     */
-    uint64String(value2) {
-      return this.uint64(BigInt(value2));
-    }
-    /**
-     * Writes a signed 64 bit value as a varint
-     */
-    int64(value2) {
-      return this.uint64(value2);
-    }
-    /**
-     * Writes a signed 64 bit value as a varint
-     */
-    int64Number(value2) {
-      return this.uint64Number(value2);
-    }
-    /**
-     * Writes a signed 64 bit value as a varint
-     */
-    int64String(value2) {
-      return this.uint64String(value2);
-    }
-    /**
-     * Writes a signed 64 bit value as a varint, zig-zag encoded
-     */
-    sint64(value2) {
-      const bits = LongBits12.fromBigInt(value2).zzEncode();
-      return this._push(writeVarint6412, bits.length(), bits);
-    }
-    /**
-     * Writes a signed 64 bit value as a varint, zig-zag encoded
-     */
-    sint64Number(value2) {
-      const bits = LongBits12.fromNumber(value2).zzEncode();
-      return this._push(writeVarint6412, bits.length(), bits);
-    }
-    /**
-     * Writes a signed 64 bit value as a varint, zig-zag encoded
-     */
-    sint64String(value2) {
-      return this.sint64(BigInt(value2));
-    }
-    /**
-     * Writes a boolish value as a varint
-     */
-    bool(value2) {
-      return this._push(writeByte12, 1, value2 ? 1 : 0);
-    }
-    /**
-     * Writes an unsigned 32 bit value as fixed 32 bits
-     */
-    fixed32(value2) {
-      return this._push(writeFixed3212, 4, value2 >>> 0);
-    }
-    /**
-     * Writes a signed 32 bit value as fixed 32 bits
-     */
-    sfixed32(value2) {
-      return this.fixed32(value2);
-    }
-    /**
-     * Writes an unsigned 64 bit value as fixed 64 bits
-     */
-    fixed64(value2) {
-      const bits = LongBits12.fromBigInt(value2);
-      return this._push(writeFixed3212, 4, bits.lo)._push(writeFixed3212, 4, bits.hi);
-    }
-    /**
-     * Writes an unsigned 64 bit value as fixed 64 bits
-     */
-    fixed64Number(value2) {
-      const bits = LongBits12.fromNumber(value2);
-      return this._push(writeFixed3212, 4, bits.lo)._push(writeFixed3212, 4, bits.hi);
-    }
-    /**
-     * Writes an unsigned 64 bit value as fixed 64 bits
-     */
-    fixed64String(value2) {
-      return this.fixed64(BigInt(value2));
-    }
-    /**
-     * Writes a signed 64 bit value as fixed 64 bits
-     */
-    sfixed64(value2) {
-      return this.fixed64(value2);
-    }
-    /**
-     * Writes a signed 64 bit value as fixed 64 bits
-     */
-    sfixed64Number(value2) {
-      return this.fixed64Number(value2);
-    }
-    /**
-     * Writes a signed 64 bit value as fixed 64 bits
-     */
-    sfixed64String(value2) {
-      return this.fixed64String(value2);
-    }
-    /**
-     * Writes a float (32 bit)
-     */
-    float(value2) {
-      return this._push(writeFloatLE12, 4, value2);
-    }
-    /**
-     * Writes a double (64 bit float).
-     *
-     * @function
-     * @param {number} value - Value to write
-     * @returns {Writer} `this`
-     */
-    double(value2) {
-      return this._push(writeDoubleLE12, 8, value2);
-    }
-    /**
-     * Writes a sequence of bytes
-     */
-    bytes(value2) {
-      const len = value2.length >>> 0;
-      if (len === 0) {
-        return this._push(writeByte12, 1, 0);
-      }
-      return this.uint32(len)._push(writeBytes12, len, value2);
-    }
-    /**
-     * Writes a string
-     */
-    string(value2) {
-      const len = length14(value2);
-      return len !== 0 ? this.uint32(len)._push(write12, len, value2) : this._push(writeByte12, 1, 0);
-    }
-    /**
-     * Forks this writer's state by pushing it to a stack.
-     * Calling {@link Writer#reset|reset} or {@link Writer#ldelim|ldelim} resets the writer to the previous state.
-     */
-    fork() {
-      this.states = new State12(this);
-      this.head = this.tail = new Op12(noop12, 0, 0);
-      this.len = 0;
-      return this;
-    }
-    /**
-     * Resets this instance to the last state
-     */
-    reset() {
-      if (this.states != null) {
-        this.head = this.states.head;
-        this.tail = this.states.tail;
-        this.len = this.states.len;
-        this.states = this.states.next;
-      } else {
-        this.head = this.tail = new Op12(noop12, 0, 0);
-        this.len = 0;
-      }
-      return this;
-    }
-    /**
-     * Resets to the last state and appends the fork state's current write length as a varint followed by its operations.
-     */
-    ldelim() {
-      const head = this.head;
-      const tail = this.tail;
-      const len = this.len;
-      this.reset().uint32(len);
-      if (len !== 0) {
-        this.tail.next = head.next;
-        this.tail = tail;
-        this.len += len;
-      }
-      return this;
-    }
-    /**
-     * Finishes the write operation
-     */
-    finish() {
-      let head = this.head.next;
-      const buf = alloc31(this.len);
-      let pos = 0;
-      while (head != null) {
-        head.fn(head.val, buf, pos);
-        pos += head.len;
-        head = head.next;
-      }
-      return buf;
-    }
-  };
-  function writeByte12(val, buf, pos) {
-    buf[pos] = val & 255;
-  }
-  function writeVarint3212(val, buf, pos) {
-    while (val > 127) {
-      buf[pos++] = val & 127 | 128;
-      val >>>= 7;
-    }
-    buf[pos] = val;
-  }
-  var VarintOp12 = class extends Op12 {
-    next;
-    constructor(len, val) {
-      super(writeVarint3212, len, val);
-      this.next = void 0;
-    }
-  };
-  function writeVarint6412(val, buf, pos) {
-    while (val.hi !== 0) {
-      buf[pos++] = val.lo & 127 | 128;
-      val.lo = (val.lo >>> 7 | val.hi << 25) >>> 0;
-      val.hi >>>= 7;
-    }
-    while (val.lo > 127) {
-      buf[pos++] = val.lo & 127 | 128;
-      val.lo = val.lo >>> 7;
-    }
-    buf[pos++] = val.lo;
-  }
-  function writeFixed3212(val, buf, pos) {
-    buf[pos] = val & 255;
-    buf[pos + 1] = val >>> 8 & 255;
-    buf[pos + 2] = val >>> 16 & 255;
-    buf[pos + 3] = val >>> 24;
-  }
-  function writeBytes12(val, buf, pos) {
-    buf.set(val, pos);
-  }
-  if (globalThis.Buffer != null) {
-    Uint8ArrayWriter12.prototype.bytes = function(value2) {
-      const len = value2.length >>> 0;
-      this.uint32(len);
-      if (len > 0) {
-        this._push(writeBytesBuffer12, len, value2);
-      }
-      return this;
-    };
-    Uint8ArrayWriter12.prototype.string = function(value2) {
-      const len = globalThis.Buffer.byteLength(value2);
-      this.uint32(len);
-      if (len > 0) {
-        this._push(writeStringBuffer12, len, value2);
-      }
-      return this;
-    };
-  }
-  function writeBytesBuffer12(val, buf, pos) {
-    buf.set(val, pos);
-  }
-  function writeStringBuffer12(val, buf, pos) {
-    if (val.length < 40) {
-      write12(val, buf, pos);
-    } else if (buf.utf8Write != null) {
-      buf.utf8Write(val, pos);
-    } else {
-      buf.set(fromString33(val), pos);
-    }
-  }
-  function createWriter12() {
-    return new Uint8ArrayWriter12();
-  }
-
-  // node_modules/@libp2p/identify/node_modules/protons-runtime/dist/src/encode.js
-  function encodeMessage13(message15, codec) {
-    const w2 = createWriter12();
-    codec.encode(message15, w2, {
-      lengthDelimited: false
-    });
-    return w2.finish();
-  }
-
-  // node_modules/@libp2p/identify/node_modules/protons-runtime/dist/src/stream.js
-  function* streamMessage11(buf, codec, opts) {
-    const reader = createReader12(buf);
-    yield* codec.stream(reader, void 0, "$", opts);
-  }
-
-  // node_modules/@libp2p/identify/node_modules/protons-runtime/dist/src/codec.js
-  var CODEC_TYPES12 = {
-    VARINT: 0,
-    BIT64: 1,
-    LENGTH_DELIMITED: 2,
-    START_GROUP: 3,
-    END_GROUP: 4,
-    BIT32: 5
-  };
-  function createCodec43(name10, type, encode19, decode20, stream) {
-    return {
-      name: name10,
-      type,
-      encode: encode19,
-      decode: decode20,
-      stream
-    };
-  }
-
-  // node_modules/@libp2p/identify/node_modules/protons-runtime/dist/src/codecs/message.js
-  function message12(encode19, decode20, stream) {
-    return createCodec43("message", CODEC_TYPES12.LENGTH_DELIMITED, encode19, decode20, stream);
-  }
-
-  // node_modules/@libp2p/identify/node_modules/protons-runtime/dist/src/index.js
-  var MaxLengthError9 = class extends Error {
-    /**
-     * This will be removed in a future release
-     *
-     * @deprecated use the `.name` property instead
-     */
-    code = "ERR_MAX_LENGTH";
-    name = "MaxLengthError";
-  };
-
-  // node_modules/@libp2p/identify/dist/src/pb/message.js
-  var Identify;
-  (function(Identify3) {
-    let _codec;
-    Identify3.codec = () => {
-      if (_codec == null) {
-        _codec = message12((obj, w2, opts = {}) => {
-          if (opts.lengthDelimited !== false) {
-            w2.fork();
-          }
-          if (obj.protocolVersion != null) {
-            w2.uint32(42);
-            w2.string(obj.protocolVersion);
-          }
-          if (obj.agentVersion != null) {
-            w2.uint32(50);
-            w2.string(obj.agentVersion);
-          }
-          if (obj.publicKey != null) {
-            w2.uint32(10);
-            w2.bytes(obj.publicKey);
-          }
-          if (obj.listenAddrs != null && obj.listenAddrs.length > 0) {
-            for (const value2 of obj.listenAddrs) {
-              w2.uint32(18);
-              w2.bytes(value2);
-            }
-          }
-          if (obj.observedAddr != null) {
-            w2.uint32(34);
-            w2.bytes(obj.observedAddr);
-          }
-          if (obj.protocols != null && obj.protocols.length > 0) {
-            for (const value2 of obj.protocols) {
-              w2.uint32(26);
-              w2.string(value2);
-            }
-          }
-          if (obj.signedPeerRecord != null) {
-            w2.uint32(66);
-            w2.bytes(obj.signedPeerRecord);
-          }
-          if (opts.lengthDelimited !== false) {
-            w2.ldelim();
-          }
-        }, (reader, length18, opts = {}) => {
-          const obj = {
-            listenAddrs: [],
-            protocols: []
-          };
-          const end = length18 == null ? reader.len : reader.pos + length18;
-          while (reader.pos < end) {
-            const tag = reader.uint32();
-            switch (tag >>> 3) {
-              case 5: {
-                obj.protocolVersion = reader.string();
-                break;
-              }
-              case 6: {
-                obj.agentVersion = reader.string();
-                break;
-              }
-              case 1: {
-                obj.publicKey = reader.bytes();
-                break;
-              }
-              case 2: {
-                if (opts.limits?.listenAddrs != null && obj.listenAddrs.length === opts.limits.listenAddrs) {
-                  throw new MaxLengthError9('Decode error - repeated field "listenAddrs" had too many elements');
-                }
-                obj.listenAddrs.push(reader.bytes());
-                break;
-              }
-              case 4: {
-                obj.observedAddr = reader.bytes();
-                break;
-              }
-              case 3: {
-                if (opts.limits?.protocols != null && obj.protocols.length === opts.limits.protocols) {
-                  throw new MaxLengthError9('Decode error - repeated field "protocols" had too many elements');
-                }
-                obj.protocols.push(reader.string());
-                break;
-              }
-              case 8: {
-                obj.signedPeerRecord = reader.bytes();
-                break;
-              }
-              default: {
-                reader.skipType(tag & 7);
-                break;
-              }
-            }
-          }
-          return obj;
-        }, function* (reader, length18, prefix, opts = {}) {
-          const obj = {
-            listenAddrs: 0,
-            protocols: 0
-          };
-          const end = length18 == null ? reader.len : reader.pos + length18;
-          while (reader.pos < end) {
-            const tag = reader.uint32();
-            switch (tag >>> 3) {
-              case 5: {
-                yield {
-                  field: `${prefix}.protocolVersion`,
-                  value: reader.string()
-                };
-                break;
-              }
-              case 6: {
-                yield {
-                  field: `${prefix}.agentVersion`,
-                  value: reader.string()
-                };
-                break;
-              }
-              case 1: {
-                yield {
-                  field: `${prefix}.publicKey`,
-                  value: reader.bytes()
-                };
-                break;
-              }
-              case 2: {
-                if (opts.limits?.listenAddrs != null && obj.listenAddrs === opts.limits.listenAddrs) {
-                  throw new MaxLengthError9('Streaming decode error - repeated field "listenAddrs" had too many elements');
-                }
-                yield {
-                  field: `${prefix}.listenAddrs[]`,
-                  index: obj.listenAddrs,
-                  value: reader.bytes()
-                };
-                obj.listenAddrs++;
-                break;
-              }
-              case 4: {
-                yield {
-                  field: `${prefix}.observedAddr`,
-                  value: reader.bytes()
-                };
-                break;
-              }
-              case 3: {
-                if (opts.limits?.protocols != null && obj.protocols === opts.limits.protocols) {
-                  throw new MaxLengthError9('Streaming decode error - repeated field "protocols" had too many elements');
-                }
-                yield {
-                  field: `${prefix}.protocols[]`,
-                  index: obj.protocols,
-                  value: reader.string()
-                };
-                obj.protocols++;
-                break;
-              }
-              case 8: {
-                yield {
-                  field: `${prefix}.signedPeerRecord`,
-                  value: reader.bytes()
-                };
-                break;
-              }
-              default: {
-                reader.skipType(tag & 7);
-                break;
-              }
-            }
-          }
-        });
-      }
-      return _codec;
-    };
-    function encode19(obj) {
-      return encodeMessage13(obj, Identify3.codec());
-    }
-    Identify3.encode = encode19;
-    function decode20(buf, opts) {
-      return decodeMessage13(buf, Identify3.codec(), opts);
-    }
-    Identify3.decode = decode20;
-    function stream(buf, opts) {
-      return streamMessage11(buf, Identify3.codec(), opts);
-    }
-    Identify3.stream = stream;
-  })(Identify || (Identify = {}));
-
-  // node_modules/@libp2p/identify/dist/src/utils.js
-  var defaultValues6 = {
-    protocolPrefix: "ipfs",
-    timeout: 5e3,
-    maxInboundStreams: 1,
-    maxOutboundStreams: 1,
-    maxObservedAddresses: 10,
-    maxMessageSize: MAX_IDENTIFY_MESSAGE_SIZE,
-    runOnConnectionOpen: true,
-    runOnSelfUpdate: true,
-    runOnLimitedConnection: true,
-    concurrency: MAX_PUSH_CONCURRENCY
-  };
-  function isEmptyMultiaddr(addr) {
-    return addr.bytes.length === 0;
-  }
-  function getCleanMultiaddr(addr) {
-    if (addr != null && addr.length > 0) {
-      try {
-        const ma = multiaddr(addr);
-        if (!isEmptyMultiaddr(ma)) {
-          return ma;
-        }
-      } catch {
-      }
-    }
-  }
-  async function consumeIdentifyMessage(peerStore, events, log14, connection, message15) {
-    log14("received identify from %p", connection.remotePeer);
-    if (message15 == null) {
-      throw new InvalidMessageError("message was null or undefined");
-    }
-    const peer = {};
-    const listenAddrs = message15.listenAddrs.map(getCleanMultiaddr).filter((addr) => addr != null);
-    if (message15.listenAddrs.length > 0) {
-      peer.addresses = listenAddrs.map((multiaddr2) => ({
-        isCertified: false,
-        multiaddr: multiaddr2
-      }));
-    }
-    if (message15.protocols.length > 0) {
-      peer.protocols = message15.protocols;
-    }
-    if (message15.publicKey != null) {
-      const publicKey2 = publicKeyFromProtobuf(message15.publicKey);
-      const peerId = peerIdFromPublicKey(publicKey2);
-      if (!peerId.equals(connection.remotePeer)) {
-        throw new InvalidMessageError("public key did not match remote PeerId");
-      }
-      peer.publicKey = publicKey2;
-    }
-    let output;
-    if (message15.signedPeerRecord != null) {
-      log14.trace("received signedPeerRecord from %p", connection.remotePeer);
-      let peerRecordEnvelope2 = message15.signedPeerRecord;
-      const envelope = await RecordEnvelope.openAndCertify(peerRecordEnvelope2, PeerRecord2.DOMAIN);
-      let peerRecord = PeerRecord2.createFromProtobuf(envelope.payload);
-      const envelopePeer = peerIdFromCID(envelope.publicKey.toCID());
-      if (!peerRecord.peerId.equals(envelopePeer)) {
-        throw new InvalidMessageError("signing key does not match PeerId in the PeerRecord");
-      }
-      if (!connection.remotePeer.equals(peerRecord.peerId)) {
-        throw new InvalidMessageError("signing key does not match remote PeerId");
-      }
-      let existingPeer;
-      try {
-        existingPeer = await peerStore.get(peerRecord.peerId);
-      } catch (err) {
-        if (err.name !== "NotFoundError") {
-          throw err;
-        }
-      }
-      if (existingPeer != null) {
-        peer.metadata = existingPeer.metadata;
-        if (existingPeer.peerRecordEnvelope != null) {
-          const storedEnvelope = RecordEnvelope.createFromProtobuf(existingPeer.peerRecordEnvelope);
-          const storedRecord = PeerRecord2.createFromProtobuf(storedEnvelope.payload);
-          if (storedRecord.seqNumber >= peerRecord.seqNumber) {
-            log14("sequence number was lower or equal to existing sequence number - stored: %d received: %d", storedRecord.seqNumber, peerRecord.seqNumber);
-            peerRecord = storedRecord;
-            peerRecordEnvelope2 = existingPeer.peerRecordEnvelope;
-          }
-        }
-      }
-      peer.peerRecordEnvelope = peerRecordEnvelope2;
-      const peerRecordMultiaddrs = peerRecord.multiaddrs.filter((addr) => !isEmptyMultiaddr(addr));
-      peer.addresses = peerRecordMultiaddrs.map((multiaddr2) => ({
-        isCertified: true,
-        multiaddr: multiaddr2
-      }));
-      output = {
-        seq: peerRecord.seqNumber,
-        addresses: peerRecordMultiaddrs
-      };
-    } else {
-      log14("%p did not send a signed peer record", connection.remotePeer);
-    }
-    log14.trace("patching %p with", connection.remotePeer, peer);
-    await peerStore.patch(connection.remotePeer, peer);
-    if (message15.agentVersion != null || message15.protocolVersion != null) {
-      const metadata = {};
-      if (message15.agentVersion != null) {
-        metadata.AgentVersion = fromString33(message15.agentVersion);
-      }
-      if (message15.protocolVersion != null) {
-        metadata.ProtocolVersion = fromString33(message15.protocolVersion);
-      }
-      log14.trace("merging %p metadata", connection.remotePeer, metadata);
-      await peerStore.merge(connection.remotePeer, {
-        metadata
-      });
-    }
-    const result = {
-      peerId: connection.remotePeer,
-      protocolVersion: message15.protocolVersion,
-      agentVersion: message15.agentVersion,
-      publicKey: message15.publicKey,
-      listenAddrs,
-      observedAddr: message15.observedAddr == null ? void 0 : multiaddr(message15.observedAddr),
-      protocols: message15.protocols,
-      signedPeerRecord: output,
-      connection
-    };
-    events.safeDispatchEvent("peer:identify", { detail: result });
-    return result;
-  }
-  function mergeIdentifyMessages(messages2) {
-    const merged = { ...messages2[0] };
-    for (const msg of messages2.slice(1)) {
-      if (msg.protocolVersion != null) {
-        merged.protocolVersion = msg.protocolVersion;
-      }
-      if (msg.agentVersion != null) {
-        merged.agentVersion = msg.agentVersion;
-      }
-      if (msg.publicKey != null) {
-        merged.publicKey = msg.publicKey;
-      }
-      if (msg.observedAddr != null) {
-        merged.observedAddr = msg.observedAddr;
-      }
-      if (msg.signedPeerRecord != null) {
-        merged.signedPeerRecord = msg.signedPeerRecord;
-      }
-      merged.listenAddrs = [...merged.listenAddrs, ...msg.listenAddrs];
-      merged.protocols = [.../* @__PURE__ */ new Set([...merged.protocols, ...msg.protocols])];
-    }
-    return merged;
-  }
-  async function readIdentifyMessages(stream, maxMessageSize, options2, log14) {
-    const pb = pbStream(stream, {
-      maxDataLength: maxMessageSize
-    }).pb(Identify);
-    const messages2 = [];
-    for (let i = 0; i < MAX_IDENTIFY_MESSAGES; i++) {
-      try {
-        messages2.push(await pb.read(options2));
-      } catch (err) {
-        if (messages2.length === 0) {
-          throw err;
-        }
-        log14.trace("stopped reading identify - %e", err);
-        break;
-      }
-    }
-    if (messages2.length >= MAX_IDENTIFY_MESSAGES) {
-      log14("reached MAX_IDENTIFY_MESSAGES, returning truncated identify");
-    }
-    try {
-      await stream.close(options2);
-    } catch (err) {
-      log14.trace("error closing identify stream after read - %e", err);
-      stream.abort(err);
-    }
-    return messages2;
-  }
-  var AbstractIdentify = class {
-    host;
-    components;
-    protocol;
-    started;
-    timeout;
-    maxInboundStreams;
-    maxOutboundStreams;
-    maxMessageSize;
-    maxObservedAddresses;
-    runOnLimitedConnection;
-    log;
-    constructor(components, init) {
-      this.protocol = init.protocol;
-      this.started = false;
-      this.components = components;
-      this.log = init.log;
-      this.timeout = init.timeout ?? defaultValues6.timeout;
-      this.maxInboundStreams = init.maxInboundStreams ?? defaultValues6.maxInboundStreams;
-      this.maxOutboundStreams = init.maxOutboundStreams ?? defaultValues6.maxOutboundStreams;
-      this.maxMessageSize = init.maxMessageSize ?? defaultValues6.maxMessageSize;
-      this.maxObservedAddresses = init.maxObservedAddresses ?? defaultValues6.maxObservedAddresses;
-      this.runOnLimitedConnection = init.runOnLimitedConnection ?? defaultValues6.runOnLimitedConnection;
-      this.host = {
-        protocolVersion: `${init.protocolPrefix ?? defaultValues6.protocolPrefix}/${IDENTIFY_PROTOCOL_VERSION}`,
-        agentVersion: components.nodeInfo.userAgent
-      };
-      this.handleProtocol = this.handleProtocol.bind(this);
-    }
-    isStarted() {
-      return this.started;
-    }
-    async start() {
-      if (this.started) {
-        return;
-      }
-      await this.components.peerStore.merge(this.components.peerId, {
-        metadata: {
-          AgentVersion: fromString33(this.host.agentVersion),
-          ProtocolVersion: fromString33(this.host.protocolVersion)
-        }
-      });
-      await this.components.registrar.handle(this.protocol, this.handleProtocol, {
-        maxInboundStreams: this.maxInboundStreams,
-        maxOutboundStreams: this.maxOutboundStreams,
-        runOnLimitedConnection: this.runOnLimitedConnection
-      });
-      this.started = true;
-    }
-    async stop() {
-      await this.components.registrar.unhandle(this.protocol);
-      this.started = false;
-    }
-  };
-
-  // node_modules/@libp2p/identify/dist/src/identify-push.js
-  var IdentifyPush = class extends AbstractIdentify {
-    connectionManager;
-    concurrency;
-    _push;
-    constructor(components, init = {}) {
-      super(components, {
-        ...init,
-        protocol: `/${init.protocolPrefix ?? defaultValues6.protocolPrefix}/${MULTICODEC_IDENTIFY_PUSH_PROTOCOL_NAME}/${MULTICODEC_IDENTIFY_PUSH_PROTOCOL_VERSION}`,
-        log: components.logger.forComponent("libp2p:identify-push")
-      });
-      this.connectionManager = components.connectionManager;
-      this.concurrency = init.concurrency ?? defaultValues6.concurrency;
-      this._push = debounce(this.sendPushMessage.bind(this), init.debounce ?? PUSH_DEBOUNCE_MS);
-      if (init.runOnSelfUpdate ?? defaultValues6.runOnSelfUpdate) {
-        components.events.addEventListener("self:peer:update", (evt) => {
-          this.push().catch((err) => {
-            this.log.error("error pushing updates to peers - %e", err);
-          });
-        });
-      }
-    }
-    [serviceCapabilities] = [
-      "@libp2p/identify-push"
-    ];
-    /**
-     * Calls `push` on all peer connections
-     */
-    async push() {
-      this._push();
-    }
-    async sendPushMessage() {
-      if (!this.isStarted()) {
-        return;
-      }
-      try {
-        const listenAddresses = this.components.addressManager.getAddresses().map((ma) => ma.decapsulateCode(CODE_P2P));
-        const peerRecord = new PeerRecord2({
-          peerId: this.components.peerId,
-          multiaddrs: listenAddresses
-        });
-        const signedPeerRecord = await RecordEnvelope.seal(peerRecord, this.components.privateKey);
-        const supportedProtocols = this.components.registrar.getProtocols();
-        const peer = await this.components.peerStore.get(this.components.peerId);
-        const agentVersion = toString16(peer.metadata.get("AgentVersion") ?? fromString33(this.host.agentVersion));
-        const protocolVersion = toString16(peer.metadata.get("ProtocolVersion") ?? fromString33(this.host.protocolVersion));
-        const self = this;
-        async function* pushToConnections() {
-          for (const connection of self.connectionManager.getConnections()) {
-            const peer2 = await self.components.peerStore.get(connection.remotePeer);
-            if (!peer2.protocols.includes(self.protocol)) {
-              continue;
-            }
-            yield async () => {
-              let stream;
-              const signal = AbortSignal.timeout(self.timeout);
-              setMaxListeners(Infinity, signal);
-              try {
-                stream = await connection.newStream(self.protocol, {
-                  signal,
-                  runOnLimitedConnection: self.runOnLimitedConnection
-                });
-                const pb = pbStream(stream, {
-                  maxDataLength: self.maxMessageSize
-                }).pb(Identify);
-                await pb.write({
-                  listenAddrs: listenAddresses.map((ma) => ma.bytes),
-                  signedPeerRecord: signedPeerRecord.marshal(),
-                  protocols: supportedProtocols,
-                  agentVersion,
-                  protocolVersion
-                }, {
-                  signal
-                });
-                await stream.close({
-                  signal
-                });
-              } catch (err) {
-                const log14 = stream?.log.newScope("identify-push");
-                log14?.error("could not push identify update to peer", err);
-                stream?.abort(err);
-              }
-            };
-          }
-        }
-        await src_default11(parallel(pushToConnections(), {
-          concurrency: this.concurrency
-        }));
-      } catch (err) {
-        this.log.error("error pushing updates to peers - %e", err);
-      }
-    }
-    /**
-     * Reads the Identify Push message from the given `connection`
-     */
-    async handleProtocol(stream, connection) {
-      const log14 = stream.log.newScope("identify-push");
-      if (this.components.peerId.equals(connection.remotePeer)) {
-        throw new Error("received push from ourselves?");
-      }
-      const options2 = {
-        signal: AbortSignal.timeout(this.timeout)
-      };
-      const messages2 = await readIdentifyMessages(stream, this.maxMessageSize, options2, log14);
-      await consumeIdentifyMessage(this.components.peerStore, this.components.events, log14, connection, mergeIdentifyMessages(messages2));
-      log14.trace("handled push from %p", connection.remotePeer);
-    }
-  };
-
-  // node_modules/@libp2p/identify/dist/src/identify.js
-  var Identify2 = class extends AbstractIdentify {
-    constructor(components, init = {}) {
-      super(components, {
-        ...init,
-        protocol: `/${init.protocolPrefix ?? defaultValues6.protocolPrefix}/${MULTICODEC_IDENTIFY_PROTOCOL_NAME}/${MULTICODEC_IDENTIFY_PROTOCOL_VERSION}`,
-        log: components.logger.forComponent("libp2p:identify")
-      });
-      if (init.runOnConnectionOpen ?? defaultValues6.runOnConnectionOpen) {
-        components.events.addEventListener("connection:open", (evt) => {
-          const connection = evt.detail;
-          this.identify(connection).catch(() => {
-          });
-        });
-      }
-    }
-    [serviceCapabilities] = [
-      "@libp2p/identify"
-    ];
-    async _identify(connection, options2 = {}) {
-      let stream;
-      let log14;
-      if (options2.signal == null) {
-        const signal = AbortSignal.timeout(this.timeout);
-        setMaxListeners(Infinity, signal);
-        options2 = {
-          ...options2,
-          signal
-        };
-      }
-      this.log("run identify on new connection %a", connection.remoteAddr);
-      try {
-        stream = await connection.newStream(this.protocol, {
-          ...options2,
-          runOnLimitedConnection: this.runOnLimitedConnection
-        });
-        log14 = stream.log.newScope("identify");
-        const messages2 = await readIdentifyMessages(stream, this.maxMessageSize, options2, log14);
-        return mergeIdentifyMessages(messages2);
-      } catch (err) {
-        log14?.error("identify failed - %e", err);
-        stream?.abort(err);
-        throw err;
-      }
-    }
-    async identify(connection, options2 = {}) {
-      const message15 = await this._identify(connection, options2);
-      const { publicKey: publicKey2, protocols, observedAddr } = message15;
-      if (publicKey2 == null) {
-        throw new InvalidMessageError("Public key was missing from identify message");
-      }
-      const key = publicKeyFromProtobuf(publicKey2);
-      const id = peerIdFromCID(key.toCID());
-      if (!connection.remotePeer.equals(id)) {
-        throw new InvalidMessageError("Identified peer does not match the expected peer");
-      }
-      if (this.components.peerId.equals(id)) {
-        throw new InvalidMessageError("Identified peer is our own peer id?");
-      }
-      this.maybeAddObservedAddress(observedAddr);
-      this.log("completed for peer %p and protocols %o", id, protocols);
-      return consumeIdentifyMessage(this.components.peerStore, this.components.events, this.log, connection, message15);
-    }
-    maybeAddObservedAddress(observedAddr) {
-      const cleanObservedAddr = getCleanMultiaddr(observedAddr);
-      if (cleanObservedAddr == null) {
-        return;
-      }
-      this.log.trace("our observed address was %a", cleanObservedAddr);
-      if (isPrivate(cleanObservedAddr)) {
-        return;
-      }
-      const tuples = cleanObservedAddr.getComponents();
-      if ((tuples[0].code === CODE_IP6 || tuples[0].code === CODE_IP6ZONE && tuples[1].code === CODE_IP6) && !isGlobalUnicast(cleanObservedAddr)) {
-        this.log.trace("our observed address was IPv6 but not a global unicast address");
-        return;
-      }
-      if (TCP.exactMatch(cleanObservedAddr)) {
-        return;
-      }
-      this.log.trace("storing the observed address");
-      this.components.addressManager.addObservedAddr(cleanObservedAddr);
-    }
-    /**
-     * Sends the `Identify` response with the Signed Peer Record
-     * to the requesting peer over the given `connection`
-     */
-    async handleProtocol(stream, connection) {
-      const log14 = stream.log.newScope("identify");
-      log14("responding to identify");
-      const signal = AbortSignal.timeout(this.timeout);
-      setMaxListeners(Infinity, signal);
-      const peerData = await this.components.peerStore.get(this.components.peerId, {
-        signal
-      });
-      const multiaddrs = this.components.addressManager.getAddresses().map((ma) => ma.decapsulateCode(CODE_P2P));
-      let signedPeerRecord = peerData.peerRecordEnvelope;
-      if (multiaddrs.length > 0 && signedPeerRecord == null) {
-        const peerRecord = new PeerRecord2({
-          peerId: this.components.peerId,
-          multiaddrs
-        });
-        const envelope = await RecordEnvelope.seal(peerRecord, this.components.privateKey, {
-          signal
-        });
-        signedPeerRecord = envelope.marshal().subarray();
-      }
-      let observedAddr = connection.remoteAddr.bytes;
-      if (!IP_OR_DOMAIN.matches(connection.remoteAddr)) {
-        observedAddr = void 0;
-      }
-      const pb = pbStream(stream).pb(Identify);
-      log14("send response");
-      await pb.write({
-        protocolVersion: this.host.protocolVersion,
-        agentVersion: this.host.agentVersion,
-        publicKey: publicKeyToProtobuf(this.components.privateKey.publicKey),
-        listenAddrs: multiaddrs.map((addr) => addr.bytes),
-        signedPeerRecord,
-        observedAddr,
-        protocols: peerData.protocols
-      }, {
-        signal
-      });
-      log14("close write");
-      await pb.unwrap().unwrap().close({
-        signal
-      });
-    }
-  };
-
-  // node_modules/@libp2p/identify/dist/src/index.js
-  function identify(init = {}) {
-    return (components) => new Identify2(components, init);
-  }
-  function identifyPush(init = {}) {
-    return (components) => new IdentifyPush(components, init);
-  }
-
   // node_modules/@libp2p/kad-dht/dist/src/constants.js
   var second2 = 1e3;
   var minute2 = 60 * second2;
@@ -76026,8 +76031,8 @@ ${values.join("\n")}` : `${blockName} :`;
     }
     return len;
   }
-  function read15(buffer2, start2, end) {
-    const len = end - start2;
+  function read15(buffer2, start3, end) {
+    const len = end - start3;
     if (len < 1) {
       return "";
     }
@@ -76035,18 +76040,18 @@ ${values.join("\n")}` : `${blockName} :`;
     const chunk = [];
     let i = 0;
     let t;
-    while (start2 < end) {
-      t = buffer2[start2++];
+    while (start3 < end) {
+      t = buffer2[start3++];
       if (t < 128) {
         chunk[i++] = t;
       } else if (t > 191 && t < 224) {
-        chunk[i++] = (t & 31) << 6 | buffer2[start2++] & 63;
+        chunk[i++] = (t & 31) << 6 | buffer2[start3++] & 63;
       } else if (t > 239 && t < 365) {
-        t = ((t & 7) << 18 | (buffer2[start2++] & 63) << 12 | (buffer2[start2++] & 63) << 6 | buffer2[start2++] & 63) - 65536;
+        t = ((t & 7) << 18 | (buffer2[start3++] & 63) << 12 | (buffer2[start3++] & 63) << 6 | buffer2[start3++] & 63) - 65536;
         chunk[i++] = 55296 + (t >> 10);
         chunk[i++] = 56320 + (t & 1023);
       } else {
-        chunk[i++] = (t & 15) << 12 | (buffer2[start2++] & 63) << 6 | buffer2[start2++] & 63;
+        chunk[i++] = (t & 15) << 12 | (buffer2[start3++] & 63) << 6 | buffer2[start3++] & 63;
       }
       if (i > 8191) {
         (parts ?? (parts = [])).push(String.fromCharCode.apply(String, chunk));
@@ -76062,7 +76067,7 @@ ${values.join("\n")}` : `${blockName} :`;
     return String.fromCharCode.apply(String, chunk.slice(0, i));
   }
   function write13(string37, buffer2, offset) {
-    const start2 = offset;
+    const start3 = offset;
     let c1;
     let c2;
     for (let i = 0; i < string37.length; ++i) {
@@ -76085,7 +76090,7 @@ ${values.join("\n")}` : `${blockName} :`;
         buffer2[offset++] = c1 & 63 | 128;
       }
     }
-    return offset - start2;
+    return offset - start3;
   }
 
   // node_modules/@libp2p/record/node_modules/protons-runtime/dist/src/utils/reader.js
@@ -76202,13 +76207,13 @@ ${values.join("\n")}` : `${blockName} :`;
      */
     bytes() {
       const length18 = this.uint32();
-      const start2 = this.pos;
+      const start3 = this.pos;
       const end = this.pos + length18;
       if (end > this.len) {
         throw indexOutOfRange13(this, length18);
       }
       this.pos += length18;
-      return start2 === end ? new Uint8Array(0) : this.buf.subarray(start2, end);
+      return start3 === end ? new Uint8Array(0) : this.buf.subarray(start3, end);
     }
     /**
      * Reads a string preceded by its byte length as a varint
@@ -77384,8 +77389,8 @@ ${values.join("\n")}` : `${blockName} :`;
     }
     return len;
   }
-  function read16(buffer2, start2, end) {
-    const len = end - start2;
+  function read16(buffer2, start3, end) {
+    const len = end - start3;
     if (len < 1) {
       return "";
     }
@@ -77393,18 +77398,18 @@ ${values.join("\n")}` : `${blockName} :`;
     const chunk = [];
     let i = 0;
     let t;
-    while (start2 < end) {
-      t = buffer2[start2++];
+    while (start3 < end) {
+      t = buffer2[start3++];
       if (t < 128) {
         chunk[i++] = t;
       } else if (t > 191 && t < 224) {
-        chunk[i++] = (t & 31) << 6 | buffer2[start2++] & 63;
+        chunk[i++] = (t & 31) << 6 | buffer2[start3++] & 63;
       } else if (t > 239 && t < 365) {
-        t = ((t & 7) << 18 | (buffer2[start2++] & 63) << 12 | (buffer2[start2++] & 63) << 6 | buffer2[start2++] & 63) - 65536;
+        t = ((t & 7) << 18 | (buffer2[start3++] & 63) << 12 | (buffer2[start3++] & 63) << 6 | buffer2[start3++] & 63) - 65536;
         chunk[i++] = 55296 + (t >> 10);
         chunk[i++] = 56320 + (t & 1023);
       } else {
-        chunk[i++] = (t & 15) << 12 | (buffer2[start2++] & 63) << 6 | buffer2[start2++] & 63;
+        chunk[i++] = (t & 15) << 12 | (buffer2[start3++] & 63) << 6 | buffer2[start3++] & 63;
       }
       if (i > 8191) {
         (parts ?? (parts = [])).push(String.fromCharCode.apply(String, chunk));
@@ -77420,7 +77425,7 @@ ${values.join("\n")}` : `${blockName} :`;
     return String.fromCharCode.apply(String, chunk.slice(0, i));
   }
   function write14(string37, buffer2, offset) {
-    const start2 = offset;
+    const start3 = offset;
     let c1;
     let c2;
     for (let i = 0; i < string37.length; ++i) {
@@ -77443,7 +77448,7 @@ ${values.join("\n")}` : `${blockName} :`;
         buffer2[offset++] = c1 & 63 | 128;
       }
     }
-    return offset - start2;
+    return offset - start3;
   }
 
   // node_modules/@libp2p/kad-dht/node_modules/protons-runtime/dist/src/utils/reader.js
@@ -77560,13 +77565,13 @@ ${values.join("\n")}` : `${blockName} :`;
      */
     bytes() {
       const length18 = this.uint32();
-      const start2 = this.pos;
+      const start3 = this.pos;
       const end = this.pos + length18;
       if (end > this.len) {
         throw indexOutOfRange14(this, length18);
       }
       this.pos += length18;
-      return start2 === end ? new Uint8Array(0) : this.buf.subarray(start2, end);
+      return start3 === end ? new Uint8Array(0) : this.buf.subarray(start3, end);
     }
     /**
      * Reads a string preceded by its byte length as a varint
@@ -80572,13 +80577,13 @@ ${values.join("\n")}` : `${blockName} :`;
         setMaxListeners(Infinity, signal, this.controller.signal);
         try {
           this.log("run self-query, look for %d peers timing out after %dms", this.count, this.queryTimeout);
-          const start2 = Date.now();
+          const start3 = Date.now();
           const peers = await pipe(this.peerRouting.getClosestPeers(this.peerId.toMultihash().bytes, {
             signal,
             isSelfQuery: true
           }), (source) => src_default12(source, this.count), async (source) => src_default15(source));
           signal?.throwIfAborted();
-          const duration = Date.now() - start2;
+          const duration = Date.now() - start3;
           this.log("self-query found %d peers in %dms", peers, duration);
           this.events.dispatchEvent(new CustomEvent("kad-dht:query:self", {
             detail: {
@@ -80765,7 +80770,7 @@ ${values.join("\n")}` : `${blockName} :`;
       });
     }
     async reprovide(cid, options2) {
-      await src_default11(this.contentRouting.provide(cid, this.addressManager.getAddresses(), options2));
+      await src_default10(this.contentRouting.provide(cid, this.addressManager.getAddresses(), options2));
     }
   };
 
@@ -98608,7 +98613,7 @@ ${values.join("\n")}` : `${blockName} :`;
       this.dht = dht;
     }
     async provide(cid, options2 = {}) {
-      await src_default11(this.dht.provide(cid, options2));
+      await src_default10(this.dht.provide(cid, options2));
     }
     async cancelReprovide(key) {
       await this.dht.cancelReprovide(key);
@@ -98624,7 +98629,7 @@ ${values.join("\n")}` : `${blockName} :`;
       }
     }
     async put(key, value2, options2) {
-      await src_default11(this.dht.put(key, value2, options2));
+      await src_default10(this.dht.put(key, value2, options2));
     }
     async get(key, options2) {
       for await (const event of this.dht.get(key, options2)) {
@@ -99358,8 +99363,8 @@ ${values.join("\n")}` : `${blockName} :`;
             bufs.push(buf);
             break;
           }
-          const start2 = beginInclusive - bufStart;
-          bufs.push(buf.subarray(start2, start2 + (endExclusive - beginInclusive)));
+          const start3 = beginInclusive - bufStart;
+          bufs.push(buf.subarray(start3, start3 + (endExclusive - beginInclusive)));
           break;
         }
         if (sliceStartInBuf) {
@@ -100217,8 +100222,8 @@ ${values.join("\n")}` : `${blockName} :`;
             bufs.push(buf);
             break;
           }
-          const start2 = beginInclusive - bufStart;
-          bufs.push(buf.subarray(start2, start2 + (endExclusive - beginInclusive)));
+          const start3 = beginInclusive - bufStart;
+          bufs.push(buf.subarray(start3, start3 + (endExclusive - beginInclusive)));
           break;
         }
         if (sliceStartInBuf) {
@@ -100490,7 +100495,7 @@ ${values.join("\n")}` : `${blockName} :`;
       signal.addEventListener("abort", () => {
         stream.abort(new TimeoutError("Ping timed out"));
       });
-      const start2 = Date.now();
+      const start3 = Date.now();
       for await (const buf of stream) {
         if (stream.status !== "open") {
           log14("stream status changed to %s", stream.status);
@@ -100507,7 +100512,7 @@ ${values.join("\n")}` : `${blockName} :`;
           log14("stream drained");
         }
       }
-      log14("ping from %p complete in %dms", connection.remotePeer, Date.now() - start2);
+      log14("ping from %p complete in %dms", connection.remotePeer, Date.now() - start3);
       await stream.close({
         signal
       });
@@ -100523,14 +100528,14 @@ ${values.join("\n")}` : `${blockName} :`;
       });
       const log14 = stream.log.newScope("ping");
       try {
-        const start2 = Date.now();
+        const start3 = Date.now();
         const finished = Promise.withResolvers();
         const received = new Uint8ArrayList17();
         const onPong = (evt) => {
           received.append(evt.data);
           if (received.byteLength === PING_LENGTH2) {
             stream.removeEventListener("message", onPong);
-            const rtt = Date.now() - start2;
+            const rtt = Date.now() - start3;
             Promise.all([
               stream.closeRead(options2)
             ]).then(() => {
@@ -101806,7 +101811,7 @@ ${indent}[Error list was empty]`;
      * Put a multiple blocks to the underlying datastore
      */
     async *putMany(blocks, options2 = {}) {
-      const missingBlocks = src_default10(blocks, async ({ cid }) => {
+      const missingBlocks = src_default11(blocks, async ({ cid }) => {
         const has = await this.child.has(cid, options2);
         if (has) {
           options2.onProgress?.(new CustomProgressEvent("blocks:put-many:duplicate", cid));
@@ -102704,7 +102709,7 @@ ${indent}[Error list was empty]`;
         const helia = this;
         const blockstore = this.blockstore.unwrap();
         this.log("gc start");
-        await src_default11(blockstore.deleteMany((async function* () {
+        await src_default10(blockstore.deleteMany((async function* () {
           for await (const { cid } of blockstore.getAll()) {
             try {
               if (await helia.pins.isPinned(cid, options2)) {
@@ -102756,8 +102761,29 @@ ${indent}[Error list was empty]`;
 
   // src/helia_adapter.js
   var storeName = "ipfs-node-flutter";
-  async function create4() {
+  var publicBootstrapPeers = [
+    "/dns/sv15.bootstrap.libp2p.io/tcp/443/wss/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
+    "/dns/sg1.bootstrap.libp2p.io/tcp/443/wss/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt",
+    "/dns/ny5.bootstrap.libp2p.io/tcp/443/wss/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa",
+    "/dns/am6.bootstrap.libp2p.io/tcp/443/wss/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb"
+  ];
+  function create4() {
     return new HeliaBrowserNode();
+  }
+  function start2(node, peers, resolve2, reject) {
+    node.start(peers).then(resolve2, (error) => reject(String(error)));
+  }
+  function stop2(node, resolve2, reject) {
+    node.stop().then(resolve2, (error) => reject(String(error)));
+  }
+  function capabilities(node, resolve2, reject) {
+    Promise.resolve(node.capabilities()).then(resolve2, (error) => reject(String(error)));
+  }
+  function addBytes2(node, bytes, resolve2, reject) {
+    node.addBytes(bytes).then(resolve2, (error) => reject(String(error)));
+  }
+  function getBytes(node, cid, resolve2, reject) {
+    node.getBytes(cid).then(resolve2, (error) => reject(String(error)));
   }
   var HeliaBrowserNode = class {
     #blockstore;
@@ -102770,17 +102796,18 @@ ${indent}[Error list was empty]`;
       if (globalThis.indexedDB == null) {
         throw new Error("IndexedDB is required for persistent browser IPFS storage.");
       }
+      const peers = bootstrapPeers.length === 0 ? publicBootstrapPeers : bootstrapPeers;
       const transports = [webSockets(), circuitRelayTransport()];
-      const capabilities = [];
+      const capabilities2 = [];
       if (typeof globalThis.RTCPeerConnection === "function") {
         transports.push(webRTC());
-        capabilities.push("webRtc");
+        capabilities2.push("webRtc");
       }
       if (typeof globalThis.WebTransport === "function") {
         transports.push(webTransport());
-        capabilities.push("webTransport");
+        capabilities2.push("webTransport");
       }
-      if (capabilities.length === 0) {
+      if (capabilities2.length === 0) {
         throw new Error("This browser does not expose a supported libp2p transport.");
       }
       this.#blockstore = new IDBBlockstore(storeName);
@@ -102788,6 +102815,10 @@ ${indent}[Error list was empty]`;
       try {
         this.#libp2p = await createLibp2p({
           transports,
+          peerDiscovery: [bootstrap({ list: peers, timeout: 0, tagTTL: Infinity })],
+          services: {
+            identify: identify()
+          },
           connectionEncrypters: [noise()],
           streamMuxers: [yamux()]
         });
@@ -102796,13 +102827,7 @@ ${indent}[Error list was empty]`;
           libp2p: this.#libp2p
         });
         this.#unixfs = unixfs(this.#helia);
-        this.#capabilities = capabilities;
-        await Promise.all(bootstrapPeers.map(async (peer) => {
-          try {
-            await this.#libp2p.dial(peer);
-          } catch {
-          }
-        }));
+        this.#capabilities = capabilities2;
       } catch (error) {
         await this.#blockstore.close();
         this.#blockstore = void 0;
