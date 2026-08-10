@@ -1,5 +1,5 @@
+import 'package:flutter/services.dart';
 import 'package:ipfs_node_flutter_platform_interface/ipfs_node_platform_interface.dart';
-import 'dart:typed_data';
 
 import 'web_node_bridge.dart';
 import 'web_node_bridge_stub.dart'
@@ -33,12 +33,32 @@ final class IpfsNodeFlutterWeb extends IpfsNodePlatform {
     try {
       await _runtimeBridge.start(
         bootstrapPeers: (config as PublicNodeConfig).bootstrapPeers,
+        adapterAssetUrl: await _resolveAdapterAsset(),
       );
       _lifecycle = NodeLifecycle.running;
     } catch (_) {
       _lifecycle = NodeLifecycle.failed;
       rethrow;
     }
+  }
+
+  /// Resolves the bundled Helia adapter asset path from the Flutter asset
+  /// manifest so runtime injection uses the exact served URL instead of
+  /// guessing. Returns null when the asset is not bundled (fall back to
+  /// conventional candidate paths).
+  Future<String?> _resolveAdapterAsset() async {
+    try {
+      final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
+      for (final asset in manifest.listAssets()) {
+        if (asset.startsWith(
+            'packages/ipfs_node_flutter_web/web/helia_adapter.js')) {
+          return 'assets/$asset';
+        }
+      }
+    } catch (_) {
+      // Asset manifest unavailable; fall back to candidate paths.
+    }
+    return null;
   }
 
   @override

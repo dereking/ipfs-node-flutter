@@ -121,7 +121,10 @@ final class _FakeWebNodeBridge implements WebNodeBridge {
   int stopCalls = 0;
 
   @override
-  Future<void> start({required List<String> bootstrapPeers}) async {
+  Future<void> start({
+    required List<String> bootstrapPeers,
+    String? adapterAssetUrl,
+  }) async {
     started = true;
   }
 

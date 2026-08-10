@@ -6,7 +6,10 @@ import 'package:ipfs_node_flutter_platform_interface/ipfs_node_platform_interfac
 abstract interface class WebNodeBridge {
   CapabilitySet get capabilities;
 
-  Future<void> start({required List<String> bootstrapPeers});
+  Future<void> start({
+    required List<String> bootstrapPeers,
+    String? adapterAssetUrl,
+  });
 
   Future<void> stop();
 

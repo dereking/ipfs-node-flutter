@@ -95,9 +95,12 @@ final class _JavascriptHeliaBridge implements WebNodeBridge {
   CapabilitySet get capabilities => _capabilities;
 
   @override
-  Future<void> start({required List<String> bootstrapPeers}) async {
+  Future<void> start({
+    required List<String> bootstrapPeers,
+    String? adapterAssetUrl,
+  }) async {
     if (_node != null) return;
-    await _ensureAdapter();
+    await _ensureAdapter(adapterAssetUrl);
     final node = _createHeliaNode();
     try {
       await _callback((resolve, reject) => _startHeliaNode(
@@ -317,12 +320,12 @@ Future<T> _callback<T extends JSAny?>(
 
 /// Loads the Helia adapter, caching the in-flight future and resetting it on
 /// failure so a later call can retry.
-Future<void> _ensureAdapter() async {
+Future<void> _ensureAdapter([String? adapterAssetUrl]) async {
   if (_adapterFuture != null) {
     await _adapterFuture;
     return;
   }
-  final future = _loadAdapter();
+  final future = _loadAdapter(adapterAssetUrl);
   _adapterFuture = future;
   try {
     await future;
@@ -332,27 +335,40 @@ Future<void> _ensureAdapter() async {
   }
 }
 
-Future<void> _loadAdapter() async {
+Future<void> _loadAdapter([String? adapterAssetUrl]) async {
   if (_registeredAdapter != null) return;
 
   Object? lastError;
   for (var attempt = 0; attempt < 3 && _registeredAdapter == null; attempt++) {
-    for (final asset in _adapterAssets) {
+    // Prefer the exact asset path resolved from the Flutter asset manifest;
+    // fall back to the conventional candidate paths.
+    final assets = <String>[
+      if (adapterAssetUrl != null && !_adapterAssets.contains(adapterAssetUrl))
+        adapterAssetUrl,
+      ..._adapterAssets,
+    ];
+    for (final asset in assets) {
       try {
         await _loadScript(asset);
-        // Give the script a moment to finish registering its API.
-        for (var i = 0; i < 20 && _registeredAdapter == null; i++) {
-          await Future<void>.delayed(const Duration(milliseconds: 100));
-        }
+        await _waitForAdapter();
         if (_registeredAdapter != null) return;
-        lastError =
-            StateError('The Helia web adapter did not register its API.');
+        lastError = StateError(
+            'The Helia web adapter did not register its API (loaded $asset).');
       } catch (error) {
         lastError = error;
       }
     }
+    if (_registeredAdapter == null && attempt < 2) {
+      await Future<void>.delayed(const Duration(seconds: 1));
+    }
   }
   throw StateError('Unable to load the Helia web adapter: $lastError');
+}
+
+Future<void> _waitForAdapter() async {
+  for (var i = 0; i < 30 && _registeredAdapter == null; i++) {
+    await Future<void>.delayed(const Duration(milliseconds: 200));
+  }
 }
 
 Future<void> _loadScript(String asset) async {
@@ -360,7 +376,7 @@ Future<void> _loadScript(String asset) async {
     ..async = true
     ..src = asset;
   final loaded = Completer<void>();
-  final timer = Timer(const Duration(seconds: 60), () {
+  final timer = Timer(const Duration(seconds: 90), () {
     if (!loaded.isCompleted) {
       loaded.completeError(StateError('Timed out loading $asset.'));
     }
