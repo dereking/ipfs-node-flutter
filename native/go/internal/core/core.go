@@ -412,7 +412,11 @@ func (core *Core) startNetwork(config networkConfig) error {
 		core.status = Status{Lifecycle: Failed, SafeDiagnostic: err.Error()}
 		return err
 	}
-	kad, err := dht.New(h, dht.Mode(dht.ModeAuto))
+	dhtMode := dht.ModeAuto
+	if config.mode == networkPrivate {
+		dhtMode = dht.ModeServer
+	}
+	kad, err := dht.New(h, dht.Mode(dhtMode))
 	if err != nil {
 		_ = h.Close()
 		_ = repo.Close()
