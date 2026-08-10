@@ -243,7 +243,31 @@ func (core *Core) startPublic(config PublicConfig) error {
 		cancel()
 		return err
 	}
-	h, err := libp2p.New(libp2p.Identity(key))
+	var h host.Host
+	h, err = libp2p.New(
+		libp2p.Identity(key),
+		// Behind NAT the node must obtain a public circuit-relay address so
+		// remote peers can dial it; otherwise the DHT provider record only
+		// advertises unreachable private addresses. Candidate relays are the
+		// peers we are already connected to (public bootstrap peers).
+		libp2p.EnableAutoRelayWithPeerSource(func(ctx context.Context, num int) <-chan peer.AddrInfo {
+			out := make(chan peer.AddrInfo)
+			go func() {
+				defer close(out)
+				if h == nil {
+					return
+				}
+				for _, pid := range h.Network().Peers() {
+					select {
+					case <-ctx.Done():
+						return
+					case out <- peer.AddrInfo{ID: pid, Addrs: h.Peerstore().Addrs(pid)}:
+					}
+				}
+			}()
+			return out
+		}),
+	)
 	if err != nil {
 		cancel()
 		core.status = Status{Lifecycle: Failed, SafeDiagnostic: err.Error()}
@@ -444,7 +468,8 @@ func (core *Core) Pin(ctx context.Context, rawCID string) error {
 }
 
 // provide best-effort announces content to the DHT so other nodes can discover
-// this node as a provider and fetch the block over Bitswap.
+// this node as a provider and fetch the block over Bitswap. Provider records
+// are valid for ~48h, matching IPFS semantics.
 func (core *Core) provide(ctx context.Context, rawCID string) {
 	parsed, err := cid.Parse(rawCID)
 	if err != nil {

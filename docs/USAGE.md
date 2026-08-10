@@ -249,12 +249,14 @@ final raw = await node.addBytes(Uint8List.fromList([0, 1, 2, 255]));
 // 任意二进制（native）等价于 `ipfs add` CIDv1/raw-leaves：小内容直接得到 raw block CID
 ```
 
-> **跨节点取回**：native 会在以下"发布内容"的场景自动调用 `dht.Provide` 向公网 DHT 宣告 CID（30s 超时，失败静默），使节点保持在线时其他节点（含 web 浏览器节点，经其连接的公共 bootstrap 节点中继）可通过 Bitswap 取回：
+> **跨节点取回**：native 会在以下"发布内容"的场景自动调用 `dht.Provide` 向公网 DHT 宣告 CID（30s 超时，失败静默；provider record 有效期约 48h，对齐 IPFS 语义）：
 > - `addBytes` / `addText`（新增内容）
 > - `pin`（固定内容）
 > - `publishName`（IPNS 发布时引用该内容）
 >
-> 注意发布仅在节点在线期间有效，且提供记录会过期（Demo 层面够用）。
+> 节点启用 **AutoRelay**（以已连接的公网 peer 为候选中继），NAT 后也能获得可被公网拨通的 `/p2p-circuit` 中继地址并写入 provider record；否则 record 只含私有地址，公网节点（含 web 经 bootstrap 中继）无法拨通。
+>
+> 取回需满足：macOS 节点保持在线；web 节点已连接公共 bootstrap（用「Swarm 连接」面板确认 connected peers > 0）。浏览器无 DHT，依赖 bootstrap 节点中继。
 
 ### 4.4 按 CID 取回 getBlock
 
