@@ -17,6 +17,7 @@ enum Capability {
   ipns,
   pubsub,
   remotePinning,
+  providerRouting,
   publicPublication,
 }
 
@@ -75,12 +76,14 @@ sealed class NodeConfig {
       );
 
   factory NodeConfig.private({
+    String? repositoryPath,
     required List<int> swarmKey,
     List<String> bootstrapPeers = const [],
     List<String> relayPeers = const [],
     Set<String> allowedPeerIds = const {},
   }) =>
       PrivateNodeConfig(
+        repositoryPath: repositoryPath,
         swarmKey: swarmKey,
         bootstrapPeers: bootstrapPeers,
         relayPeers: relayPeers,
@@ -111,30 +114,41 @@ final class PublicNodeConfig extends NodeConfig {
       _listsEqual(_bootstrapPeers, other._bootstrapPeers);
 
   @override
-  int get hashCode => Object.hash(_repositoryPath, Object.hashAll(_bootstrapPeers));
+  int get hashCode =>
+      Object.hash(_repositoryPath, Object.hashAll(_bootstrapPeers));
 }
 
 final class PrivateNodeConfig extends NodeConfig {
   PrivateNodeConfig({
+    String? repositoryPath,
     required List<int> swarmKey,
     List<String> bootstrapPeers = const [],
     List<String> relayPeers = const [],
     Set<String> allowedPeerIds = const {},
-  })  : _swarmKey = List.unmodifiable(swarmKey),
+  })  : _repositoryPath = repositoryPath,
+        _swarmKey = List.unmodifiable(swarmKey),
         _bootstrapPeers = List.unmodifiable(bootstrapPeers),
         _relayPeers = List.unmodifiable(relayPeers),
         _allowedPeerIds = Set.unmodifiable(allowedPeerIds),
         super._() {
-    if (swarmKey.isEmpty) {
-      throw ArgumentError.value(swarmKey, 'swarmKey', 'must not be empty');
+    if (swarmKey.length != 32) {
+      throw ArgumentError.value(
+        swarmKey,
+        'swarmKey',
+        'must contain exactly 32 bytes',
+      );
     }
   }
 
+  final String? _repositoryPath;
   final List<int> _swarmKey;
   final List<String> _bootstrapPeers;
   final List<String> _relayPeers;
   final Set<String> _allowedPeerIds;
 
+  /// Native backends require a non-empty local filesystem path. Browser
+  /// backends reject private-network configurations.
+  String? get repositoryPath => _repositoryPath;
   List<int> get swarmKey => _swarmKey;
   List<String> get bootstrapPeers => _bootstrapPeers;
   List<String> get relayPeers => _relayPeers;
@@ -143,6 +157,7 @@ final class PrivateNodeConfig extends NodeConfig {
   @override
   bool operator ==(Object other) =>
       other is PrivateNodeConfig &&
+      _repositoryPath == other._repositoryPath &&
       _listsEqual(_swarmKey, other._swarmKey) &&
       _listsEqual(_bootstrapPeers, other._bootstrapPeers) &&
       _listsEqual(_relayPeers, other._relayPeers) &&
@@ -150,6 +165,7 @@ final class PrivateNodeConfig extends NodeConfig {
 
   @override
   int get hashCode => Object.hash(
+        _repositoryPath,
         Object.hashAll(_swarmKey),
         Object.hashAll(_bootstrapPeers),
         Object.hashAll(_relayPeers),

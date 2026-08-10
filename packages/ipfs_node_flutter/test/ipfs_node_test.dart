@@ -12,7 +12,7 @@ void main() {
     IpfsNodePlatform.instance = platform;
     final node = IpfsNode();
     final config = NodeConfig.private(
-      swarmKey: [1, 2, 3],
+      swarmKey: List<int>.generate(32, (index) => index),
       bootstrapPeers: ['peer-a'],
     );
 
@@ -65,11 +65,11 @@ void main() {
     );
     expect(
       NodeConfig.private(
-        swarmKey: [1],
+        swarmKey: List<int>.filled(32, 1),
         allowedPeerIds: {'peer-a'},
       ),
       NodeConfig.private(
-        swarmKey: [1],
+        swarmKey: List<int>.filled(32, 1),
         allowedPeerIds: {'peer-a'},
       ),
     );
@@ -90,7 +90,7 @@ void main() {
   });
 
   test('configuration collection values are defensively copied', () {
-    final swarmKey = [1];
+    final swarmKey = List<int>.filled(32, 1);
     final peerIds = {'peer-a'};
     final config = NodeConfig.private(
       swarmKey: swarmKey,
@@ -101,7 +101,7 @@ void main() {
     peerIds.add('peer-b');
 
     final privateConfig = config as PrivateNodeConfig;
-    expect(privateConfig.swarmKey, [1]);
+    expect(privateConfig.swarmKey, List<int>.filled(32, 1));
     expect(privateConfig.allowedPeerIds, {'peer-a'});
   });
 

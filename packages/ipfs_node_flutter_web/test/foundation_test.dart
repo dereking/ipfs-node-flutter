@@ -28,7 +28,9 @@ void main() {
     final platform = IpfsNodeFlutterWeb(bridge: bridge);
 
     await expectLater(
-      platform.start(NodeConfig.private(swarmKey: [1])),
+      platform.start(
+        NodeConfig.private(swarmKey: List<int>.filled(32, 1)),
+      ),
       throwsA(
         isA<UnsupportedCapabilityException>().having(
           (error) => error.capability,
