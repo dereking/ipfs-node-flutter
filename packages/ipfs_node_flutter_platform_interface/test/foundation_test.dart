@@ -4,7 +4,9 @@ import 'package:ipfs_node_flutter_platform_interface/ipfs_node_platform_interfac
 void main() {
   test('default platform throws an unimplemented error that names start', () {
     expect(
-      () => IpfsNodePlatform.instance.start(PublicNodeConfig()),
+      () => IpfsNodePlatform.instance.start(
+        PublicNodeConfig(repositoryPath: '/tmp/ipfs-node-test'),
+      ),
       throwsA(
         isA<UnimplementedError>().having(
           (error) => error.message,

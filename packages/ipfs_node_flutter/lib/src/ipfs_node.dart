@@ -36,6 +36,23 @@ final class IpfsNode {
   /// Stores raw bytes as an IPFS content root and returns its CID.
   Future<IpfsAddResult> addBytes(Uint8List bytes) => _platform.addBytes(bytes);
 
+  /// Whether this node is ready to announce content to the public IPFS network.
+  Future<bool> networkReady() => _platform.networkReady();
+
+  /// Announces an already-local content root through the public DHT.
+  Future<void> provide(
+    String cid, {
+    Duration timeout = const Duration(seconds: 60),
+  }) =>
+      _platform.provide(cid, timeout: timeout);
+
+  /// Stores bytes locally, then waits for their public provider announcement.
+  Future<IpfsAddResult> addAndProvide(
+    Uint8List bytes, {
+    Duration timeout = const Duration(seconds: 60),
+  }) =>
+      _platform.addAndProvide(bytes, timeout: timeout);
+
   /// Stores [text] as an IPFS content root and returns its CID.
   Future<IpfsAddResult> addText(String text) =>
       _platform.addBytes(utf8.encode(text));

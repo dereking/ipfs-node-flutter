@@ -29,8 +29,8 @@ void main() {
     final first = IpfsNode();
     final second = IpfsNode();
 
-    await first.start(NodeConfig.public());
-    await second.start(NodeConfig.public());
+    await first.start(NodeConfig.public(repositoryPath: '/tmp/first'));
+    await second.start(NodeConfig.public(repositoryPath: '/tmp/second'));
 
     expect(factory.created, hasLength(2));
     expect(factory.created[0].startedWith, isNotNull);
@@ -54,8 +54,14 @@ void main() {
 
   test('configuration values compare by value', () {
     expect(
-      NodeConfig.public(bootstrapPeers: ['peer-a']),
-      NodeConfig.public(bootstrapPeers: ['peer-a']),
+      NodeConfig.public(
+        repositoryPath: '/tmp/ipfs-repository',
+        bootstrapPeers: ['peer-a'],
+      ),
+      NodeConfig.public(
+        repositoryPath: '/tmp/ipfs-repository',
+        bootstrapPeers: ['peer-a'],
+      ),
     );
     expect(
       NodeConfig.private(
@@ -101,7 +107,10 @@ void main() {
 
   test('public configuration copies bootstrap peers from the caller', () {
     final bootstrapPeers = ['peer-a'];
-    final config = NodeConfig.public(bootstrapPeers: bootstrapPeers);
+    final config = NodeConfig.public(
+      repositoryPath: '/tmp/ipfs-repository',
+      bootstrapPeers: bootstrapPeers,
+    );
 
     bootstrapPeers.add('peer-b');
 
@@ -119,6 +128,26 @@ void main() {
     expect(await node.getBlock('bafk-test'), [1, 2, 3]);
     expect(platform.requestedCid, 'bafk-test');
   });
+
+  test('public configuration preserves its optional repository path', () {
+    expect((NodeConfig.public() as PublicNodeConfig).repositoryPath, isNull);
+    expect(
+      (NodeConfig.public(repositoryPath: '/tmp/ipfs-repository')
+              as PublicNodeConfig)
+          .repositoryPath,
+      '/tmp/ipfs-repository',
+    );
+  });
+
+  test('publication delegates to the backend', () async {
+    final platform = _FakePlatform();
+    final node = IpfsNode(platform: platform);
+
+    await node.provide('bafk-test');
+    final result = await node.addAndProvide(Uint8List.fromList([1, 2, 3]));
+
+    expect(platform.provided, ['bafk-test', result.cid]);
+  });
 }
 
 final class _FakePlatform extends IpfsNodePlatform {
@@ -131,6 +160,7 @@ final class _FakePlatform extends IpfsNodePlatform {
   final List<int> block;
   NodeConfig? startedWith;
   String? requestedCid;
+  final List<String> provided = [];
 
   @override
   Future<CapabilitySet> capabilities() async => availableCapabilities;
@@ -153,6 +183,21 @@ final class _FakePlatform extends IpfsNodePlatform {
   }) async {
     requestedCid = cid;
     return Uint8List.fromList(block);
+  }
+
+  @override
+  Future<void> provide(String cid, {Duration timeout = const Duration(seconds: 60)}) async {
+    provided.add(cid);
+  }
+
+  @override
+  Future<IpfsAddResult> addAndProvide(
+    Uint8List bytes, {
+    Duration timeout = const Duration(seconds: 60),
+  }) async {
+    const result = IpfsAddResult(cid: 'bafk-added', bytes: 3);
+    await provide(result.cid, timeout: timeout);
+    return result;
   }
 }
 

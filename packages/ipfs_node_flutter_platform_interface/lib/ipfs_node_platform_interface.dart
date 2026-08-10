@@ -17,6 +17,7 @@ enum Capability {
   ipns,
   pubsub,
   remotePinning,
+  publicPublication,
 }
 
 /// A capability requested by the caller is unavailable on this backend.
@@ -64,8 +65,14 @@ final class CapabilitySet {
 sealed class NodeConfig {
   const NodeConfig._();
 
-  factory NodeConfig.public({List<String> bootstrapPeers = const []}) =>
-      PublicNodeConfig(bootstrapPeers: bootstrapPeers);
+  factory NodeConfig.public({
+    String? repositoryPath,
+    List<String> bootstrapPeers = const [],
+  }) =>
+      PublicNodeConfig(
+        repositoryPath: repositoryPath,
+        bootstrapPeers: bootstrapPeers,
+      );
 
   factory NodeConfig.private({
     required List<int> swarmKey,
@@ -82,21 +89,29 @@ sealed class NodeConfig {
 }
 
 final class PublicNodeConfig extends NodeConfig {
-  PublicNodeConfig({List<String> bootstrapPeers = const []})
-      : _bootstrapPeers = List.unmodifiable(bootstrapPeers),
+  PublicNodeConfig({
+    String? repositoryPath,
+    List<String> bootstrapPeers = const [],
+  })  : _repositoryPath = repositoryPath,
+        _bootstrapPeers = List.unmodifiable(bootstrapPeers),
         super._();
 
+  final String? _repositoryPath;
   final List<String> _bootstrapPeers;
 
+  /// Native backends require a non-empty local filesystem path. Browser
+  /// backends use IndexedDB and therefore do not require one.
+  String? get repositoryPath => _repositoryPath;
   List<String> get bootstrapPeers => _bootstrapPeers;
 
   @override
   bool operator ==(Object other) =>
       other is PublicNodeConfig &&
+      _repositoryPath == other._repositoryPath &&
       _listsEqual(_bootstrapPeers, other._bootstrapPeers);
 
   @override
-  int get hashCode => Object.hashAll(_bootstrapPeers);
+  int get hashCode => Object.hash(_repositoryPath, Object.hashAll(_bootstrapPeers));
 }
 
 final class PrivateNodeConfig extends NodeConfig {
@@ -395,6 +410,23 @@ abstract base class IpfsNodePlatform extends PlatformInterface {
   /// Stores bytes as an IPFS content root and returns its CID.
   Future<IpfsAddResult> addBytes(Uint8List bytes) async =>
       _unimplemented('addBytes');
+
+  /// Whether this node can currently announce content to the public network.
+  Future<bool> networkReady() async => _unimplemented('networkReady');
+
+  /// Announces an already-local content root through the configured router.
+  Future<void> provide(
+    String cid, {
+    Duration timeout = const Duration(seconds: 60),
+  }) async =>
+      _unimplemented('provide');
+
+  /// Stores bytes locally and waits for a public provider announcement.
+  Future<IpfsAddResult> addAndProvide(
+    Uint8List bytes, {
+    Duration timeout = const Duration(seconds: 60),
+  }) async =>
+      _unimplemented('addAndProvide');
 
   /// Pins a content root so its block stays available locally.
   Future<void> pin(String cid) async => _unimplemented('pin');
