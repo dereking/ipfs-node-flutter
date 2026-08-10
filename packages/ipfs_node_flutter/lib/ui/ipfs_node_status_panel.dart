@@ -80,6 +80,18 @@ class IpfsNodeStatusPanel extends StatelessWidget {
                 label: '已连接 peers',
                 value: '${status!.connectedPeers.length} 个',
               ),
+              _StatusRow(
+                label: 'DHT 就绪',
+                value: status!.dhtReady
+                    ? '是（路由表 ${status!.routingTableSize} 个 peer）'
+                    : '否',
+              ),
+              _StatusRow(
+                label: 'Relay 就绪',
+                value: status!.relayReady
+                    ? '是（${status!.relayAddrs.length} 条中继）'
+                    : '否',
+              ),
               if (status!.bootstrapErrors.isNotEmpty)
                 _StatusRow(
                   label: 'bootstrap 错误',

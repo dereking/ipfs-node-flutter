@@ -18,7 +18,7 @@ void main() {
     expect(await platform.capabilities(), CapabilitySet([Capability.webRtc]));
     expect(
       await platform.status(),
-      const NodeStatus.running(),
+      const NodeStatus.running(dhtReady: true),
     );
   });
 
