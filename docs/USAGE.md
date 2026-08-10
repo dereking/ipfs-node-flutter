@@ -249,6 +249,13 @@ final raw = await node.addBytes(Uint8List.fromList([0, 1, 2, 255]));
 // 任意二进制（native）等价于 `ipfs add` CIDv1/raw-leaves：小内容直接得到 raw block CID
 ```
 
+> **跨节点取回**：native 会在以下"发布内容"的场景自动调用 `dht.Provide` 向公网 DHT 宣告 CID（30s 超时，失败静默），使节点保持在线时其他节点（含 web 浏览器节点，经其连接的公共 bootstrap 节点中继）可通过 Bitswap 取回：
+> - `addBytes` / `addText`（新增内容）
+> - `pin`（固定内容）
+> - `publishName`（IPNS 发布时引用该内容）
+>
+> 注意发布仅在节点在线期间有效，且提供记录会过期（Demo 层面够用）。
+
 ### 4.4 按 CID 取回 getBlock
 
 ```dart

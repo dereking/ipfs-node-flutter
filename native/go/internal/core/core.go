@@ -370,6 +370,7 @@ func (core *Core) AddBytes(ctx context.Context, data []byte) (string, error) {
 		if err := store.Put(ctx, block); err != nil {
 			return "", err
 		}
+		core.provide(ctx, block.Cid().String())
 		return block.Cid().String(), nil
 	}
 
@@ -401,6 +402,7 @@ func (core *Core) AddBytes(ctx context.Context, data []byte) (string, error) {
 	if err := store.Put(ctx, rootBlock); err != nil {
 		return "", err
 	}
+	core.provide(ctx, root.Cid().String())
 	return root.Cid().String(), nil
 }
 
@@ -437,7 +439,26 @@ func (core *Core) Pin(ctx context.Context, rawCID string) error {
 		PinnedAt: time.Now(),
 	}
 	core.mu.Unlock()
+	core.provide(ctx, parsed.String())
 	return nil
+}
+
+// provide best-effort announces content to the DHT so other nodes can discover
+// this node as a provider and fetch the block over Bitswap.
+func (core *Core) provide(ctx context.Context, rawCID string) {
+	parsed, err := cid.Parse(rawCID)
+	if err != nil {
+		return
+	}
+	core.mu.Lock()
+	kad := core.dht
+	core.mu.Unlock()
+	if kad == nil {
+		return
+	}
+	pctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+	_ = kad.Provide(pctx, parsed, true)
 }
 
 // Unpin removes a content root from the local pin set.
@@ -696,6 +717,9 @@ func (core *Core) PublishName(ctx context.Context, contentCID string) (string, e
 	if err := ns.Publish(ctx, key, value); err != nil {
 		return "", err
 	}
+	// Make the referenced content discoverable, matching `ipfs name publish`
+	// which pins and provides the target CID.
+	core.provide(ctx, contentCID)
 	return ipns.NameFromPeer(pid).String(), nil
 }
 
