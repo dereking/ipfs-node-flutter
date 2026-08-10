@@ -9,14 +9,24 @@ resolution: workspace
 dependencies:
   flutter:
     sdk: flutter
+  flutter_web_plugins:
+    sdk: flutter
+  ipfs_node_flutter:
+    path: ../ipfs_node_flutter
   ipfs_node_flutter_platform_interface:
     path: ../ipfs_node_flutter_platform_interface
   web: ^1.1.1
 
-flutter:
-  assets:
-    - web/helia_adapter.js
-
 dev_dependencies:
   flutter_test:
     sdk: flutter
+
+flutter:
+  plugin:
+    implements: ipfs_node_flutter
+    platforms:
+      web:
+        pluginClass: IpfsNodeFlutterWeb
+        fileName: src/ipfs_node_flutter_web.dart
+  assets:
+    - web/helia_adapter.js

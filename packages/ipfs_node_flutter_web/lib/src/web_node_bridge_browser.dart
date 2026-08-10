@@ -8,8 +8,10 @@ import 'package:web/web.dart' as web;
 import 'web_node_bridge.dart';
 
 const _adapterAssets = [
-  'web/helia_adapter.js',
+  // Flutter-bundled package asset (declared in this package's pubspec).
   'assets/packages/ipfs_node_flutter_web/web/helia_adapter.js',
+  // Optional override placed in the host app's own web/ directory.
+  'web/helia_adapter.js',
   'assets/web/helia_adapter.js',
   'packages/ipfs_node_flutter_web/web/helia_adapter.js',
 ];
@@ -45,6 +47,45 @@ external void _addHeliaBytes(
 @JS('IpfsNodeFlutterHelia.getBytes')
 external void _getHeliaBytes(
     _HeliaNode node, JSString cid, JSFunction resolve, JSFunction reject);
+@JS('IpfsNodeFlutterHelia.pin')
+external void _pinHeliaCid(
+    _HeliaNode node, JSString cid, JSFunction resolve, JSFunction reject);
+@JS('IpfsNodeFlutterHelia.unpin')
+external void _unpinHeliaCid(
+    _HeliaNode node, JSString cid, JSFunction resolve, JSFunction reject);
+@JS('IpfsNodeFlutterHelia.listPins')
+external void _listHeliaPins(
+    _HeliaNode node, JSFunction resolve, JSFunction reject);
+@JS('IpfsNodeFlutterHelia.swarmPeers')
+external void _heliaSwarmPeers(
+    _HeliaNode node, JSFunction resolve, JSFunction reject);
+@JS('IpfsNodeFlutterHelia.bootstrapList')
+external void _heliaBootstrapList(
+    _HeliaNode node, JSFunction resolve, JSFunction reject);
+@JS('IpfsNodeFlutterHelia.bootstrapAdd')
+external void _heliaBootstrapAdd(
+    _HeliaNode node, JSString multiaddr, JSFunction resolve, JSFunction reject);
+@JS('IpfsNodeFlutterHelia.bootstrapRemove')
+external void _heliaBootstrapRemove(
+    _HeliaNode node, JSString multiaddr, JSFunction resolve, JSFunction reject);
+@JS('IpfsNodeFlutterHelia.findProviders')
+external void _heliaFindProviders(_HeliaNode node, JSString cid,
+    JSNumber timeoutMillis, JSFunction resolve, JSFunction reject);
+@JS('IpfsNodeFlutterHelia.findPeer')
+external void _heliaFindPeer(_HeliaNode node, JSString peerId,
+    JSNumber timeoutMillis, JSFunction resolve, JSFunction reject);
+@JS('IpfsNodeFlutterHelia.publishName')
+external void _heliaPublishName(_HeliaNode node, JSString cid,
+    JSNumber timeoutMillis, JSFunction resolve, JSFunction reject);
+@JS('IpfsNodeFlutterHelia.resolveName')
+external void _heliaResolveName(_HeliaNode node, JSString name,
+    JSNumber timeoutMillis, JSFunction resolve, JSFunction reject);
+@JS('IpfsNodeFlutterHelia.listKeys')
+external void _heliaListKeys(
+    _HeliaNode node, JSFunction resolve, JSFunction reject);
+@JS('IpfsNodeFlutterHelia.bitswapStats')
+external void _heliaBitswapStats(
+    _HeliaNode node, JSFunction resolve, JSFunction reject);
 
 final class _JavascriptHeliaBridge implements WebNodeBridge {
   _HeliaNode? _node;
@@ -68,7 +109,7 @@ final class _JavascriptHeliaBridge implements WebNodeBridge {
           (resolve, reject) => _heliaCapabilities(node, resolve, reject));
       _capabilities = _decodeCapabilities(names);
       _node = node;
-    } catch (_) {
+    } catch (error) {
       await _callback(
           (resolve, reject) => _stopHeliaNode(node, resolve, reject));
       rethrow;
@@ -100,6 +141,163 @@ final class _JavascriptHeliaBridge implements WebNodeBridge {
     final bytes = await _callback<JSUint8Array>((resolve, reject) =>
         _getHeliaBytes(_requireNode(), cid.toJS, resolve, reject));
     return bytes.toDart;
+  }
+
+  @override
+  Future<void> pin(String cid) async {
+    await _callback<JSAny?>((resolve, reject) =>
+        _pinHeliaCid(_requireNode(), cid.toJS, resolve, reject));
+  }
+
+  @override
+  Future<void> unpin(String cid) async {
+    await _callback<JSAny?>((resolve, reject) =>
+        _unpinHeliaCid(_requireNode(), cid.toJS, resolve, reject));
+  }
+
+  @override
+  Future<List<IpfsPinInfo>> listPins() async {
+    final pins = await _callback<JSArray<JSObject>>(
+        (resolve, reject) => _listHeliaPins(_requireNode(), resolve, reject));
+    return pins.toDart.map(_decodePin).toList(growable: false);
+  }
+
+  @override
+  Future<List<IpfsPeerInfo>> swarmPeers() async {
+    final peers = await _callback<JSArray<JSObject>>(
+        (resolve, reject) => _heliaSwarmPeers(_requireNode(), resolve, reject));
+    return peers.toDart.map(_decodePeer).toList(growable: false);
+  }
+
+  @override
+  Future<List<String>> bootstrapList() async {
+    final peers = await _callback<JSArray<JSString>>((resolve, reject) =>
+        _heliaBootstrapList(_requireNode(), resolve, reject));
+    return peers.toDart.map((peer) => peer.toDart).toList(growable: false);
+  }
+
+  @override
+  Future<void> bootstrapAdd(String multiaddr) async {
+    await _callback<JSAny?>((resolve, reject) =>
+        _heliaBootstrapAdd(_requireNode(), multiaddr.toJS, resolve, reject));
+  }
+
+  @override
+  Future<void> bootstrapRemove(String multiaddr) async {
+    await _callback<JSAny?>((resolve, reject) =>
+        _heliaBootstrapRemove(_requireNode(), multiaddr.toJS, resolve, reject));
+  }
+
+  @override
+  Future<List<IpfsPeerInfo>> findProviders(
+    String cid, {
+    Duration timeout = const Duration(seconds: 30),
+  }) async {
+    final peers = await _callback<JSArray<JSObject>>((resolve, reject) =>
+        _heliaFindProviders(_requireNode(), cid.toJS,
+            timeout.inMilliseconds.toJS, resolve, reject));
+    return peers.toDart.map(_decodePeer).toList(growable: false);
+  }
+
+  @override
+  Future<IpfsPeerInfo> findPeer(
+    String peerId, {
+    Duration timeout = const Duration(seconds: 30),
+  }) async {
+    final peer = await _callback<JSObject?>((resolve, reject) => _heliaFindPeer(
+        _requireNode(),
+        peerId.toJS,
+        timeout.inMilliseconds.toJS,
+        resolve,
+        reject));
+    return _decodePeer(peer);
+  }
+
+  @override
+  Future<String> publishName(
+    String cid, {
+    Duration timeout = const Duration(seconds: 60),
+  }) async {
+    final name = await _callback<JSString>((resolve, reject) =>
+        _heliaPublishName(_requireNode(), cid.toJS, timeout.inMilliseconds.toJS,
+            resolve, reject));
+    return name.toDart;
+  }
+
+  @override
+  Future<String> resolveName(
+    String name, {
+    Duration timeout = const Duration(seconds: 60),
+  }) async {
+    final value = await _callback<JSString>((resolve, reject) =>
+        _heliaResolveName(_requireNode(), name.toJS,
+            timeout.inMilliseconds.toJS, resolve, reject));
+    return value.toDart;
+  }
+
+  @override
+  Future<List<IpfsKeyInfo>> listKeys() async {
+    final keys = await _callback<JSArray<JSObject>>(
+        (resolve, reject) => _heliaListKeys(_requireNode(), resolve, reject));
+    return keys.toDart.map((raw) {
+      final map = raw.dartify() as Map<dynamic, dynamic>;
+      final name = map['name'];
+      final peerId = map['peerId'];
+      if (name is! String || peerId is! String) {
+        throw StateError('Helia returned an invalid key entry.');
+      }
+      return IpfsKeyInfo(name: name, peerId: peerId);
+    }).toList(growable: false);
+  }
+
+  @override
+  Future<IpfsBitswapStats> bitswapStats() async {
+    final stats = await _callback<JSObject?>((resolve, reject) =>
+        _heliaBitswapStats(_requireNode(), resolve, reject));
+    final map = stats?.dartify() as Map<dynamic, dynamic>? ?? const {};
+    final blocksReceived = map['blocksReceived'];
+    final dataReceived = map['dataReceived'];
+    final wantlist = map['wantlist'];
+    final messagesSent = map['messagesSent'];
+    final messagesReceived = map['messagesReceived'];
+    if (blocksReceived is! int ||
+        dataReceived is! int ||
+        wantlist is! int ||
+        messagesSent is! int ||
+        messagesReceived is! int) {
+      throw StateError('Helia returned invalid bitswap stats.');
+    }
+    return IpfsBitswapStats(
+      blocksReceived: blocksReceived,
+      dataReceived: dataReceived,
+      wantlist: wantlist,
+      messagesSent: messagesSent,
+      messagesReceived: messagesReceived,
+    );
+  }
+
+  IpfsPinInfo _decodePin(JSObject raw) {
+    final map = raw.dartify() as Map<dynamic, dynamic>;
+    final cid = map['cid'];
+    final type = map['type'];
+    if (cid is! String || type is! String) {
+      throw StateError('Helia returned an invalid pin entry.');
+    }
+    return IpfsPinInfo(
+      cid: cid,
+      type: type == 'recursive' ? IpfsPinType.recursive : IpfsPinType.direct,
+    );
+  }
+
+  IpfsPeerInfo _decodePeer(JSObject? raw) {
+    if (raw == null) return const IpfsPeerInfo(id: '');
+    final map = raw.dartify() as Map<dynamic, dynamic>;
+    final id = map['id'];
+    final addrs = map['addrs'];
+    if (id is! String || addrs is! List) {
+      throw StateError('Helia returned an invalid peer entry.');
+    }
+    return IpfsPeerInfo(id: id, addrs: addrs.cast<String>());
   }
 
   _HeliaNode _requireNode() =>
@@ -140,10 +338,21 @@ Future<void> _loadScript(String asset) async {
     ..async = true
     ..src = asset;
   final loaded = Completer<void>();
-  script.addEventListener('load', ((web.Event _) => loaded.complete()).toJS);
+  final timer = Timer(const Duration(seconds: 10), () {
+    if (!loaded.isCompleted) {
+      loaded.completeError(StateError('Timed out loading $asset.'));
+    }
+  });
+  script.addEventListener(
+      'load',
+      ((web.Event _) {
+        timer.cancel();
+        loaded.complete();
+      }).toJS);
   script.addEventListener(
     'error',
     ((web.Event _) {
+      timer.cancel();
       loaded.completeError(StateError('Unable to load $asset.'));
     }).toJS,
   );

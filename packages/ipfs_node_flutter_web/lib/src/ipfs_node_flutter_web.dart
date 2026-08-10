@@ -13,7 +13,11 @@ final class IpfsNodeFlutterWeb extends IpfsNodePlatform {
   NodeLifecycle _lifecycle = NodeLifecycle.stopped;
 
   /// Installs this backend as the default platform implementation.
-  static void registerWith() {
+  ///
+  /// The optional [registrar] is supplied by the Flutter web plugin
+  /// registrant and is unused: this backend registers directly through the
+  /// platform interface instead of a method channel.
+  static void registerWith([Object? registrar]) {
     IpfsNodePlatform.instance = IpfsNodeFlutterWeb();
   }
 
@@ -72,6 +76,63 @@ final class IpfsNodeFlutterWeb extends IpfsNodePlatform {
     Duration timeout = const Duration(seconds: 180),
   }) =>
       _runtimeBridge.getBytes(cid).timeout(timeout);
+
+  @override
+  Future<void> pin(String cid) => _runtimeBridge.pin(cid);
+
+  @override
+  Future<void> unpin(String cid) => _runtimeBridge.unpin(cid);
+
+  @override
+  Future<List<IpfsPinInfo>> listPins() => _runtimeBridge.listPins();
+
+  @override
+  Future<List<IpfsPeerInfo>> swarmPeers() => _runtimeBridge.swarmPeers();
+
+  @override
+  Future<List<String>> bootstrapList() => _runtimeBridge.bootstrapList();
+
+  @override
+  Future<void> bootstrapAdd(String multiaddr) =>
+      _runtimeBridge.bootstrapAdd(multiaddr);
+
+  @override
+  Future<void> bootstrapRemove(String multiaddr) =>
+      _runtimeBridge.bootstrapRemove(multiaddr);
+
+  @override
+  Future<List<IpfsPeerInfo>> findProviders(
+    String cid, {
+    Duration timeout = const Duration(seconds: 30),
+  }) =>
+      _runtimeBridge.findProviders(cid, timeout: timeout);
+
+  @override
+  Future<IpfsPeerInfo> findPeer(
+    String peerId, {
+    Duration timeout = const Duration(seconds: 30),
+  }) =>
+      _runtimeBridge.findPeer(peerId, timeout: timeout);
+
+  @override
+  Future<IpfsBitswapStats> bitswapStats() => _runtimeBridge.bitswapStats();
+
+  @override
+  Future<String> publishName(
+    String cid, {
+    Duration timeout = const Duration(seconds: 60),
+  }) =>
+      _runtimeBridge.publishName(cid, timeout: timeout);
+
+  @override
+  Future<String> resolveName(
+    String name, {
+    Duration timeout = const Duration(seconds: 60),
+  }) =>
+      _runtimeBridge.resolveName(name, timeout: timeout);
+
+  @override
+  Future<List<IpfsKeyInfo>> listKeys() => _runtimeBridge.listKeys();
 
   WebNodeBridge get _runtimeBridge => _bridge ??= createWebNodeBridge();
 }

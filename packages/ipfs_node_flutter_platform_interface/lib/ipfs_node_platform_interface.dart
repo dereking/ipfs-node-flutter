@@ -434,5 +434,8 @@ final class _DefaultIpfsNodePlatform extends IpfsNodePlatform {
   Future<NodeStatus> status() async => _unimplemented('status');
 
   @override
-  Future<void> stop() async => _unimplemented('stop');
+  Future<void> stop() async {
+    // Stopping an unregistered node is a no-op so teardown never crashes when
+    // no platform implementation was installed.
+  }
 }

@@ -71,6 +71,40 @@ void main() {
     expect(await platform.getBytes(added.cid), [1, 2, 3]);
   });
 
+  test('pin, swarm, bootstrap, and dht operations delegate to the bridge',
+      () async {
+    final bridge = _FakeWebNodeBridge();
+    final platform = IpfsNodeFlutterWeb(bridge: bridge);
+    await platform.start(NodeConfig.public());
+
+    await platform.pin('bafkrei-pinned');
+    expect(await platform.listPins(), hasLength(1));
+    await platform.unpin('bafkrei-pinned');
+
+    expect((await platform.swarmPeers()).single.id, 'QmPeer');
+
+    await platform.bootstrapAdd('/dnsaddr/bootstrap.libp2p.io/p2p/QmX');
+    expect(await platform.bootstrapList(),
+        contains('/dnsaddr/bootstrap.libp2p.io/p2p/QmX'));
+    await platform.bootstrapRemove('/dnsaddr/bootstrap.libp2p.io/p2p/QmX');
+
+    expect((await platform.findProviders('bafkrei-x')).single.id, 'QmProvider');
+    expect((await platform.findPeer('QmTarget')).id, 'QmTarget');
+  });
+  test('bitswap, IPNS, and keys delegate to the bridge', () async {
+    final bridge = _FakeWebNodeBridge();
+    final platform = IpfsNodeFlutterWeb(bridge: bridge);
+    await platform.start(NodeConfig.public());
+
+    final stats = await platform.bitswapStats();
+    expect(stats.wantlist, 1);
+
+    expect(await platform.publishName('bafkrei-x'), 'k51qzi5uqu5dgv');
+    expect(
+        await platform.resolveName('/ipns/k51qzi5uqu5dgv'), '/ipfs/bafkrei-x');
+    expect((await platform.listKeys()).single.name, 'self');
+  });
+
   test('registerWith installs a web backend factory', () {
     IpfsNodeFlutterWeb.registerWith();
 
@@ -101,4 +135,71 @@ final class _FakeWebNodeBridge implements WebNodeBridge {
 
   @override
   Future<Uint8List> getBytes(String cid) async => Uint8List.fromList([1, 2, 3]);
+
+  @override
+  Future<void> pin(String cid) async {}
+
+  @override
+  Future<void> unpin(String cid) async {}
+
+  @override
+  Future<List<IpfsPinInfo>> listPins() async => const [
+        IpfsPinInfo(cid: 'bafkrei-pinned', type: IpfsPinType.direct),
+      ];
+
+  @override
+  Future<List<IpfsPeerInfo>> swarmPeers() async => const [
+        IpfsPeerInfo(id: 'QmPeer', addrs: ['/ip4/1.2.3.4/tcp/4001'])
+      ];
+
+  @override
+  Future<List<String>> bootstrapList() async =>
+      const ['/dnsaddr/bootstrap.libp2p.io/p2p/QmX'];
+
+  @override
+  Future<void> bootstrapAdd(String multiaddr) async {}
+
+  @override
+  Future<void> bootstrapRemove(String multiaddr) async {}
+
+  @override
+  Future<List<IpfsPeerInfo>> findProviders(
+    String cid, {
+    Duration timeout = const Duration(seconds: 30),
+  }) async =>
+      const [IpfsPeerInfo(id: 'QmProvider')];
+
+  @override
+  Future<IpfsPeerInfo> findPeer(
+    String peerId, {
+    Duration timeout = const Duration(seconds: 30),
+  }) async =>
+      const IpfsPeerInfo(id: 'QmTarget');
+
+  @override
+  Future<String> publishName(
+    String cid, {
+    Duration timeout = const Duration(seconds: 60),
+  }) async =>
+      'k51qzi5uqu5dgv';
+
+  @override
+  Future<String> resolveName(
+    String name, {
+    Duration timeout = const Duration(seconds: 60),
+  }) async =>
+      '/ipfs/bafkrei-x';
+
+  @override
+  Future<List<IpfsKeyInfo>> listKeys() async =>
+      const [IpfsKeyInfo(name: 'self', peerId: 'QmSelf')];
+
+  @override
+  Future<IpfsBitswapStats> bitswapStats() async => const IpfsBitswapStats(
+        blocksReceived: 3,
+        dataReceived: 10,
+        wantlist: 1,
+        messagesSent: 2,
+        messagesReceived: 1,
+      );
 }

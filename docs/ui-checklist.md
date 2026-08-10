@@ -1,6 +1,6 @@
 # IPFS 常用功能 UI 清单
 
-> 范围：ipfs-node-flutter SDK 的常用功能 UI 组件 + 对应 backend 扩展。
+> 范围：ipfs-node-flutter SDK 的常用功能 UI 组件 + 对应底层扩展。
 > 现状约束：native Go core 目前只实现 `getBlock`（raw block 取回）。除 A 外，其余模块都需同步扩展 Go core、Dart SDK 和 UI 组件。
 
 ## A. 节点管理（已有 ✅）
@@ -78,3 +78,13 @@
 - SDK ui：`IpfsSwarmPanel`、`IpfsBootstrapPanel`、`IpfsBitswapPanel`、`IpfsDhtPanel`、`IpfsIpnsPanel`
 - example 常用功能 tab 已集成全部面板
 - 限制：IPNS 发布/解析依赖公网 DHT（离线不可用，测试以 `IPFS_PUBLIC_INTEGRATION=1` 门控）；bitswap 仅暴露接收侧块/字节计数与消息收发数（boxo v0.42 无发送侧块级计数）
+
+## 跨平台支持（统一 API + web）
+
+- SDK 通过 `IpfsNodePlatform` 提供统一 API；native（Go dylib）与 web（Helia）两个底层实现同一接口
+- **联邦插件自动注册**：`ipfs_node_flutter` 声明 `default_package`（native/web），`ipfs_node_flutter_native` 用 `dartPluginClass`、`ipfs_node_flutter_web` 用 `pluginClass` 注册实现；构建时生成插件注册器自动调用 `registerWith()`，用户只需 `pub add ipfs_node_flutter`，无需手动注册
+- example 只依赖 `ipfs_node_flutter`，`feature_checks` 平台无关；支持 macOS / Windows / Linux / Android / iOS / Web（`flutter run -d macos` / `-d chrome`）
+- web 底层功能矩阵：
+  - 支持：start/stop/status/capabilities、addBytes/getBytes、pin/unpin/listPins、swarmPeers/connect/disconnect（浏览器内为直接连接）、bootstrapList/Add/Remove、findProviders/findPeer、**bitswap 统计（本地跟踪的收发块/字节与在途 want 数）**、**IPNS publishName/resolveName/listKeys（@helia/ipns + keychain）**
+  - 无后端差异：IPNS 发布/解析依赖浏览器可达的 DHT/记录分发，未连接公网时可能失败
+- web bundle 由 `packages/ipfs_node_flutter_web/javascript` 的 esbuild 构建（`npm run build`），Helia 7 + @helia/unixfs + @helia/bitswap + @helia/ipns + js-libp2p

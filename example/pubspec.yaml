@@ -13,6 +13,9 @@ dependencies:
     sdk: flutter
   ipfs_node_flutter:
     path: ../packages/ipfs_node_flutter
+  # Explicit platform implementations. The federated plugin registrant normally
+  # installs these automatically; the example also registers them explicitly in
+  # main.dart as an idempotent safety net.
   ipfs_node_flutter_native:
     path: ../packages/ipfs_node_flutter_native
   ipfs_node_flutter_web:

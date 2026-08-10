@@ -1,21 +1,34 @@
 # ipfs-node-flutter
 
 `ipfs-node-flutter` is a Flutter IPFS node SDK workspace for Android, iOS,
-macOS, Windows, Linux, and web. The native backend embeds a real Go libp2p
-host, Amino DHT client, and Bitswap client. The Web backend starts a real
+macOS, Windows, Linux, and web. The native layer embeds a real Go libp2p
+host, Amino DHT client, and Bitswap client. The web layer starts a real
 Helia/js-libp2p browser node with an IndexedDB blockstore.
 
-The common SDK exposes lifecycle/configuration/status/capability APIs plus
-`getBlock(cid)`, which retrieves and CID-verifies one raw IPFS block. Native
-status includes the node Peer ID, listen addresses, connected bootstrap peers,
-and non-fatal bootstrap errors. `NodeConfig.public()` uses Boxo's public IPFS
-fallback bootstrap peers when no override is supplied.
+The common SDK exposes a **unified `IpfsNode` API** across platforms:
+lifecycle / configuration / status / capabilities, content add (`addBytes` /
+`addText`) and retrieval (`getBlock`), pinning (`pin` / `unpin` / `listPins`),
+swarm and bootstrap management, bitswap statistics, DHT queries
+(`findProviders` / `findPeer`), and IPNS (`publishName` / `resolveName` /
+`listKeys`). A set of reusable Flutter UI components (`lib/ui`) covers both
+feature testing and everyday node usage.
+
+The SDK is a **federated Flutter plugin**: add only `ipfs_node_flutter` and the
+Flutter toolchain auto-resolves and auto-registers the right implementation
+per platform (desktop/mobile → `ipfs_node_flutter_native`, web →
+`ipfs_node_flutter_web`) — no manual `registerWith()` or sub-package
+declarations needed.
+
+## 使用指引
+
+完整使用文档（架构原理、安装、各功能详细代码片段、UI 组件、平台差异）见
+**[`docs/USAGE.md`](docs/USAGE.md)**。
 
 ## Web capability limits
 
-With `NodeConfig.public()` the browser backend uses WSS addresses advertised
+With `NodeConfig.public()` the browser layer uses WSS addresses advertised
 by public Amino DHT bootstrap peers. Callers may provide browser-dialable
-`PublicNodeConfig.bootstrapPeers` overrides. The browser backend deliberately
+`PublicNodeConfig.bootstrapPeers` overrides. The browser layer deliberately
 does not run a DHT, provider routing, or automatic relay reservation, so public
 CID discovery is not guaranteed. Common `getBlock` can read local content or
 content available from an already connected peer.
@@ -25,9 +38,10 @@ or private swarm-key support. It can use WebRTC, WebTransport, WSS, and circuit
 relay transports. Private browser configurations are rejected with a typed
 `UnsupportedCapabilityException`.
 
-The Web package also exposes an experimental backend-specific UnixFS
-`addBytes` / `getBytes` bridge. Cross-platform UnixFS add/get, CAR, local
-pinning, private routing, IPNS, PubSub, and remote pinning remain later work.
+The Web package also exposes a UnixFS `addBytes` / `getBytes` bridge and
+implements pinning, swarm, bootstrap, and DHT lookups over Helia. Bitswap
+statistics and IPNS are not available on web and throw typed errors. CAR,
+private routing, PubSub, and remote pinning remain later work.
 
 ## Native C ABI
 
@@ -40,13 +54,15 @@ Strings returned by `ipfs_node_status`, `ipfs_node_capabilities`, and
 `ipfs_node_get_block` must be released with `ipfs_node_free_string`. Block
 responses are JSON containing either base64 `data` or an `error` message.
 
-## macOS example
+## Cross-platform example
 
-[`example`](example) is a Flutter macOS application that uses the public SDK
-API to start a public node and retrieve the documented raw CID
-`bafkreidfdrlkeq4m4xnxuyx6iae76fdm4wgl5d4xzsb77ixhyqwumhz244`. Its Xcode
-build phase embeds and signs the Go dylib. See
-[`example/README.md`](example/README.md).
+[`example`](example) is a Flutter application that runs on macOS and web from
+the same feature-lab UI: it uses the public SDK API to start a node, adds and
+retrieves content, pins content, and manages swarm / bootstrap / bitswap /
+DHT / IPNS. The macOS Xcode build phase embeds and signs the Go dylib; the web
+build registers the Helia layer automatically. See
+[`example/README.md`](example/README.md) and
+[`docs/USAGE.md`](docs/USAGE.md).
 
 ## Validation
 

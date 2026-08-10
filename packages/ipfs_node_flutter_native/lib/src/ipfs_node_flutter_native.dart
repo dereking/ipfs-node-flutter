@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
+import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'package:ffi/ffi.dart';
@@ -84,24 +85,31 @@ final class IpfsNodeFlutterNative extends IpfsNodePlatform {
 
   @override
   Future<void> start(NodeConfig config) async {
-    _throwForError('start', _backend.start(_encodeStartRequest(config)));
+    final encoded = _encodeStartRequest(config);
+    final code = await _inIsolate((abi) => abi.start(encoded));
+    _throwForError('start', code);
   }
 
   @override
   Future<void> stop() async {
-    _throwForError('stop', _backend.stop());
+    final code = await _inIsolate((abi) => abi.stop());
+    _throwForError('stop', code);
   }
 
   @override
   Future<void> dispose() async {
     if (_disposed) return;
+    final abi = _abi;
     _disposed = true;
-    _abi?.dispose();
+    _abi = null;
+    if (abi == null) return;
+    await _runInIsolateWith(abi, (worker) => worker.dispose());
   }
 
   @override
   Future<NodeStatus> status() async {
-    final encoded = _requiredResponse('status', _backend.status());
+    final encoded =
+        _requiredResponse('status', await _inIsolate((abi) => abi.status()));
     final map = _decodeObject('status', encoded);
     final lifecycleName = map['lifecycle'];
     if (lifecycleName is! String) {
@@ -144,7 +152,8 @@ final class IpfsNodeFlutterNative extends IpfsNodePlatform {
 
   @override
   Future<CapabilitySet> capabilities() async {
-    final encoded = _requiredResponse('capabilities', _backend.capabilities());
+    final encoded = _requiredResponse(
+        'capabilities', await _inIsolate((abi) => abi.capabilities()));
     final decoded = _decodeJson('capabilities', encoded);
     if (decoded is! List || decoded.any((value) => value is! String)) {
       throw const NativeNodeProtocolException(
@@ -168,7 +177,7 @@ final class IpfsNodeFlutterNative extends IpfsNodePlatform {
   }) async {
     final encoded = _requiredResponse(
       'getBlock',
-      _backend.getBlock(cid, timeout.inMilliseconds),
+      await _inIsolate((abi) => abi.getBlock(cid, timeout.inMilliseconds)),
     );
     final map = _decodeObject('getBlock', encoded);
     final error = map['error'];
@@ -194,60 +203,65 @@ final class IpfsNodeFlutterNative extends IpfsNodePlatform {
 
   @override
   Future<IpfsAddResult> addBytes(Uint8List bytes) async {
-    final pointer = calloc<Uint8>(bytes.length);
-    pointer.asTypedList(bytes.length).setAll(0, bytes);
-    try {
-      final encoded = _requiredResponse(
-        'addBytes',
-        _backend.addBytes(pointer.cast<Void>(), bytes.length),
-      );
-      final map = _decodeObject('addBytes', encoded);
-      final error = map['error'];
-      if (error is String && error.isNotEmpty) {
-        throw NativeNodeRequestException(operation: 'addBytes', message: error);
-      }
-      final cid = map['cid'];
-      if (cid is! String || cid.isEmpty) {
-        throw const NativeNodeProtocolException(
-          operation: 'addBytes',
-          message: 'Native node response did not contain a content root CID.',
-        );
-      }
-      final added = map['bytes'];
-      if (added is! int) {
-        throw const NativeNodeProtocolException(
-          operation: 'addBytes',
-          message: 'Native node response did not contain the byte count.',
-        );
-      }
-      return IpfsAddResult(cid: cid, bytes: added);
-    } finally {
-      calloc.free(pointer);
+    final encoded = _requiredResponse(
+      'addBytes',
+      await _inIsolate((abi) {
+        final pointer = calloc<Uint8>(bytes.length);
+        pointer.asTypedList(bytes.length).setAll(0, bytes);
+        try {
+          return abi.addBytes(pointer.cast<Void>(), bytes.length);
+        } finally {
+          calloc.free(pointer);
+        }
+      }),
+    );
+    final map = _decodeObject('addBytes', encoded);
+    final error = map['error'];
+    if (error is String && error.isNotEmpty) {
+      throw NativeNodeRequestException(operation: 'addBytes', message: error);
     }
+    final cid = map['cid'];
+    if (cid is! String || cid.isEmpty) {
+      throw const NativeNodeProtocolException(
+        operation: 'addBytes',
+        message: 'Native node response did not contain a content root CID.',
+      );
+    }
+    final added = map['bytes'];
+    if (added is! int) {
+      throw const NativeNodeProtocolException(
+        operation: 'addBytes',
+        message: 'Native node response did not contain the byte count.',
+      );
+    }
+    return IpfsAddResult(cid: cid, bytes: added);
   }
 
   @override
   Future<void> pin(String cid) async {
-    _throwForStringError('pin', _requiredResponse('pin', _backend.pin(cid)));
+    _throwForStringError('pin',
+        _requiredResponse('pin', await _inIsolate((abi) => abi.pin(cid))));
   }
 
   @override
   Future<void> unpin(String cid) async {
-    _throwForStringError(
-        'unpin', _requiredResponse('unpin', _backend.unpin(cid)));
+    _throwForStringError('unpin',
+        _requiredResponse('unpin', await _inIsolate((abi) => abi.unpin(cid))));
   }
 
   @override
   Future<List<IpfsPinInfo>> listPins() async => _decodeListOf(
         'listPins',
-        _requiredResponse('listPins', _backend.listPins()),
+        _requiredResponse(
+            'listPins', await _inIsolate((abi) => abi.listPins())),
         _decodePin,
       );
 
   @override
   Future<List<IpfsPeerInfo>> swarmPeers() async => _decodeListOf(
         'swarmPeers',
-        _requiredResponse('swarmPeers', _backend.swarmPeers()),
+        _requiredResponse(
+            'swarmPeers', await _inIsolate((abi) => abi.swarmPeers())),
         _decodePeer,
       );
 
@@ -255,7 +269,8 @@ final class IpfsNodeFlutterNative extends IpfsNodePlatform {
   Future<void> swarmConnect(String multiaddr) async {
     _throwForStringError(
       'swarmConnect',
-      _requiredResponse('swarmConnect', _backend.swarmConnect(multiaddr)),
+      _requiredResponse('swarmConnect',
+          await _inIsolate((abi) => abi.swarmConnect(multiaddr))),
     );
   }
 
@@ -263,14 +278,15 @@ final class IpfsNodeFlutterNative extends IpfsNodePlatform {
   Future<void> swarmDisconnect(String peerId) async {
     _throwForStringError(
       'swarmDisconnect',
-      _requiredResponse('swarmDisconnect', _backend.swarmDisconnect(peerId)),
+      _requiredResponse('swarmDisconnect',
+          await _inIsolate((abi) => abi.swarmDisconnect(peerId))),
     );
   }
 
   @override
   Future<List<String>> bootstrapList() async {
-    final encoded =
-        _requiredResponse('bootstrapList', _backend.bootstrapList());
+    final encoded = _requiredResponse(
+        'bootstrapList', await _inIsolate((abi) => abi.bootstrapList()));
     final decoded = _decodeJson('bootstrapList', encoded);
     if (decoded is List) return List.unmodifiable(decoded.cast<String>());
     if (decoded is Map<String, dynamic>) {
@@ -290,7 +306,8 @@ final class IpfsNodeFlutterNative extends IpfsNodePlatform {
   Future<void> bootstrapAdd(String multiaddr) async {
     _throwForStringError(
       'bootstrapAdd',
-      _requiredResponse('bootstrapAdd', _backend.bootstrapAdd(multiaddr)),
+      _requiredResponse('bootstrapAdd',
+          await _inIsolate((abi) => abi.bootstrapAdd(multiaddr))),
     );
   }
 
@@ -298,7 +315,8 @@ final class IpfsNodeFlutterNative extends IpfsNodePlatform {
   Future<void> bootstrapRemove(String multiaddr) async {
     _throwForStringError(
       'bootstrapRemove',
-      _requiredResponse('bootstrapRemove', _backend.bootstrapRemove(multiaddr)),
+      _requiredResponse('bootstrapRemove',
+          await _inIsolate((abi) => abi.bootstrapRemove(multiaddr))),
     );
   }
 
@@ -306,7 +324,8 @@ final class IpfsNodeFlutterNative extends IpfsNodePlatform {
   Future<IpfsBitswapStats> bitswapStats() async {
     final map = _decodeObjectOrThrow(
       'bitswapStats',
-      _requiredResponse('bitswapStats', _backend.bitswapStats()),
+      _requiredResponse(
+          'bitswapStats', await _inIsolate((abi) => abi.bitswapStats())),
     );
     final blocksReceived = map['blocksReceived'];
     final dataReceived = map['dataReceived'];
@@ -341,7 +360,8 @@ final class IpfsNodeFlutterNative extends IpfsNodePlatform {
         'findProviders',
         _requiredResponse(
           'findProviders',
-          _backend.findProviders(cid, timeout.inMilliseconds),
+          await _inIsolate(
+              (abi) => abi.findProviders(cid, timeout.inMilliseconds)),
         ),
         _decodePeer,
       );
@@ -355,7 +375,7 @@ final class IpfsNodeFlutterNative extends IpfsNodePlatform {
       'findPeer',
       _requiredResponse(
         'findPeer',
-        _backend.findPeer(peerId, timeout.inMilliseconds),
+        await _inIsolate((abi) => abi.findPeer(peerId, timeout.inMilliseconds)),
       ),
     );
     return _decodePeer(map);
@@ -370,7 +390,7 @@ final class IpfsNodeFlutterNative extends IpfsNodePlatform {
       'publishName',
       _requiredResponse(
         'publishName',
-        _backend.publishName(cid, timeout.inMilliseconds),
+        await _inIsolate((abi) => abi.publishName(cid, timeout.inMilliseconds)),
       ),
     );
     final name = map['name'];
@@ -392,7 +412,8 @@ final class IpfsNodeFlutterNative extends IpfsNodePlatform {
       'resolveName',
       _requiredResponse(
         'resolveName',
-        _backend.resolveName(name, timeout.inMilliseconds),
+        await _inIsolate(
+            (abi) => abi.resolveName(name, timeout.inMilliseconds)),
       ),
     );
     final path = map['path'];
@@ -408,7 +429,8 @@ final class IpfsNodeFlutterNative extends IpfsNodePlatform {
   @override
   Future<List<IpfsKeyInfo>> listKeys() async => _decodeListOf(
         'listKeys',
-        _requiredResponse('listKeys', _backend.listKeys()),
+        _requiredResponse(
+            'listKeys', await _inIsolate((abi) => abi.listKeys())),
         _decodeKey,
       );
 
@@ -417,6 +439,25 @@ final class IpfsNodeFlutterNative extends IpfsNodePlatform {
       throw const NativeNodeInvalidHandleException(operation: 'node operation');
     }
     return _abi ??= _loadAbi(_libraryPath);
+  }
+
+  /// Runs a blocking FFI operation in a worker isolate so the UI isolate never
+  /// stalls while the native node performs slow network work (bootstrap,
+  /// Bitswap, DHT, IPNS).
+  Future<T> _inIsolate<T>(T Function(_FfiNativeNodeAbi abi) invoke) async {
+    return _runInIsolateWith(_backend, invoke);
+  }
+
+  Future<T> _runInIsolateWith<T>(
+    _FfiNativeNodeAbi abi,
+    T Function(_FfiNativeNodeAbi abi) invoke,
+  ) async {
+    final libraryPath = _libraryPath;
+    final handle = abi.handle;
+    return Isolate.run(
+      () =>
+          invoke(_FfiNativeNodeAbi(_openLibrary(libraryPath), handle: handle)),
+    );
   }
 }
 
@@ -451,16 +492,20 @@ List<String> _decodeStringList(
 _FfiNativeNodeAbi _loadAbi(String? libraryPath) {
   final artifact = libraryPath ?? _defaultArtifactName();
   try {
-    final library = libraryPath == null && Platform.isIOS
-        ? DynamicLibrary.process()
-        : DynamicLibrary.open(artifact);
-    return _FfiNativeNodeAbi(library);
+    return _FfiNativeNodeAbi(_openLibrary(libraryPath));
   } catch (error) {
     throw NativeNodeLoadException(
       artifact: artifact,
       message: 'Unable to load native IPFS node artifact: $error',
     );
   }
+}
+
+DynamicLibrary _openLibrary(String? libraryPath) {
+  if (libraryPath == null && Platform.isIOS) {
+    return DynamicLibrary.process();
+  }
+  return DynamicLibrary.open(libraryPath ?? _defaultArtifactName());
 }
 
 String _defaultArtifactName() => switch (Platform.operatingSystem) {
@@ -633,7 +678,10 @@ enum _NativeReturnCode {
 }
 
 final class _FfiNativeNodeAbi {
-  _FfiNativeNodeAbi(DynamicLibrary library)
+  /// [handle] supplies an existing native node handle (used by worker isolates
+  /// so blocking calls never stall the UI isolate); when omitted a new node
+  /// is created.
+  _FfiNativeNodeAbi(DynamicLibrary library, {int? handle})
       : _create = library
             .lookupFunction<_CreateNative, _CreateDart>('ipfs_node_create'),
         _start =
@@ -698,7 +746,7 @@ final class _FfiNativeNodeAbi {
             library.lookupFunction<_FreeStringNative, _FreeStringDart>(
           'ipfs_node_free_string',
         ) {
-    _handle = _create();
+    _handle = handle ?? _create();
     if (_handle == 0) {
       throw StateError('Native node creation returned an invalid handle.');
     }
@@ -729,6 +777,8 @@ final class _FfiNativeNodeAbi {
   final _FreeDart _free;
   final _FreeStringDart _freeString;
   late int _handle;
+
+  int get handle => _handle;
 
   _NativeReturnCode start(String request) {
     final value = request.toNativeUtf8().cast<Char>();

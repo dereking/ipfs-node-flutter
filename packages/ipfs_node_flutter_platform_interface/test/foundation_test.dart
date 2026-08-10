@@ -19,14 +19,10 @@ void main() {
       () async {
     final platform = IpfsNodePlatform.instance;
 
-    await expectLater(
-      platform.stop(),
-      throwsA(isA<UnimplementedError>().having(
-        (error) => error.message,
-        'message',
-        contains('stop'),
-      )),
-    );
+    // Stopping an unregistered platform is a safe no-op so teardown never
+    // crashes when no implementation was installed.
+    await platform.stop();
+
     await expectLater(
       platform.status(),
       throwsA(isA<UnimplementedError>().having(
