@@ -4,9 +4,13 @@ import { withBitswap } from '@helia/bitswap'
 import { ipns } from '@helia/ipns'
 import { withLibp2p } from '@helia/libp2p'
 import { unixfs } from '@helia/unixfs'
-import { circuitRelayTransport } from '@libp2p/circuit-relay-v2'
+import { autoNAT } from '@libp2p/autonat'
 import { bootstrap } from '@libp2p/bootstrap'
-import { identify } from '@libp2p/identify'
+import { circuitRelayTransport } from '@libp2p/circuit-relay-v2'
+import { dcutr } from '@libp2p/dcutr'
+import { identify, identifyPush } from '@libp2p/identify'
+import { kadDHT } from '@libp2p/kad-dht'
+import { ping } from '@libp2p/ping'
 import { webRTC } from '@libp2p/webrtc'
 import { webSockets } from '@libp2p/websockets'
 import { webTransport } from '@libp2p/webtransport'
@@ -115,7 +119,9 @@ class HeliaBrowserNode {
   #libp2p
   #bootstrap = []
   #capabilities = []
+  #blocksSent = 0
   #blocksReceived = 0
+  #dataSent = 0
   #dataReceived = 0
   #wants = new Set()
 
@@ -129,7 +135,7 @@ class HeliaBrowserNode {
     const peers = bootstrapPeers.length === 0 ? publicBootstrapPeers : bootstrapPeers
     this.#bootstrap = [...peers]
     const transports = [webSockets(), circuitRelayTransport()]
-    const capabilities = []
+    const capabilities = ['dhtRouting']
     if (typeof globalThis.RTCPeerConnection === 'function') {
       transports.push(webRTC())
       capabilities.push('webRtc')
@@ -149,7 +155,12 @@ class HeliaBrowserNode {
         transports,
         peerDiscovery: [bootstrap({ list: peers, timeout: 0, tagTTL: Infinity })],
         services: {
-          identify: identify()
+          autoNAT: autoNAT(),
+          dcutr: dcutr(),
+          dht: kadDHT({ clientMode: true }),
+          identify: identify(),
+          identifyPush: identifyPush(),
+          ping: ping()
         },
         connectionEncrypters: [noise()],
         streamMuxers: [yamux()]
@@ -193,7 +204,9 @@ class HeliaBrowserNode {
     this.#blockstore = undefined
     this.#bootstrap = []
     this.#capabilities = []
+    this.#blocksSent = 0
     this.#blocksReceived = 0
+    this.#dataSent = 0
     this.#dataReceived = 0
     this.#wants = new Set()
   }
@@ -401,7 +414,9 @@ class HeliaBrowserNode {
   bitswapStats () {
     this.#assertStarted()
     return {
+      blocksSent: this.#blocksSent,
       blocksReceived: this.#blocksReceived,
+      dataSent: this.#dataSent,
       dataReceived: this.#dataReceived,
       wantlist: this.#wants.size,
       messagesSent: 0,

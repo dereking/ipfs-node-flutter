@@ -207,17 +207,21 @@ final class IpfsPeerInfo {
   int get hashCode => Object.hash(id, Object.hashAll(addrs));
 }
 
-/// Aggregate bitswap client and network counters.
+/// Aggregate bitswap client and server counters.
 final class IpfsBitswapStats {
   const IpfsBitswapStats({
+    required this.blocksSent,
     required this.blocksReceived,
+    required this.dataSent,
     required this.dataReceived,
     required this.wantlist,
     required this.messagesSent,
     required this.messagesReceived,
   });
 
+  final int blocksSent;
   final int blocksReceived;
+  final int dataSent;
   final int dataReceived;
   final int wantlist;
   final int messagesSent;
@@ -226,7 +230,9 @@ final class IpfsBitswapStats {
   @override
   bool operator ==(Object other) =>
       other is IpfsBitswapStats &&
+      blocksSent == other.blocksSent &&
       blocksReceived == other.blocksReceived &&
+      dataSent == other.dataSent &&
       dataReceived == other.dataReceived &&
       wantlist == other.wantlist &&
       messagesSent == other.messagesSent &&
@@ -234,7 +240,9 @@ final class IpfsBitswapStats {
 
   @override
   int get hashCode => Object.hash(
+        blocksSent,
         blocksReceived,
+        dataSent,
         dataReceived,
         wantlist,
         messagesSent,
@@ -267,6 +275,10 @@ final class NodeStatus {
     this.listenAddrs = const [],
     this.connectedPeers = const [],
     this.bootstrapErrors = const [],
+    this.relayAddrs = const [],
+    this.relayReady = false,
+    this.routingTableSize = 0,
+    this.dhtReady = false,
   });
 
   const NodeStatus.running({
@@ -275,6 +287,10 @@ final class NodeStatus {
     List<String> listenAddrs = const [],
     List<String> connectedPeers = const [],
     List<String> bootstrapErrors = const [],
+    List<String> relayAddrs = const [],
+    bool relayReady = false,
+    int routingTableSize = 0,
+    bool dhtReady = false,
   }) : this(
           lifecycle: NodeLifecycle.running,
           safeDiagnostic: safeDiagnostic,
@@ -282,6 +298,10 @@ final class NodeStatus {
           listenAddrs: listenAddrs,
           connectedPeers: connectedPeers,
           bootstrapErrors: bootstrapErrors,
+          relayAddrs: relayAddrs,
+          relayReady: relayReady,
+          routingTableSize: routingTableSize,
+          dhtReady: dhtReady,
         );
 
   final NodeLifecycle lifecycle;
@@ -291,6 +311,21 @@ final class NodeStatus {
   final List<String> connectedPeers;
   final List<String> bootstrapErrors;
 
+  /// Live circuit-relay addresses for this node (only meaningful on native
+  /// backends; web browsers are reached through their own transports).
+  final List<String> relayAddrs;
+
+  /// Whether at least one circuit-relay reservation is active, so peers can
+  /// dial this node through NAT.
+  final bool relayReady;
+
+  /// Number of peers in the DHT routing table.
+  final int routingTableSize;
+
+  /// Whether the DHT routing table has peers, i.e. lookups and provider
+  /// announcements can reach the network.
+  final bool dhtReady;
+
   @override
   bool operator ==(Object other) =>
       other is NodeStatus &&
@@ -299,7 +334,11 @@ final class NodeStatus {
       peerId == other.peerId &&
       _listsEqual(listenAddrs, other.listenAddrs) &&
       _listsEqual(connectedPeers, other.connectedPeers) &&
-      _listsEqual(bootstrapErrors, other.bootstrapErrors);
+      _listsEqual(bootstrapErrors, other.bootstrapErrors) &&
+      _listsEqual(relayAddrs, other.relayAddrs) &&
+      relayReady == other.relayReady &&
+      routingTableSize == other.routingTableSize &&
+      dhtReady == other.dhtReady;
 
   @override
   int get hashCode => Object.hash(
@@ -309,6 +348,10 @@ final class NodeStatus {
         Object.hashAll(listenAddrs),
         Object.hashAll(connectedPeers),
         Object.hashAll(bootstrapErrors),
+        Object.hashAll(relayAddrs),
+        relayReady,
+        routingTableSize,
+        dhtReady,
       );
 }
 

@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/ipfs/boxo/autoconf"
-	bsclient "github.com/ipfs/boxo/bitswap/client"
+	"github.com/ipfs/boxo/bitswap"
 	bsnet "github.com/ipfs/boxo/bitswap/network/bsnet"
 	bsnetiface "github.com/ipfs/boxo/bitswap/network"
 	"github.com/ipfs/boxo/blockstore"
@@ -64,12 +64,16 @@ const (
 
 // Status reports the lifecycle and an optional diagnostic safe for callers.
 type Status struct {
-	Lifecycle       Lifecycle `json:"lifecycle"`
-	SafeDiagnostic  string    `json:"safeDiagnostic,omitempty"`
-	PeerID          string    `json:"peerId,omitempty"`
-	ListenAddrs     []string  `json:"listenAddrs,omitempty"`
-	ConnectedPeers  []string  `json:"connectedPeers,omitempty"`
-	BootstrapErrors []string  `json:"bootstrapErrors,omitempty"`
+	Lifecycle        Lifecycle `json:"lifecycle"`
+	SafeDiagnostic   string    `json:"safeDiagnostic,omitempty"`
+	PeerID           string    `json:"peerId,omitempty"`
+	ListenAddrs      []string  `json:"listenAddrs,omitempty"`
+	ConnectedPeers   []string  `json:"connectedPeers,omitempty"`
+	BootstrapErrors  []string  `json:"bootstrapErrors,omitempty"`
+	RelayAddrs       []string  `json:"relayAddrs,omitempty"`
+	RelayReady       bool      `json:"relayReady"`
+	RoutingTableSize int       `json:"routingTableSize"`
+	DhtReady         bool      `json:"dhtReady"`
 }
 
 // PinType classifies how a content root is pinned.
@@ -96,9 +100,11 @@ type PeerInfo struct {
 	Addrs []string `json:"addrs"`
 }
 
-// BitswapStats is an aggregate of the bitswap client and network counters.
+// BitswapStats is an aggregate of the bitswap client and server counters.
 type BitswapStats struct {
+	BlocksSent       uint64   `json:"blocksSent"`
 	BlocksReceived   uint64   `json:"blocksReceived"`
+	DataSent         uint64   `json:"dataSent"`
 	DataReceived     uint64   `json:"dataReceived"`
 	Wantlist         []string `json:"wantlist"`
 	MessagesSent     uint64   `json:"messagesSent"`
@@ -124,13 +130,15 @@ type PrivateConfig struct {
 // Core owns one native node lifecycle state machine.
 type Core struct {
 	mu        sync.Mutex
+	ctx       context.Context
 	status    Status
 	host      host.Host
 	dht       *dht.IpfsDHT
-	bitswap   *bsclient.Client
+	bitswap   *bitswap.Bitswap
 	network   bsnetiface.BitSwapNetwork
 	store     blockstore.Blockstore
 	pins      map[string]PinInfo
+	provided  map[string]struct{}
 	bootstrap []string
 	key       crypto.PrivKey
 	namesys   namesys.NameSystem
@@ -208,7 +216,9 @@ func (core *Core) Stop() error {
 		}
 		core.store = nil
 		core.network = nil
+		core.ctx = nil
 		core.pins = make(map[string]PinInfo)
+		core.provided = nil
 		core.bootstrap = nil
 		core.key = nil
 		core.namesys = nil
@@ -219,7 +229,8 @@ func (core *Core) Stop() error {
 	}
 }
 
-// Status returns a snapshot of the current node state.
+// Status returns a snapshot of the current node state, including live DHT and
+// relay readiness so callers can surface when the node is reachable.
 func (core *Core) Status() Status {
 	core.mu.Lock()
 	defer core.mu.Unlock()
@@ -227,7 +238,31 @@ func (core *Core) Status() Status {
 	status.ListenAddrs = append([]string(nil), core.status.ListenAddrs...)
 	status.ConnectedPeers = append([]string(nil), core.status.ConnectedPeers...)
 	status.BootstrapErrors = append([]string(nil), core.status.BootstrapErrors...)
+	if core.host != nil {
+		for _, addr := range core.host.Addrs() {
+			if isRelayAddr(addr) {
+				status.RelayAddrs = append(status.RelayAddrs, addr.String())
+			}
+		}
+	}
+	status.RelayReady = len(status.RelayAddrs) > 0
+	if core.dht != nil {
+		status.RoutingTableSize = core.dht.RoutingTable().Size()
+		status.DhtReady = status.RoutingTableSize > 0
+	}
 	return status
+}
+
+func isRelayAddr(addr ma.Multiaddr) bool {
+	relay := false
+	ma.ForEach(addr, func(c ma.Component) bool {
+		if c.Protocol().Code == ma.P_CIRCUIT {
+			relay = true
+			return false
+		}
+		return true
+	})
+	return relay
 }
 
 // Capabilities returns the native transports and routing protocol initialized
@@ -281,7 +316,7 @@ func (core *Core) startPublic(config PublicConfig) error {
 	}
 	store := blockstore.NewBlockstore(dssync.MutexWrap(datastore.NewMapDatastore()))
 	network := bsnet.NewFromIpfsHost(h)
-	client := bsclient.New(ctx, network, kad, store)
+	client := bitswap.New(ctx, network, kad, store)
 	network.Start(client)
 	ns, err := namesys.NewNameSystem(kad)
 	if err != nil {
@@ -293,9 +328,11 @@ func (core *Core) startPublic(config PublicConfig) error {
 	}
 
 	core.host, core.dht, core.bitswap, core.cancel = h, kad, client, cancel
+	core.ctx = ctx
 	core.network = network
 	core.store = store
 	core.pins = make(map[string]PinInfo)
+	core.provided = make(map[string]struct{})
 	core.bootstrap = append([]string(nil), config.BootstrapPeers...)
 	core.key = key
 	core.namesys = ns
@@ -327,6 +364,7 @@ func (core *Core) startPublic(config PublicConfig) error {
 		core.host, core.dht, core.bitswap, core.cancel = nil, nil, nil, nil
 		return err
 	}
+	go core.reprovideLoop(ctx)
 	return nil
 }
 
@@ -351,7 +389,7 @@ func (core *Core) GetBlock(ctx context.Context, rawCID string) ([]byte, error) {
 	if !ipld.IsNotFound(err) {
 		return nil, err
 	}
-	block, err = client.GetBlock(ctx, parsed)
+	block, err = client.Client.GetBlock(ctx, parsed)
 	if err != nil {
 		return nil, err
 	}
@@ -448,7 +486,7 @@ func (core *Core) Pin(ctx context.Context, rawCID string) error {
 		return err
 	}
 	if !has {
-		block, err := client.GetBlock(ctx, parsed)
+		block, err := client.Client.GetBlock(ctx, parsed)
 		if err != nil {
 			return err
 		}
@@ -467,23 +505,86 @@ func (core *Core) Pin(ctx context.Context, rawCID string) error {
 	return nil
 }
 
-// provide best-effort announces content to the DHT so other nodes can discover
-// this node as a provider and fetch the block over Bitswap. Provider records
-// are valid for ~48h, matching IPFS semantics.
+// reprovideInterval is how often the node re-announces its local content roots.
+// Provider records expire after ~48h, so re-provision keeps long-running nodes
+// discoverable, matching Kubo's periodic reprovide behaviour.
+const reprovideInterval = 6 * time.Hour
+
+// provide announces content to the DHT so other nodes can discover this node
+// as a provider and fetch the block over Bitswap. The CID is tracked so it can
+// be re-announced by [Core.reprovideLoop], and the initial announcement retries
+// until the DHT is warm enough to accept it (the routing table is empty right
+// after start). The announcement runs in the background because the DHT may
+// take tens of seconds to bootstrap.
 func (core *Core) provide(ctx context.Context, rawCID string) {
 	parsed, err := cid.Parse(rawCID)
 	if err != nil {
 		return
 	}
 	core.mu.Lock()
+	if core.provided == nil {
+		core.provided = make(map[string]struct{})
+	}
+	core.provided[parsed.String()] = struct{}{}
 	kad := core.dht
+	nodeCtx := core.ctx
 	core.mu.Unlock()
-	if kad == nil {
+	if kad == nil || nodeCtx == nil {
 		return
 	}
-	pctx, cancel := context.WithTimeout(ctx, 30*time.Second)
-	defer cancel()
-	_ = kad.Provide(pctx, parsed, true)
+	go core.provideUntil(nodeCtx, kad, parsed)
+}
+
+// provideUntil repeatedly announces one CID until the network accepts it or the
+// node stops. Provider records carry the node's current addresses, so a record
+// is only useful once auto-relay and the DHT are ready.
+func (core *Core) provideUntil(ctx context.Context, kad *dht.IpfsDHT, parsed cid.Cid) {
+	for attempt := 0; ; attempt++ {
+		pctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+		err := kad.Provide(pctx, parsed, true)
+		cancel()
+		if err == nil {
+			return
+		}
+		delay := 5 * time.Second
+		if attempt > 0 {
+			delay = 30 * time.Second
+		}
+		select {
+		case <-ctx.Done():
+			return
+		case <-time.After(delay):
+		}
+	}
+}
+
+// reprovideLoop periodically re-announces every local content root so provider
+// records do not expire while the node stays online.
+func (core *Core) reprovideLoop(ctx context.Context) {
+	ticker := time.NewTicker(reprovideInterval)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			core.mu.Lock()
+			kad := core.dht
+			roots := make([]cid.Cid, 0, len(core.provided))
+			for raw := range core.provided {
+				if parsed, err := cid.Parse(raw); err == nil {
+					roots = append(roots, parsed)
+				}
+			}
+			core.mu.Unlock()
+			if kad == nil {
+				continue
+			}
+			for _, parsed := range roots {
+				go core.provideUntil(ctx, kad, parsed)
+			}
+		}
+	}
 }
 
 // Unpin removes a content root from the local pin set.
@@ -667,7 +768,9 @@ func (core *Core) BitswapStats() (BitswapStats, error) {
 		wantlist = append(wantlist, c.String())
 	}
 	return BitswapStats{
+		BlocksSent:       clientStat.BlocksSent,
 		BlocksReceived:   clientStat.BlocksReceived,
+		DataSent:         clientStat.DataSent,
 		DataReceived:     clientStat.DataReceived,
 		Wantlist:         wantlist,
 		MessagesSent:     networkStat.MessagesSent,

@@ -40,9 +40,11 @@ require (
 	github.com/ipfs/bbloom v0.1.0 // indirect
 	github.com/ipfs/go-cidutil v0.1.2 // indirect
 	github.com/ipfs/go-dsqueue v0.2.0 // indirect
+	github.com/ipfs/go-ipfs-pq v0.0.4 // indirect
 	github.com/ipfs/go-ipld-legacy v0.3.0 // indirect
 	github.com/ipfs/go-log/v2 v2.9.2 // indirect
 	github.com/ipfs/go-metrics-interface v0.3.0 // indirect
+	github.com/ipfs/go-peertaskqueue v0.8.3 // indirect
 	github.com/ipld/go-codec-dagpb v1.7.0 // indirect
 	github.com/ipld/go-ipld-prime v0.24.0 // indirect
 	github.com/jackpal/go-nat-pmp v1.0.2 // indirect

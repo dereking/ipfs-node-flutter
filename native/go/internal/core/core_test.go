@@ -5,11 +5,14 @@ import (
 	"errors"
 	"os"
 	"reflect"
+	"strings"
 	"sync"
 	"testing"
 	"time"
 
+	"github.com/ipfs/go-cid"
 	dht "github.com/libp2p/go-libp2p-kad-dht"
+	"github.com/libp2p/go-libp2p/core/peer"
 )
 
 func TestStartStopIsIdempotent(t *testing.T) {
@@ -378,5 +381,86 @@ func TestStatusAndCapabilitiesAreSafeDuringConcurrentLifecycleCalls(t *testing.T
 
 	if got := node.Capabilities(); !reflect.DeepEqual(got, []string{"inboundListen", "tcp", "quic", "dhtRouting"}) {
 		t.Fatalf("capabilities = %v", got)
+	}
+}
+
+func TestDiagnosePublicReachability(t *testing.T) {
+	if os.Getenv("IPFS_PUBLIC_INTEGRATION") != "1" {
+		t.Skip("set IPFS_PUBLIC_INTEGRATION=1")
+	}
+	node := New()
+	if err := node.Start(PublicConfig{BootstrapPeers: DefaultPublicBootstrapPeers()}); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = node.Stop() })
+	ctx := context.Background()
+
+	// Give AutoRelay + DHT time to settle.
+	time.Sleep(30 * time.Second)
+
+	status := node.Status()
+	t.Logf("connected peers: %d", len(status.ConnectedPeers))
+	hasRelay := false
+	for _, addr := range status.ListenAddrs {
+		if strings.Contains(addr, "p2p-circuit") {
+			hasRelay = true
+		}
+	}
+	t.Logf("hasRelayAddress: %v", hasRelay)
+	t.Logf("listenAddrs: %v", status.ListenAddrs)
+
+	rawCID, err := node.AddBytes(ctx, []byte("diagnose content"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("added cid: %s", rawCID)
+
+	time.Sleep(10 * time.Second)
+
+	parsed, err := cid.Parse(rawCID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	providers, err := node.dht.FindProviders(ctx, parsed)
+	t.Logf("findProviders err=%v count=%d", err, len(providers))
+	for _, p := range providers {
+		t.Logf("  provider: %s addrs=%v", p.ID, p.Addrs)
+	}
+}
+
+func TestTwoNodesShareContentDirectly(t *testing.T) {
+	nodeA := New()
+	if err := nodeA.Start(PublicConfig{}); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = nodeA.Stop() })
+	nodeB := New()
+	if err := nodeB.Start(PublicConfig{}); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = nodeB.Stop() })
+	ctx := context.Background()
+
+	// Dial node A from node B over a direct TCP address.
+	info, err := peer.AddrInfoFromString(nodeA.Status().ListenAddrs[0])
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := nodeB.host.Connect(ctx, *info); err != nil {
+		t.Fatal(err)
+	}
+
+	rawCID, err := nodeA.AddBytes(ctx, []byte("direct share"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	time.Sleep(2 * time.Second)
+
+	data, err := nodeB.GetBlock(ctx, rawCID)
+	if err != nil {
+		t.Fatalf("node B could not fetch from node A: %v", err)
+	}
+	if string(data) != "direct share" {
+		t.Fatalf("retrieved %q", data)
 	}
 }

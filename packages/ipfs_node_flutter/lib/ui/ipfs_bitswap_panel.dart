@@ -77,6 +77,8 @@ class _IpfsBitswapPanelState extends State<IpfsBitswapPanel> {
                 style: TextStyle(color: theme.colorScheme.error),
               )
             else if (stats != null) ...[
+              _StatRow(label: '发送块', value: '${stats.blocksSent}'),
+              _StatRow(label: '发送数据', value: _formatBytes(stats.dataSent)),
               _StatRow(label: '收到块', value: '${stats.blocksReceived}'),
               _StatRow(label: '收到数据', value: _formatBytes(stats.dataReceived)),
               _StatRow(label: 'Wantlist', value: '${stats.wantlist}'),

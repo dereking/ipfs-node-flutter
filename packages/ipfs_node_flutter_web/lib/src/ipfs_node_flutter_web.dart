@@ -73,7 +73,12 @@ final class IpfsNodeFlutterWeb extends IpfsNodePlatform {
   }
 
   @override
-  Future<NodeStatus> status() async => NodeStatus(lifecycle: _lifecycle);
+  Future<NodeStatus> status() async => NodeStatus(
+        lifecycle: _lifecycle,
+        // A started browser node always runs a client-mode DHT over the Amino
+        // bootstrap peers; the native backend reports live routing-table size.
+        dhtReady: _lifecycle == NodeLifecycle.running,
+      );
 
   @override
   Future<CapabilitySet> capabilities() async =>

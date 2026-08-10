@@ -147,6 +147,12 @@ final class IpfsNodeFlutterNative extends IpfsNodePlatform {
       listenAddrs: _decodeStringList('status', map, 'listenAddrs'),
       connectedPeers: _decodeStringList('status', map, 'connectedPeers'),
       bootstrapErrors: _decodeStringList('status', map, 'bootstrapErrors'),
+      relayAddrs: _decodeStringList('status', map, 'relayAddrs'),
+      relayReady: map['relayReady'] == true,
+      routingTableSize: map['routingTableSize'] is int
+          ? map['routingTableSize'] as int
+          : 0,
+      dhtReady: map['dhtReady'] == true,
     );
   }
 
@@ -327,12 +333,16 @@ final class IpfsNodeFlutterNative extends IpfsNodePlatform {
       _requiredResponse(
           'bitswapStats', await _inIsolate((abi) => abi.bitswapStats())),
     );
+    final blocksSent = map['blocksSent'];
     final blocksReceived = map['blocksReceived'];
+    final dataSent = map['dataSent'];
     final dataReceived = map['dataReceived'];
     final wantlist = map['wantlist'];
     final messagesSent = map['messagesSent'];
     final messagesReceived = map['messagesReceived'];
-    if (blocksReceived is! int ||
+    if (blocksSent is! int ||
+        blocksReceived is! int ||
+        dataSent is! int ||
         dataReceived is! int ||
         wantlist is! List ||
         messagesSent is! int ||
@@ -343,7 +353,9 @@ final class IpfsNodeFlutterNative extends IpfsNodePlatform {
       );
     }
     return IpfsBitswapStats(
+      blocksSent: blocksSent,
       blocksReceived: blocksReceived,
+      dataSent: dataSent,
       dataReceived: dataReceived,
       wantlist: wantlist.length,
       messagesSent: messagesSent,

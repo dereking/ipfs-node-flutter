@@ -258,12 +258,16 @@ final class _JavascriptHeliaBridge implements WebNodeBridge {
     final stats = await _callback<JSObject?>((resolve, reject) =>
         _heliaBitswapStats(_requireNode(), resolve, reject));
     final map = stats?.dartify() as Map<dynamic, dynamic>? ?? const {};
+    final blocksSent = map['blocksSent'];
     final blocksReceived = map['blocksReceived'];
+    final dataSent = map['dataSent'];
     final dataReceived = map['dataReceived'];
     final wantlist = map['wantlist'];
     final messagesSent = map['messagesSent'];
     final messagesReceived = map['messagesReceived'];
-    if (blocksReceived is! int ||
+    if (blocksSent is! int ||
+        blocksReceived is! int ||
+        dataSent is! int ||
         dataReceived is! int ||
         wantlist is! int ||
         messagesSent is! int ||
@@ -271,7 +275,9 @@ final class _JavascriptHeliaBridge implements WebNodeBridge {
       throw StateError('Helia returned invalid bitswap stats.');
     }
     return IpfsBitswapStats(
+      blocksSent: blocksSent,
       blocksReceived: blocksReceived,
+      dataSent: dataSent,
       dataReceived: dataReceived,
       wantlist: wantlist,
       messagesSent: messagesSent,

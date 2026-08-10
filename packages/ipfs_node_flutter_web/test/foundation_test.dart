@@ -199,7 +199,9 @@ final class _FakeWebNodeBridge implements WebNodeBridge {
 
   @override
   Future<IpfsBitswapStats> bitswapStats() async => const IpfsBitswapStats(
+        blocksSent: 4,
         blocksReceived: 3,
+        dataSent: 11,
         dataReceived: 10,
         wantlist: 1,
         messagesSent: 2,

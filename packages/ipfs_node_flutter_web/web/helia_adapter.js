@@ -105337,7 +105337,9 @@ ${indent}[Error list was empty]`;
     #libp2p;
     #bootstrap = [];
     #capabilities = [];
+    #blocksSent = 0;
     #blocksReceived = 0;
+    #dataSent = 0;
     #dataReceived = 0;
     #wants = /* @__PURE__ */ new Set();
     async start(bootstrapPeers = []) {
@@ -105348,7 +105350,7 @@ ${indent}[Error list was empty]`;
       const peers = bootstrapPeers.length === 0 ? publicBootstrapPeers : bootstrapPeers;
       this.#bootstrap = [...peers];
       const transports = [webSockets(), circuitRelayTransport()];
-      const capabilities2 = [];
+      const capabilities2 = ["dhtRouting"];
       if (typeof globalThis.RTCPeerConnection === "function") {
         transports.push(webRTC());
         capabilities2.push("webRtc");
@@ -105367,7 +105369,12 @@ ${indent}[Error list was empty]`;
           transports,
           peerDiscovery: [bootstrap({ list: peers, timeout: 0, tagTTL: Infinity })],
           services: {
-            identify: identify()
+            autoNAT: autoNAT(),
+            dcutr: dcutr(),
+            dht: kadDHT({ clientMode: true }),
+            identify: identify(),
+            identifyPush: identifyPush(),
+            ping: ping()
           },
           connectionEncrypters: [noise()],
           streamMuxers: [yamux()]
@@ -105405,7 +105412,9 @@ ${indent}[Error list was empty]`;
       this.#blockstore = void 0;
       this.#bootstrap = [];
       this.#capabilities = [];
+      this.#blocksSent = 0;
       this.#blocksReceived = 0;
+      this.#dataSent = 0;
       this.#dataReceived = 0;
       this.#wants = /* @__PURE__ */ new Set();
     }
@@ -105595,7 +105604,9 @@ ${indent}[Error list was empty]`;
     bitswapStats() {
       this.#assertStarted();
       return {
+        blocksSent: this.#blocksSent,
         blocksReceived: this.#blocksReceived,
+        dataSent: this.#dataSent,
         dataReceived: this.#dataReceived,
         wantlist: this.#wants.size,
         messagesSent: 0,
