@@ -6,6 +6,9 @@ import 'package:ipfs_node_example/main.dart';
 void main() {
   testWidgets('shows the IPFS feature lab with test and feature tabs',
       (tester) async {
+    await tester.binding.setSurfaceSize(const Size(800, 3000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
     await tester.pumpWidget(
       const MaterialApp(home: IpfsFeatureLabPage(autoStart: false)),
     );
@@ -27,5 +30,13 @@ void main() {
     expect(find.text('按 CID 取回内容'), findsOneWidget);
     expect(find.text('启动'), findsOneWidget);
     expect(find.text('获取'), findsOneWidget);
+    expect(find.text('添加内容'), findsOneWidget);
+    expect(find.text('固定内容'), findsOneWidget);
+    expect(find.text('固定列表'), findsOneWidget);
+    expect(find.text('Swarm 连接'), findsOneWidget);
+    expect(find.text('Bootstrap 节点'), findsOneWidget);
+    expect(find.text('Bitswap 统计'), findsOneWidget);
+    expect(find.text('DHT Providers'), findsOneWidget);
+    expect(find.text('IPNS'), findsOneWidget);
   });
 }

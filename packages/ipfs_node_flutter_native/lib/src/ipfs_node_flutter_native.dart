@@ -192,6 +192,226 @@ final class IpfsNodeFlutterNative extends IpfsNodePlatform {
     }
   }
 
+  @override
+  Future<IpfsAddResult> addBytes(Uint8List bytes) async {
+    final pointer = calloc<Uint8>(bytes.length);
+    pointer.asTypedList(bytes.length).setAll(0, bytes);
+    try {
+      final encoded = _requiredResponse(
+        'addBytes',
+        _backend.addBytes(pointer.cast<Void>(), bytes.length),
+      );
+      final map = _decodeObject('addBytes', encoded);
+      final error = map['error'];
+      if (error is String && error.isNotEmpty) {
+        throw NativeNodeRequestException(operation: 'addBytes', message: error);
+      }
+      final cid = map['cid'];
+      if (cid is! String || cid.isEmpty) {
+        throw const NativeNodeProtocolException(
+          operation: 'addBytes',
+          message: 'Native node response did not contain a content root CID.',
+        );
+      }
+      final added = map['bytes'];
+      if (added is! int) {
+        throw const NativeNodeProtocolException(
+          operation: 'addBytes',
+          message: 'Native node response did not contain the byte count.',
+        );
+      }
+      return IpfsAddResult(cid: cid, bytes: added);
+    } finally {
+      calloc.free(pointer);
+    }
+  }
+
+  @override
+  Future<void> pin(String cid) async {
+    _throwForStringError('pin', _requiredResponse('pin', _backend.pin(cid)));
+  }
+
+  @override
+  Future<void> unpin(String cid) async {
+    _throwForStringError(
+        'unpin', _requiredResponse('unpin', _backend.unpin(cid)));
+  }
+
+  @override
+  Future<List<IpfsPinInfo>> listPins() async => _decodeListOf(
+        'listPins',
+        _requiredResponse('listPins', _backend.listPins()),
+        _decodePin,
+      );
+
+  @override
+  Future<List<IpfsPeerInfo>> swarmPeers() async => _decodeListOf(
+        'swarmPeers',
+        _requiredResponse('swarmPeers', _backend.swarmPeers()),
+        _decodePeer,
+      );
+
+  @override
+  Future<void> swarmConnect(String multiaddr) async {
+    _throwForStringError(
+      'swarmConnect',
+      _requiredResponse('swarmConnect', _backend.swarmConnect(multiaddr)),
+    );
+  }
+
+  @override
+  Future<void> swarmDisconnect(String peerId) async {
+    _throwForStringError(
+      'swarmDisconnect',
+      _requiredResponse('swarmDisconnect', _backend.swarmDisconnect(peerId)),
+    );
+  }
+
+  @override
+  Future<List<String>> bootstrapList() async {
+    final encoded =
+        _requiredResponse('bootstrapList', _backend.bootstrapList());
+    final decoded = _decodeJson('bootstrapList', encoded);
+    if (decoded is List) return List.unmodifiable(decoded.cast<String>());
+    if (decoded is Map<String, dynamic>) {
+      final error = decoded['error'];
+      if (error is String && error.isNotEmpty) {
+        throw NativeNodeRequestException(
+            operation: 'bootstrapList', message: error);
+      }
+    }
+    throw const NativeNodeProtocolException(
+      operation: 'bootstrapList',
+      message: 'Native node response was not a bootstrap list.',
+    );
+  }
+
+  @override
+  Future<void> bootstrapAdd(String multiaddr) async {
+    _throwForStringError(
+      'bootstrapAdd',
+      _requiredResponse('bootstrapAdd', _backend.bootstrapAdd(multiaddr)),
+    );
+  }
+
+  @override
+  Future<void> bootstrapRemove(String multiaddr) async {
+    _throwForStringError(
+      'bootstrapRemove',
+      _requiredResponse('bootstrapRemove', _backend.bootstrapRemove(multiaddr)),
+    );
+  }
+
+  @override
+  Future<IpfsBitswapStats> bitswapStats() async {
+    final map = _decodeObjectOrThrow(
+      'bitswapStats',
+      _requiredResponse('bitswapStats', _backend.bitswapStats()),
+    );
+    final blocksReceived = map['blocksReceived'];
+    final dataReceived = map['dataReceived'];
+    final wantlist = map['wantlist'];
+    final messagesSent = map['messagesSent'];
+    final messagesReceived = map['messagesReceived'];
+    if (blocksReceived is! int ||
+        dataReceived is! int ||
+        wantlist is! List ||
+        messagesSent is! int ||
+        messagesReceived is! int) {
+      throw const NativeNodeProtocolException(
+        operation: 'bitswapStats',
+        message: 'Native node response contained invalid bitswap stats.',
+      );
+    }
+    return IpfsBitswapStats(
+      blocksReceived: blocksReceived,
+      dataReceived: dataReceived,
+      wantlist: wantlist.length,
+      messagesSent: messagesSent,
+      messagesReceived: messagesReceived,
+    );
+  }
+
+  @override
+  Future<List<IpfsPeerInfo>> findProviders(
+    String cid, {
+    Duration timeout = const Duration(seconds: 30),
+  }) async =>
+      _decodeListOf(
+        'findProviders',
+        _requiredResponse(
+          'findProviders',
+          _backend.findProviders(cid, timeout.inMilliseconds),
+        ),
+        _decodePeer,
+      );
+
+  @override
+  Future<IpfsPeerInfo> findPeer(
+    String peerId, {
+    Duration timeout = const Duration(seconds: 30),
+  }) async {
+    final map = _decodeObjectOrThrow(
+      'findPeer',
+      _requiredResponse(
+        'findPeer',
+        _backend.findPeer(peerId, timeout.inMilliseconds),
+      ),
+    );
+    return _decodePeer(map);
+  }
+
+  @override
+  Future<String> publishName(
+    String cid, {
+    Duration timeout = const Duration(seconds: 60),
+  }) async {
+    final map = _decodeObjectOrThrow(
+      'publishName',
+      _requiredResponse(
+        'publishName',
+        _backend.publishName(cid, timeout.inMilliseconds),
+      ),
+    );
+    final name = map['name'];
+    if (name is! String || name.isEmpty) {
+      throw const NativeNodeProtocolException(
+        operation: 'publishName',
+        message: 'Native node response did not contain a name.',
+      );
+    }
+    return name;
+  }
+
+  @override
+  Future<String> resolveName(
+    String name, {
+    Duration timeout = const Duration(seconds: 60),
+  }) async {
+    final map = _decodeObjectOrThrow(
+      'resolveName',
+      _requiredResponse(
+        'resolveName',
+        _backend.resolveName(name, timeout.inMilliseconds),
+      ),
+    );
+    final path = map['path'];
+    if (path is! String || path.isEmpty) {
+      throw const NativeNodeProtocolException(
+        operation: 'resolveName',
+        message: 'Native node response did not contain a path.',
+      );
+    }
+    return path;
+  }
+
+  @override
+  Future<List<IpfsKeyInfo>> listKeys() async => _decodeListOf(
+        'listKeys',
+        _requiredResponse('listKeys', _backend.listKeys()),
+        _decodeKey,
+      );
+
   _FfiNativeNodeAbi get _backend {
     if (_disposed) {
       throw const NativeNodeInvalidHandleException(operation: 'node operation');
@@ -298,6 +518,102 @@ void _throwForError(String operation, _NativeReturnCode code) {
   }
 }
 
+void _throwForStringError(String operation, String encoded) {
+  final map = _decodeObject(operation, encoded);
+  final error = map['error'];
+  if (error is String && error.isNotEmpty) {
+    throw NativeNodeRequestException(operation: operation, message: error);
+  }
+}
+
+IpfsPinInfo _decodePin(Map<dynamic, dynamic> map) {
+  final cid = map['cid'];
+  final type = map['type'];
+  if (cid is! String || cid.isEmpty || type is! String) {
+    throw const NativeNodeProtocolException(
+      operation: 'listPins',
+      message: 'Native node response contained an invalid pin entry.',
+    );
+  }
+  final pinType = switch (type) {
+    'direct' => IpfsPinType.direct,
+    'recursive' => IpfsPinType.recursive,
+    _ => throw const NativeNodeProtocolException(
+        operation: 'listPins',
+        message: 'Native node response contained an unknown pin type.',
+      ),
+  };
+  final rawPinnedAt = map['pinnedAt'];
+  return IpfsPinInfo(
+    cid: cid,
+    type: pinType,
+    pinnedAt: rawPinnedAt is String ? DateTime.tryParse(rawPinnedAt) : null,
+  );
+}
+
+IpfsPeerInfo _decodePeer(Map<dynamic, dynamic> map) {
+  final id = map['id'];
+  final rawAddrs = map['addrs'];
+  if (id is! String || id.isEmpty || rawAddrs is! List) {
+    throw const NativeNodeProtocolException(
+      operation: 'peer',
+      message: 'Native node response contained an invalid peer entry.',
+    );
+  }
+  return IpfsPeerInfo(
+      id: id, addrs: List.unmodifiable(rawAddrs.cast<String>()));
+}
+
+IpfsKeyInfo _decodeKey(Map<dynamic, dynamic> map) {
+  final name = map['name'];
+  final peerId = map['peerId'];
+  if (name is! String || name.isEmpty || peerId is! String || peerId.isEmpty) {
+    throw const NativeNodeProtocolException(
+      operation: 'key',
+      message: 'Native node response contained an invalid key entry.',
+    );
+  }
+  return IpfsKeyInfo(name: name, peerId: peerId);
+}
+
+List<T> _decodeListOf<T>(
+  String operation,
+  String encoded,
+  T Function(Map<dynamic, dynamic>) decode,
+) {
+  final decoded = _decodeJson(operation, encoded);
+  if (decoded is List) {
+    return decoded
+        .map((value) => decode((value as Map).cast<dynamic, dynamic>()))
+        .toList(growable: false);
+  }
+  if (decoded is Map<String, dynamic>) {
+    final error = decoded['error'];
+    if (error is String && error.isNotEmpty) {
+      throw NativeNodeRequestException(operation: operation, message: error);
+    }
+  }
+  throw NativeNodeProtocolException(
+    operation: operation,
+    message: 'Native node response was not a list.',
+  );
+}
+
+Map<String, dynamic> _decodeObjectOrThrow(String operation, String encoded) {
+  final decoded = _decodeJson(operation, encoded);
+  if (decoded is Map<String, dynamic>) {
+    final error = decoded['error'];
+    if (error is String && error.isNotEmpty) {
+      throw NativeNodeRequestException(operation: operation, message: error);
+    }
+    return decoded;
+  }
+  throw NativeNodeProtocolException(
+    operation: operation,
+    message: 'Native node response was not an object.',
+  );
+}
+
 enum _NativeReturnCode {
   ok(0),
   invalidHandle(1),
@@ -332,6 +648,50 @@ final class _FfiNativeNodeAbi {
         _getBlock = library.lookupFunction<_GetBlockNative, _GetBlockDart>(
           'ipfs_node_get_block',
         ),
+        _addBytes = library.lookupFunction<_AddBytesNative, _AddBytesDart>(
+          'ipfs_node_add_bytes',
+        ),
+        _pin = library.lookupFunction<_PinNative, _PinDart>('ipfs_node_pin'),
+        _unpin =
+            library.lookupFunction<_PinNative, _PinDart>('ipfs_node_unpin'),
+        _listPins = library.lookupFunction<_StringNative, _StringDart>(
+          'ipfs_node_list_pins',
+        ),
+        _swarmPeers = library.lookupFunction<_StringNative, _StringDart>(
+          'ipfs_node_swarm_peers',
+        ),
+        _swarmConnect = library
+            .lookupFunction<_PinNative, _PinDart>('ipfs_node_swarm_connect'),
+        _swarmDisconnect = library.lookupFunction<_PinNative, _PinDart>(
+          'ipfs_node_swarm_disconnect',
+        ),
+        _bootstrapList = library.lookupFunction<_StringNative, _StringDart>(
+          'ipfs_node_bootstrap_list',
+        ),
+        _bootstrapAdd = library.lookupFunction<_PinNative, _PinDart>(
+          'ipfs_node_bootstrap_add',
+        ),
+        _bootstrapRemove = library.lookupFunction<_PinNative, _PinDart>(
+          'ipfs_node_bootstrap_remove',
+        ),
+        _bitswapStats = library.lookupFunction<_StringNative, _StringDart>(
+          'ipfs_node_bitswap_stats',
+        ),
+        _findProviders = library.lookupFunction<_TimeoutNative, _TimeoutDart>(
+          'ipfs_node_find_providers',
+        ),
+        _findPeer = library.lookupFunction<_TimeoutNative, _TimeoutDart>(
+          'ipfs_node_find_peer',
+        ),
+        _publishName = library.lookupFunction<_TimeoutNative, _TimeoutDart>(
+          'ipfs_node_publish_name',
+        ),
+        _resolveName = library.lookupFunction<_TimeoutNative, _TimeoutDart>(
+          'ipfs_node_resolve_name',
+        ),
+        _listKeys = library.lookupFunction<_StringNative, _StringDart>(
+          'ipfs_node_list_keys',
+        ),
         _free =
             library.lookupFunction<_FreeNative, _FreeDart>('ipfs_node_free'),
         _freeString =
@@ -350,6 +710,22 @@ final class _FfiNativeNodeAbi {
   final _StringDart _status;
   final _StringDart _capabilities;
   final _GetBlockDart _getBlock;
+  final _AddBytesDart _addBytes;
+  final _PinDart _pin;
+  final _PinDart _unpin;
+  final _StringDart _listPins;
+  final _StringDart _swarmPeers;
+  final _PinDart _swarmConnect;
+  final _PinDart _swarmDisconnect;
+  final _StringDart _bootstrapList;
+  final _PinDart _bootstrapAdd;
+  final _PinDart _bootstrapRemove;
+  final _StringDart _bitswapStats;
+  final _TimeoutDart _findProviders;
+  final _TimeoutDart _findPeer;
+  final _TimeoutDart _publishName;
+  final _TimeoutDart _resolveName;
+  final _StringDart _listKeys;
   final _FreeDart _free;
   final _FreeStringDart _freeString;
   late int _handle;
@@ -381,6 +757,84 @@ final class _FfiNativeNodeAbi {
       }
     } finally {
       calloc.free(value);
+    }
+  }
+
+  String? addBytes(Pointer<Void> data, int length) {
+    final response = _addBytes(_handle, data, length);
+    if (response == nullptr) return null;
+    try {
+      return response.cast<Utf8>().toDartString();
+    } finally {
+      _freeString(response);
+    }
+  }
+
+  String? pin(String value) => _callString(_pin, value);
+
+  String? unpin(String value) => _callString(_unpin, value);
+
+  String? listPins() => _readString(_listPins);
+
+  String? swarmPeers() => _readString(_swarmPeers);
+
+  String? swarmConnect(String value) => _callString(_swarmConnect, value);
+
+  String? swarmDisconnect(String value) => _callString(_swarmDisconnect, value);
+
+  String? bootstrapList() => _readString(_bootstrapList);
+
+  String? bootstrapAdd(String value) => _callString(_bootstrapAdd, value);
+
+  String? bootstrapRemove(String value) => _callString(_bootstrapRemove, value);
+
+  String? bitswapStats() => _readString(_bitswapStats);
+
+  String? findProviders(String value, int timeoutMillis) =>
+      _callStringWithTimeout(_findProviders, value, timeoutMillis);
+
+  String? findPeer(String value, int timeoutMillis) =>
+      _callStringWithTimeout(_findPeer, value, timeoutMillis);
+
+  String? publishName(String value, int timeoutMillis) =>
+      _callStringWithTimeout(_publishName, value, timeoutMillis);
+
+  String? resolveName(String value, int timeoutMillis) =>
+      _callStringWithTimeout(_resolveName, value, timeoutMillis);
+
+  String? listKeys() => _readString(_listKeys);
+
+  String? _callString(_PinDart function, String value) {
+    final encoded = value.toNativeUtf8().cast<Char>();
+    try {
+      final response = function(_handle, encoded);
+      if (response == nullptr) return null;
+      try {
+        return response.cast<Utf8>().toDartString();
+      } finally {
+        _freeString(response);
+      }
+    } finally {
+      calloc.free(encoded);
+    }
+  }
+
+  String? _callStringWithTimeout(
+    _TimeoutDart function,
+    String value,
+    int timeoutMillis,
+  ) {
+    final encoded = value.toNativeUtf8().cast<Char>();
+    try {
+      final response = function(_handle, encoded, timeoutMillis);
+      if (response == nullptr) return null;
+      try {
+        return response.cast<Utf8>().toDartString();
+      } finally {
+        _freeString(response);
+      }
+    } finally {
+      calloc.free(encoded);
     }
   }
 
@@ -418,6 +872,31 @@ typedef _GetBlockNative = Pointer<Char> Function(
 typedef _GetBlockDart = Pointer<Char> Function(
   int handle,
   Pointer<Char> cid,
+  int timeoutMillis,
+);
+typedef _AddBytesNative = Pointer<Char> Function(
+  UintPtr handle,
+  Pointer<Void> data,
+  Size length,
+);
+typedef _AddBytesDart = Pointer<Char> Function(
+  int handle,
+  Pointer<Void> data,
+  int length,
+);
+typedef _PinNative = Pointer<Char> Function(
+  UintPtr handle,
+  Pointer<Char> value,
+);
+typedef _PinDart = Pointer<Char> Function(int handle, Pointer<Char> value);
+typedef _TimeoutNative = Pointer<Char> Function(
+  UintPtr handle,
+  Pointer<Char> value,
+  Int32 timeoutMillis,
+);
+typedef _TimeoutDart = Pointer<Char> Function(
+  int handle,
+  Pointer<Char> value,
   int timeoutMillis,
 );
 typedef _FreeNative = Void Function(UintPtr handle);

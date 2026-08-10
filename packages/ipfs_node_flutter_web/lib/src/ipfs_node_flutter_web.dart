@@ -56,8 +56,11 @@ final class IpfsNodeFlutterWeb extends IpfsNodePlatform {
       _bridge?.capabilities ?? const CapabilitySet.empty();
 
   /// Stores opaque bytes as a UnixFS file in the local Helia blockstore.
-  Future<String> addBytes(List<int> bytes) =>
-      _runtimeBridge.addBytes(Uint8List.fromList(bytes));
+  @override
+  Future<IpfsAddResult> addBytes(Uint8List bytes) async {
+    final cid = await _runtimeBridge.addBytes(bytes);
+    return IpfsAddResult(cid: cid, bytes: bytes.length);
+  }
 
   /// Retrieves opaque bytes for a locally stored CID or one provided by a
   /// connected libp2p peer.

@@ -64,10 +64,11 @@ void main() {
     final platform = IpfsNodeFlutterWeb(bridge: bridge);
     await platform.start(NodeConfig.public());
 
-    final cid = await platform.addBytes([1, 2, 3]);
+    final added = await platform.addBytes(Uint8List.fromList([1, 2, 3]));
 
-    expect(cid, 'bafy-test');
-    expect(await platform.getBytes(cid), [1, 2, 3]);
+    expect(added.cid, 'bafy-test');
+    expect(added.bytes, 3);
+    expect(await platform.getBytes(added.cid), [1, 2, 3]);
   });
 
   test('registerWith installs a web backend factory', () {

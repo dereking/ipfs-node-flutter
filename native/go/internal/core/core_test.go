@@ -61,6 +61,247 @@ func TestPublicNetworkRetrievesDocumentedCID(t *testing.T) {
 	}
 }
 
+func TestAddBytesStoresContentAndPinRoundtrip(t *testing.T) {
+	node := New()
+	if err := node.Start(PublicConfig{}); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = node.Stop() })
+	ctx := context.Background()
+
+	content := "hello add\n"
+	rawCID, err := node.AddBytes(ctx, []byte(content))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rawCID == "" {
+		t.Fatal("expected a content root CID")
+	}
+
+	block, err := node.GetBlock(ctx, rawCID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(block) != content {
+		t.Fatalf("retrieved %q, want %q", block, content)
+	}
+
+	if err := node.Pin(ctx, rawCID); err != nil {
+		t.Fatal(err)
+	}
+	pins, err := node.ListPins()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(pins) != 1 || pins[0].Cid != rawCID || pins[0].Type != PinDirect {
+		t.Fatalf("pins = %+v", pins)
+	}
+
+	if err := node.Unpin(rawCID); err != nil {
+		t.Fatal(err)
+	}
+	pins, err = node.ListPins()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(pins) != 0 {
+		t.Fatalf("pins after unpin = %+v", pins)
+	}
+}
+
+func TestAddBytesMatchesDocumentedCID(t *testing.T) {
+	node := New()
+	if err := node.Start(PublicConfig{}); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = node.Stop() })
+
+	rawCID, err := node.AddBytes(context.Background(), []byte("Hello IPFS\n"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	const documentedCID = "bafkreidfdrlkeq4m4xnxuyx6iae76fdm4wgl5d4xzsb77ixhyqwumhz244"
+	if rawCID != documentedCID {
+		t.Fatalf("raw block CID = %s, want %s", rawCID, documentedCID)
+	}
+}
+
+func TestAddBytesChunksLargeContent(t *testing.T) {
+	node := New()
+	if err := node.Start(PublicConfig{}); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = node.Stop() })
+	ctx := context.Background()
+
+	content := make([]byte, defaultChunkSize+42)
+	for i := range content {
+		content[i] = byte('a' + i%26)
+	}
+	rawCID, err := node.AddBytes(ctx, content)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	block, err := node.GetBlock(ctx, rawCID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(block) == 0 {
+		t.Fatal("expected a retrievable dag-pb root block")
+	}
+}
+
+func TestPinRejectsUnknownCID(t *testing.T) {
+	node := New()
+	if err := node.Start(PublicConfig{}); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = node.Stop() })
+
+	err := node.Unpin("not-a-cid")
+	if err == nil {
+		t.Fatal("expected invalid CID error")
+	}
+}
+
+func TestOperationsRequireRunningNode(t *testing.T) {
+	node := New()
+
+	if _, err := node.AddBytes(context.Background(), []byte("x")); err == nil {
+		t.Fatal("expected AddBytes error on stopped node")
+	}
+	if err := node.Pin(context.Background(), "bafkreidfdrlkeq4m4xnxuyx6iae76fdm4wgl5d4xzsb77ixhyqwumhz244"); err == nil {
+		t.Fatal("expected Pin error on stopped node")
+	}
+	if _, err := node.ListPins(); err == nil {
+		t.Fatal("expected ListPins error on stopped node")
+	}
+}
+
+func TestSwarmAndBootstrapManagement(t *testing.T) {
+	node := New()
+	if err := node.Start(PublicConfig{}); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = node.Stop() })
+	ctx := context.Background()
+
+	peers, err := node.SwarmPeers()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(peers) != 0 {
+		t.Fatalf("swarm peers = %+v, want empty", peers)
+	}
+
+	if err := node.SwarmConnect(ctx, "not-a-multiaddr"); err == nil {
+		t.Fatal("expected invalid multiaddr error")
+	}
+	if err := node.SwarmDisconnect("not-a-peer-id"); err == nil {
+		t.Fatal("expected invalid peer id error")
+	}
+
+	if list, err := node.BootstrapList(); err != nil || len(list) != 0 {
+		t.Fatalf("bootstrap list = %v, %v", list, err)
+	}
+	const bootstrap = "/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN"
+	if err := node.BootstrapAdd("not-a-multiaddr"); err == nil {
+		t.Fatal("expected invalid bootstrap error")
+	}
+	if err := node.BootstrapAdd(bootstrap); err != nil {
+		t.Fatal(err)
+	}
+	list, err := node.BootstrapList()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(list) != 1 || list[0] != bootstrap {
+		t.Fatalf("bootstrap list = %v", list)
+	}
+	if err := node.BootstrapRemove(bootstrap); err != nil {
+		t.Fatal(err)
+	}
+	if err := node.BootstrapRemove(bootstrap); err == nil {
+		t.Fatal("expected error removing a missing bootstrap peer")
+	}
+}
+
+func TestBitswapStatsAndKeysOnStartedNode(t *testing.T) {
+	node := New()
+	if err := node.Start(PublicConfig{}); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = node.Stop() })
+
+	stats, err := node.BitswapStats()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(stats.Wantlist) != 0 {
+		t.Fatalf("wantlist = %v, want empty", stats.Wantlist)
+	}
+
+	keys, err := node.ListKeys()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(keys) != 1 || keys[0].Name != "self" || keys[0].PeerID == "" {
+		t.Fatalf("keys = %+v", keys)
+	}
+}
+
+func TestPublishAndResolveIPNS(t *testing.T) {
+	if os.Getenv("IPFS_PUBLIC_INTEGRATION") != "1" {
+		t.Skip("set IPFS_PUBLIC_INTEGRATION=1 to publish IPNS over the public network")
+	}
+
+	node := New()
+	if err := node.Start(PublicConfig{BootstrapPeers: DefaultPublicBootstrapPeers()}); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = node.Stop() })
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+
+	rawCID, err := node.AddBytes(ctx, []byte("ipns content"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	name, err := node.PublishName(ctx, rawCID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if name == "" {
+		t.Fatal("expected an IPNS name")
+	}
+
+	resolved, err := node.ResolveName(ctx, "/ipns/"+name)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resolved != "/ipfs/"+rawCID {
+		t.Fatalf("resolved = %q, want /ipfs/%s", resolved, rawCID)
+	}
+}
+
+func TestFindPeerOnSelf(t *testing.T) {
+	node := New()
+	if err := node.Start(PublicConfig{}); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = node.Stop() })
+
+	self := node.Status().PeerID
+	info, err := node.FindPeer(context.Background(), self)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if info.ID != self {
+		t.Fatalf("find peer = %+v, want self %s", info, self)
+	}
+}
+
 func TestPublicConfigRejectsInvalidBootstrapMultiaddr(t *testing.T) {
 	node := New()
 	err := node.Start(PublicConfig{BootstrapPeers: []string{"not-a-multiaddr"}})

@@ -2,7 +2,13 @@ export 'package:ipfs_node_flutter_platform_interface/ipfs_node_platform_interfac
     show
         Capability,
         CapabilitySet,
+        IpfsAddResult,
+        IpfsBitswapStats,
+        IpfsKeyInfo,
         IpfsNodeException,
+        IpfsPeerInfo,
+        IpfsPinInfo,
+        IpfsPinType,
         NodeConfig,
         NodeLifecycle,
         NodeStatus,

@@ -42,8 +42,7 @@ class IpfsNodeLifecyclePanel extends StatelessWidget {
                 : FilledButton.icon(
                     onPressed: controller.loading
                         ? null
-                        : () =>
-                            controller.start(config ?? NodeConfig.public()),
+                        : () => controller.start(config ?? NodeConfig.public()),
                     icon: const Icon(Icons.play_arrow),
                     label: const Text('启动'),
                   ),

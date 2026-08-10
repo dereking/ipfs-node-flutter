@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/widgets.dart';
 import 'package:ipfs_node_flutter_platform_interface/ipfs_node_platform_interface.dart';
 import 'package:ipfs_node_flutter_web/ipfs_node_flutter_web.dart';
@@ -32,7 +34,8 @@ final class _HeliaVerificationAppState extends State<_HeliaVerificationApp> {
     try {
       await node.start(NodeConfig.public());
       step = 'addBytes';
-      final cid = await node.addBytes([0, 1, 2, 255]);
+      final added = await node.addBytes(Uint8List.fromList([0, 1, 2, 255]));
+      final cid = added.cid;
       step = 'getBytes';
       final bytes = await node.getBytes(cid);
       if (bytes.length != 4 || bytes[3] != 255) {

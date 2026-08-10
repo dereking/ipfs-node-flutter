@@ -40,6 +40,7 @@ class _IpfsFeatureLabPageState extends State<IpfsFeatureLabPage> {
   Object? _displayError;
   bool _loading = false;
   late final IpfsNodeController _featureController;
+  int _pinListVersion = 0;
 
   @override
   void initState() {
@@ -123,6 +124,37 @@ class _IpfsFeatureLabPageState extends State<IpfsFeatureLabPage> {
           IpfsNodeLifecyclePanel(controller: _featureController),
           const SizedBox(height: 12),
           IpfsCidFetchPanel(
+            controller: _featureController,
+            initialCid: documentedCid,
+          ),
+          const SizedBox(height: 12),
+          IpfsContentAddPanel(
+            controller: _featureController,
+            initialText: documentedContent,
+          ),
+          const SizedBox(height: 12),
+          IpfsPinPanel(
+            controller: _featureController,
+            onChanged: () => setState(() => _pinListVersion++),
+          ),
+          const SizedBox(height: 12),
+          IpfsPinListPanel(
+            key: ValueKey(_pinListVersion),
+            controller: _featureController,
+          ),
+          const SizedBox(height: 12),
+          IpfsSwarmPanel(controller: _featureController),
+          const SizedBox(height: 12),
+          IpfsBootstrapPanel(controller: _featureController),
+          const SizedBox(height: 12),
+          IpfsBitswapPanel(controller: _featureController),
+          const SizedBox(height: 12),
+          IpfsDhtPanel(
+            controller: _featureController,
+            initialCid: documentedCid,
+          ),
+          const SizedBox(height: 12),
+          IpfsIpnsPanel(
             controller: _featureController,
             initialCid: documentedCid,
           ),

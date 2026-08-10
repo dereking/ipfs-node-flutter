@@ -61,6 +61,57 @@ void main() {
     await platform.dispose();
   });
 
+  test('native adapter adds content, pins it, and lists pins', () async {
+    final platform = IpfsNodeFlutterNative(libraryPath: hostLibrary.path);
+    await platform.start(_offlinePublicConfig());
+    addTearDown(platform.dispose);
+
+    const content = 'Hello IPFS\n';
+    final added = await platform.addBytes(utf8.encode(content));
+    expect(added.cid,
+        'bafkreidfdrlkeq4m4xnxuyx6iae76fdm4wgl5d4xzsb77ixhyqwumhz244');
+    expect(added.bytes, content.length);
+
+    final block = await platform.getBlock(added.cid);
+    expect(utf8.decode(block), content);
+
+    await platform.pin(added.cid);
+    final pins = await platform.listPins();
+    expect(
+      pins,
+      contains(predicate<IpfsPinInfo>((pin) => pin.cid == added.cid)),
+    );
+
+    await platform.unpin(added.cid);
+    expect(await platform.listPins(), isEmpty);
+  });
+
+  test('native adapter exposes swarm, bootstrap, bitswap, and keys', () async {
+    final platform = IpfsNodeFlutterNative(libraryPath: hostLibrary.path);
+    await platform.start(_offlinePublicConfig());
+    addTearDown(platform.dispose);
+
+    expect(await platform.swarmPeers(), isEmpty);
+
+    const extra =
+        '/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN';
+    await platform.bootstrapAdd(extra);
+    expect(await platform.bootstrapList(), contains(extra));
+    await platform.bootstrapRemove(extra);
+    expect(await platform.bootstrapList(), isNot(contains(extra)));
+
+    final stats = await platform.bitswapStats();
+    expect(stats.blocksReceived, 0);
+
+    final keys = await platform.listKeys();
+    expect(keys, hasLength(1));
+    expect(keys.single.name, 'self');
+
+    final status = await platform.status();
+    final self = await platform.findPeer(status.peerId!);
+    expect(self.id, status.peerId);
+  });
+
   test(
     'native adapter retrieves the documented CID from public IPFS',
     () async {

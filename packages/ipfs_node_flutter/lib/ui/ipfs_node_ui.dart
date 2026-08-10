@@ -1,7 +1,15 @@
+export 'ipfs_bitswap_panel.dart';
+export 'ipfs_bootstrap_panel.dart';
 export 'ipfs_cid_fetch_panel.dart';
+export 'ipfs_content_add_panel.dart';
+export 'ipfs_dht_panel.dart';
 export 'ipfs_feature_check.dart';
 export 'ipfs_feature_check_card.dart';
 export 'ipfs_feature_check_list.dart';
+export 'ipfs_ipns_panel.dart';
 export 'ipfs_node_controller.dart';
 export 'ipfs_node_lifecycle_panel.dart';
 export 'ipfs_node_status_panel.dart';
+export 'ipfs_pin_list_panel.dart';
+export 'ipfs_pin_panel.dart';
+export 'ipfs_swarm_panel.dart';

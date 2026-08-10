@@ -47,6 +47,37 @@ type blockResponse struct {
 	Error string `json:"error,omitempty"`
 }
 
+type addResponse struct {
+	Cid   string `json:"cid,omitempty"`
+	Bytes int    `json:"bytes,omitempty"`
+	Error string `json:"error,omitempty"`
+}
+
+type operationResponse struct {
+	Error string `json:"error,omitempty"`
+}
+
+type nameResponse struct {
+	Name  string `json:"name,omitempty"`
+	Path  string `json:"path,omitempty"`
+	Error string `json:"error,omitempty"`
+}
+
+func stringResponse(operation string, fn func() (any, error)) *C.char {
+	value, err := fn()
+	if err != nil {
+		return jsonString(operationResponse{Error: err.Error()})
+	}
+	return jsonString(value)
+}
+
+func stringOperation(operation string, fn func() error) *C.char {
+	if err := fn(); err != nil {
+		return jsonString(operationResponse{Error: err.Error()})
+	}
+	return jsonString(operationResponse{})
+}
+
 // ipfs_node_create creates a stopped node and returns its opaque handle.
 //
 //export ipfs_node_create
@@ -142,6 +173,269 @@ func ipfs_node_get_block(handle C.uintptr_t, cid *C.char, timeout_millis C.int) 
 		return jsonString(blockResponse{Error: err.Error()})
 	}
 	return jsonString(blockResponse{Data: base64.StdEncoding.EncodeToString(data)})
+}
+
+// ipfs_node_add_bytes stores raw bytes as a UnixFS file and returns a
+// heap-allocated JSON object containing the content root CID or an error.
+// Call ipfs_node_free_string exactly once for non-NULL results.
+//
+//export ipfs_node_add_bytes
+func ipfs_node_add_bytes(handle C.uintptr_t, data unsafe.Pointer, length C.size_t) *C.char {
+	node, ok := lookup(handle)
+	if !ok {
+		return nil
+	}
+	if data == nil {
+		return jsonString(addResponse{Error: "invalid add request"})
+	}
+	cid, err := node.AddBytes(context.Background(), C.GoBytes(data, C.int(length)))
+	if err != nil {
+		return jsonString(addResponse{Error: err.Error()})
+	}
+	return jsonString(addResponse{Cid: cid, Bytes: int(length)})
+}
+
+// ipfs_node_pin ensures a content root is local and pinned. Returns a
+// heap-allocated JSON object with an optional error.
+//
+//export ipfs_node_pin
+func ipfs_node_pin(handle C.uintptr_t, rawCID *C.char) *C.char {
+	node, ok := lookup(handle)
+	if !ok {
+		return nil
+	}
+	if rawCID == nil {
+		return jsonString(operationResponse{Error: "invalid pin request"})
+	}
+	if err := node.Pin(context.Background(), C.GoString(rawCID)); err != nil {
+		return jsonString(operationResponse{Error: err.Error()})
+	}
+	return jsonString(operationResponse{})
+}
+
+// ipfs_node_unpin removes a content root from the local pin set.
+//
+//export ipfs_node_unpin
+func ipfs_node_unpin(handle C.uintptr_t, rawCID *C.char) *C.char {
+	node, ok := lookup(handle)
+	if !ok {
+		return nil
+	}
+	if rawCID == nil {
+		return jsonString(operationResponse{Error: "invalid unpin request"})
+	}
+	if err := node.Unpin(C.GoString(rawCID)); err != nil {
+		return jsonString(operationResponse{Error: err.Error()})
+	}
+	return jsonString(operationResponse{})
+}
+
+// ipfs_node_list_pins returns a heap-allocated JSON array of pinned content
+// roots, or an object containing an error.
+//
+//export ipfs_node_list_pins
+func ipfs_node_list_pins(handle C.uintptr_t) *C.char {
+	node, ok := lookup(handle)
+	if !ok {
+		return nil
+	}
+	pins, err := node.ListPins()
+	if err != nil {
+		return jsonString(operationResponse{Error: err.Error()})
+	}
+	return jsonString(pins)
+}
+
+// ipfs_node_swarm_peers returns a heap-allocated JSON array of connected peers.
+//
+//export ipfs_node_swarm_peers
+func ipfs_node_swarm_peers(handle C.uintptr_t) *C.char {
+	node, ok := lookup(handle)
+	if !ok {
+		return nil
+	}
+	return stringResponse("swarm_peers", func() (any, error) {
+		return node.SwarmPeers()
+	})
+}
+
+// ipfs_node_swarm_connect dials a p2p multiaddr.
+//
+//export ipfs_node_swarm_connect
+func ipfs_node_swarm_connect(handle C.uintptr_t, multiaddr *C.char) *C.char {
+	node, ok := lookup(handle)
+	if !ok {
+		return nil
+	}
+	if multiaddr == nil {
+		return jsonString(operationResponse{Error: "invalid connect request"})
+	}
+	return stringOperation("swarm_connect", func() error {
+		return node.SwarmConnect(context.Background(), C.GoString(multiaddr))
+	})
+}
+
+// ipfs_node_swarm_disconnect closes connections to a peer.
+//
+//export ipfs_node_swarm_disconnect
+func ipfs_node_swarm_disconnect(handle C.uintptr_t, peerID *C.char) *C.char {
+	node, ok := lookup(handle)
+	if !ok {
+		return nil
+	}
+	if peerID == nil {
+		return jsonString(operationResponse{Error: "invalid disconnect request"})
+	}
+	return stringOperation("swarm_disconnect", func() error {
+		return node.SwarmDisconnect(C.GoString(peerID))
+	})
+}
+
+// ipfs_node_bootstrap_list returns the configured bootstrap multiaddrs.
+//
+//export ipfs_node_bootstrap_list
+func ipfs_node_bootstrap_list(handle C.uintptr_t) *C.char {
+	node, ok := lookup(handle)
+	if !ok {
+		return nil
+	}
+	return stringResponse("bootstrap_list", func() (any, error) {
+		return node.BootstrapList()
+	})
+}
+
+// ipfs_node_bootstrap_add records a bootstrap multiaddr.
+//
+//export ipfs_node_bootstrap_add
+func ipfs_node_bootstrap_add(handle C.uintptr_t, multiaddr *C.char) *C.char {
+	node, ok := lookup(handle)
+	if !ok {
+		return nil
+	}
+	if multiaddr == nil {
+		return jsonString(operationResponse{Error: "invalid bootstrap request"})
+	}
+	return stringOperation("bootstrap_add", func() error {
+		return node.BootstrapAdd(C.GoString(multiaddr))
+	})
+}
+
+// ipfs_node_bootstrap_remove removes a bootstrap multiaddr.
+//
+//export ipfs_node_bootstrap_remove
+func ipfs_node_bootstrap_remove(handle C.uintptr_t, multiaddr *C.char) *C.char {
+	node, ok := lookup(handle)
+	if !ok {
+		return nil
+	}
+	if multiaddr == nil {
+		return jsonString(operationResponse{Error: "invalid bootstrap request"})
+	}
+	return stringOperation("bootstrap_remove", func() error {
+		return node.BootstrapRemove(C.GoString(multiaddr))
+	})
+}
+
+// ipfs_node_bitswap_stats returns current bitswap counters.
+//
+//export ipfs_node_bitswap_stats
+func ipfs_node_bitswap_stats(handle C.uintptr_t) *C.char {
+	node, ok := lookup(handle)
+	if !ok {
+		return nil
+	}
+	return stringResponse("bitswap_stats", func() (any, error) {
+		return node.BitswapStats()
+	})
+}
+
+// ipfs_node_find_providers searches the DHT for content providers.
+//
+//export ipfs_node_find_providers
+func ipfs_node_find_providers(handle C.uintptr_t, rawCID *C.char, timeout_millis C.int) *C.char {
+	node, ok := lookup(handle)
+	if !ok {
+		return nil
+	}
+	if rawCID == nil || timeout_millis <= 0 {
+		return jsonString(operationResponse{Error: "invalid find providers request"})
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout_millis)*time.Millisecond)
+	defer cancel()
+	return stringResponse("find_providers", func() (any, error) {
+		return node.FindProviders(ctx, C.GoString(rawCID))
+	})
+}
+
+// ipfs_node_find_peer locates a peer on the DHT.
+//
+//export ipfs_node_find_peer
+func ipfs_node_find_peer(handle C.uintptr_t, peerID *C.char, timeout_millis C.int) *C.char {
+	node, ok := lookup(handle)
+	if !ok {
+		return nil
+	}
+	if peerID == nil || timeout_millis <= 0 {
+		return jsonString(operationResponse{Error: "invalid find peer request"})
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout_millis)*time.Millisecond)
+	defer cancel()
+	return stringResponse("find_peer", func() (any, error) {
+		return node.FindPeer(ctx, C.GoString(peerID))
+	})
+}
+
+// ipfs_node_publish_name publishes a content root under the node's IPNS name.
+//
+//export ipfs_node_publish_name
+func ipfs_node_publish_name(handle C.uintptr_t, rawCID *C.char, timeout_millis C.int) *C.char {
+	node, ok := lookup(handle)
+	if !ok {
+		return nil
+	}
+	if rawCID == nil || timeout_millis <= 0 {
+		return jsonString(nameResponse{Error: "invalid publish request"})
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout_millis)*time.Millisecond)
+	defer cancel()
+	name, err := node.PublishName(ctx, C.GoString(rawCID))
+	if err != nil {
+		return jsonString(nameResponse{Error: err.Error()})
+	}
+	return jsonString(nameResponse{Name: name})
+}
+
+// ipfs_node_resolve_name resolves an IPNS name to a content path.
+//
+//export ipfs_node_resolve_name
+func ipfs_node_resolve_name(handle C.uintptr_t, rawName *C.char, timeout_millis C.int) *C.char {
+	node, ok := lookup(handle)
+	if !ok {
+		return nil
+	}
+	if rawName == nil || timeout_millis <= 0 {
+		return jsonString(nameResponse{Error: "invalid resolve request"})
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout_millis)*time.Millisecond)
+	defer cancel()
+	path, err := node.ResolveName(ctx, C.GoString(rawName))
+	if err != nil {
+		return jsonString(nameResponse{Error: err.Error()})
+	}
+	return jsonString(nameResponse{Path: path})
+}
+
+// ipfs_node_list_keys returns the local IPNS keys.
+//
+//export ipfs_node_list_keys
+func ipfs_node_list_keys(handle C.uintptr_t) *C.char {
+	node, ok := lookup(handle)
+	if !ok {
+		return nil
+	}
+	return stringResponse("list_keys", func() (any, error) {
+		return node.ListKeys()
+	})
 }
 
 // ipfs_node_free invalidates an opaque node handle. Repeated frees are safe.

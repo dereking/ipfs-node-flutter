@@ -1,16 +1,9 @@
-import 'dart:convert';
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
+import 'package:ipfs_node_flutter/ipfs_node_flutter.dart';
 
-import 'ipfs_node_controller.dart';
-
-/// Fetches a raw IPFS block by CID through a shared [IpfsNodeController.node].
-///
-/// Content is rendered as UTF-8 text when it decodes cleanly and as base64
-/// otherwise.
-class IpfsCidFetchPanel extends StatefulWidget {
-  const IpfsCidFetchPanel({
+/// Queries the DHT for providers of a content root.
+class IpfsDhtPanel extends StatefulWidget {
+  const IpfsDhtPanel({
     super.key,
     required this.controller,
     this.initialCid,
@@ -20,42 +13,33 @@ class IpfsCidFetchPanel extends StatefulWidget {
   final String? initialCid;
 
   @override
-  State<IpfsCidFetchPanel> createState() => _IpfsCidFetchPanelState();
+  State<IpfsDhtPanel> createState() => _IpfsDhtPanelState();
 }
 
-class _IpfsCidFetchPanelState extends State<IpfsCidFetchPanel> {
+class _IpfsDhtPanelState extends State<IpfsDhtPanel> {
   late final TextEditingController _cidController =
       TextEditingController(text: widget.initialCid ?? '');
+  List<IpfsPeerInfo>? _providers;
   bool _loading = false;
   Object? _error;
-  String? _summary;
 
-  Future<void> _fetch() async {
+  Future<void> _query() async {
     final cid = _cidController.text.trim();
     if (cid.isEmpty || _loading) return;
     setState(() {
       _loading = true;
+      _providers = null;
       _error = null;
-      _summary = null;
     });
     try {
-      final bytes = await widget.controller.node.getBlock(cid);
+      final providers = await widget.controller.node.findProviders(cid);
       if (!mounted) return;
-      setState(() => _summary = _render(bytes));
+      setState(() => _providers = providers);
     } catch (error) {
       if (!mounted) return;
       setState(() => _error = error);
     } finally {
       if (mounted) setState(() => _loading = false);
-    }
-  }
-
-  static String _render(Uint8List bytes) {
-    try {
-      final text = utf8.decode(bytes);
-      return '${bytes.length} 字节，内容：${jsonEncode(text)}';
-    } on FormatException {
-      return '${bytes.length} 字节（非 UTF-8）：${base64Encode(bytes)}';
     }
   }
 
@@ -68,13 +52,14 @@ class _IpfsCidFetchPanelState extends State<IpfsCidFetchPanel> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final providers = _providers;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('按 CID 取回内容', style: theme.textTheme.titleMedium),
+            Text('DHT Providers', style: theme.textTheme.titleMedium),
             const SizedBox(height: 8),
             Row(
               children: [
@@ -85,28 +70,42 @@ class _IpfsCidFetchPanelState extends State<IpfsCidFetchPanel> {
                       border: OutlineInputBorder(),
                       hintText: 'CID',
                     ),
-                    onSubmitted: (_) => _fetch(),
+                    onSubmitted: (_) => _query(),
                   ),
                 ),
                 const SizedBox(width: 8),
                 FilledButton.icon(
-                  onPressed: _loading ? null : _fetch,
-                  icon: const Icon(Icons.download),
-                  label: const Text('获取'),
+                  onPressed: _loading ? null : _query,
+                  icon: const Icon(Icons.search),
+                  label: const Text('查询'),
                 ),
               ],
             ),
             const SizedBox(height: 8),
             if (_loading)
               const LinearProgressIndicator()
-            else ...[
-              if (_summary != null) SelectableText('成功：$_summary'),
-              if (_error != null)
-                SelectableText(
-                  '失败：$_error',
-                  style: TextStyle(color: theme.colorScheme.error),
+            else if (_error != null)
+              SelectableText(
+                '失败：$_error',
+                style: TextStyle(color: theme.colorScheme.error),
+              )
+            else if (providers == null)
+              const Text('输入 CID 后查询 provider 节点')
+            else if (providers.isEmpty)
+              const Text('未找到 provider')
+            else
+              for (final provider in providers)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.dns, size: 16),
+                      const SizedBox(width: 6),
+                      Expanded(child: SelectableText(provider.id)),
+                    ],
+                  ),
                 ),
-            ],
           ],
         ),
       ),
