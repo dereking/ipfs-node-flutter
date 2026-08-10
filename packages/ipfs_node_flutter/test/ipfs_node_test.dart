@@ -186,7 +186,8 @@ final class _FakePlatform extends IpfsNodePlatform {
   }
 
   @override
-  Future<void> provide(String cid, {Duration timeout = const Duration(seconds: 60)}) async {
+  Future<void> provide(String cid,
+      {Duration timeout = const Duration(seconds: 60)}) async {
     provided.add(cid);
   }
 

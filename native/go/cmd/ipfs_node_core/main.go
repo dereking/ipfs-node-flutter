@@ -24,6 +24,7 @@ const (
 	errInvalidHandle
 	errInvalidConfiguration
 	errInvalidState
+	errNodeAlreadyRunning
 )
 
 var registry = struct {
@@ -40,6 +41,7 @@ type startRequest struct {
 	SwarmKey            []byte   `json:"swarmKey,omitempty"`
 	BootstrapPeers      []string `json:"bootstrapPeers,omitempty"`
 	UseDefaultBootstrap bool     `json:"useDefaultBootstrap,omitempty"`
+	RepositoryPath      string   `json:"repositoryPath,omitempty"`
 }
 
 type blockResponse struct {
@@ -107,6 +109,9 @@ func ipfs_node_start(handle C.uintptr_t, request *C.char) C.int {
 		return errInvalidConfiguration
 	}
 	if err := node.Start(config); err != nil {
+		if errors.Is(err, core.ErrNodeAlreadyRunning) {
+			return errNodeAlreadyRunning
+		}
 		if errors.Is(err, core.ErrInvalidLifecycleTransition) {
 			return errInvalidState
 		}
@@ -189,6 +194,47 @@ func ipfs_node_add_bytes(handle C.uintptr_t, data unsafe.Pointer, length C.size_
 		return jsonString(addResponse{Error: "invalid add request"})
 	}
 	cid, err := node.AddBytes(context.Background(), C.GoBytes(data, C.int(length)))
+	if err != nil {
+		return jsonString(addResponse{Error: err.Error()})
+	}
+	return jsonString(addResponse{Cid: cid, Bytes: int(length)})
+}
+
+//export ipfs_node_network_ready
+func ipfs_node_network_ready(handle C.uintptr_t) *C.char {
+	node, ok := lookup(handle)
+	if !ok {
+		return nil
+	}
+	return jsonString(map[string]bool{"ready": node.NetworkReady()})
+}
+
+//export ipfs_node_provide
+func ipfs_node_provide(handle C.uintptr_t, rawCID *C.char, timeoutMillis C.int) *C.char {
+	node, ok := lookup(handle)
+	if !ok {
+		return nil
+	}
+	if rawCID == nil || timeoutMillis <= 0 {
+		return jsonString(operationResponse{Error: "invalid provide request"})
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeoutMillis)*time.Millisecond)
+	defer cancel()
+	return stringOperation("provide", func() error { return node.Provide(ctx, C.GoString(rawCID)) })
+}
+
+//export ipfs_node_add_and_provide
+func ipfs_node_add_and_provide(handle C.uintptr_t, data unsafe.Pointer, length C.size_t, timeoutMillis C.int) *C.char {
+	node, ok := lookup(handle)
+	if !ok {
+		return nil
+	}
+	if data == nil || timeoutMillis <= 0 {
+		return jsonString(addResponse{Error: "invalid add and provide request"})
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeoutMillis)*time.Millisecond)
+	defer cancel()
+	cid, err := node.AddAndProvide(ctx, C.GoBytes(data, C.int(length)))
 	if err != nil {
 		return jsonString(addResponse{Error: err.Error()})
 	}
@@ -479,7 +525,10 @@ func parseStartRequest(value *C.char) (any, error) {
 		if request.UseDefaultBootstrap && len(request.BootstrapPeers) == 0 {
 			request.BootstrapPeers = core.DefaultPublicBootstrapPeers()
 		}
-		return core.PublicConfig{BootstrapPeers: request.BootstrapPeers}, nil
+		return core.PublicConfig{
+			BootstrapPeers: request.BootstrapPeers,
+			RepositoryPath: request.RepositoryPath,
+		}, nil
 	case "private":
 		return core.PrivateConfig{SwarmKey: request.SwarmKey}, nil
 	default:

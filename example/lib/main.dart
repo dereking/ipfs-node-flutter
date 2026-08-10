@@ -1,5 +1,9 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:ipfs_node_flutter/ipfs_node_flutter.dart';
+import 'package:path_provider/path_provider.dart';
 
 import 'feature_checks.dart';
 import 'platform_registration.dart' as platform;
@@ -35,10 +39,13 @@ class IpfsFeatureLabPage extends StatefulWidget {
 }
 
 class _IpfsFeatureLabPageState extends State<IpfsFeatureLabPage> {
-  IpfsNode? _displayNode;
   NodeStatus? _displayStatus;
   Object? _displayError;
   bool _loading = false;
+  bool _networkReady = false;
+  String? _repositoryPath;
+  NodeConfig? _nodeConfig;
+  int _pinCount = 0;
   late final IpfsNodeController _featureController;
   int _pinListVersion = 0;
 
@@ -47,24 +54,32 @@ class _IpfsFeatureLabPageState extends State<IpfsFeatureLabPage> {
     super.initState();
     _featureController = IpfsNodeController();
     if (widget.autoStart) {
-      _refreshDisplayNode();
-      _featureController.start(NodeConfig.public());
+      _startSharedNode();
     }
   }
 
-  Future<void> _refreshDisplayNode() async {
+  Future<void> _startSharedNode() async {
     setState(() {
       _loading = true;
       _displayError = null;
     });
-    await _displayNode?.dispose();
-    final node = IpfsNode();
-    _displayNode = node;
     try {
-      await node.start(NodeConfig.public());
-      final status = await node.status();
+      final directory = await getApplicationSupportDirectory();
+      final repository =
+          Directory('${directory.path}${Platform.pathSeparator}ipfs-node');
+      final config = NodeConfig.public(repositoryPath: repository.path);
+      _nodeConfig = config;
+      _repositoryPath = repository.path;
+      await _featureController.start(config);
+      final status = await _featureController.node.status();
+      final ready = await _featureController.node.networkReady();
+      final pins = await _featureController.node.listPins();
       if (!mounted) return;
-      setState(() => _displayStatus = status);
+      setState(() {
+        _displayStatus = status;
+        _networkReady = ready;
+        _pinCount = pins.length;
+      });
     } catch (error) {
       if (!mounted) return;
       setState(() => _displayError = error);
@@ -73,9 +88,23 @@ class _IpfsFeatureLabPageState extends State<IpfsFeatureLabPage> {
     }
   }
 
+  Future<String> _verifyWithKubo(String cid) async {
+    if (kIsWeb) throw UnsupportedError('Web 不支持本机 Kubo 验证');
+    final providers = await Process.run('ipfs', ['routing', 'findprovs', cid]);
+    if (providers.exitCode != 0) {
+      throw ProcessException('ipfs', ['routing', 'findprovs', cid],
+          '${providers.stderr}', providers.exitCode);
+    }
+    final content = await Process.run('ipfs', ['cat', cid]);
+    if (content.exitCode != 0) {
+      throw ProcessException(
+          'ipfs', ['cat', cid], '${content.stderr}', content.exitCode);
+    }
+    return 'Provider 查询成功；Kubo 已取回 ${('${content.stdout}').length} 字符';
+  }
+
   @override
   void dispose() {
-    _displayNode?.dispose();
     _featureController.dispose();
     super.dispose();
   }
@@ -112,12 +141,22 @@ class _IpfsFeatureLabPageState extends State<IpfsFeatureLabPage> {
                 status: _displayStatus,
                 loading: _loading,
                 error: _displayError,
-                onRefresh: _loading ? null : _refreshDisplayNode,
+                onRefresh: _loading ? null : _startSharedNode,
               ),
               const SizedBox(height: 24),
               Text('常见功能测试', style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 12),
-              IpfsFeatureCheckList(checks: commonIpfsFeatureChecks),
+              ListenableBuilder(
+                listenable: _featureController,
+                builder: (context, _) => _featureController.running
+                    ? const Card(
+                        child: Padding(
+                          padding: EdgeInsets.all(16),
+                          child: Text('单实例模式已启用：请先停止共享节点，再运行隔离功能测试。'),
+                        ),
+                      )
+                    : IpfsFeatureCheckList(checks: commonIpfsFeatureChecks),
+              ),
             ],
           ),
         ),
@@ -129,7 +168,24 @@ class _IpfsFeatureLabPageState extends State<IpfsFeatureLabPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              IpfsNodeLifecyclePanel(controller: _featureController),
+              IpfsNodeLifecyclePanel(
+                controller: _featureController,
+                config: _nodeConfig,
+              ),
+              const SizedBox(height: 12),
+              IpfsPublicationStatusPanel(
+                status: _displayStatus,
+                networkReady: _networkReady,
+                publicAddressReady:
+                    _networkReady && _displayStatus?.relayReady != true,
+                publicationSupported: !kIsWeb,
+              ),
+              const SizedBox(height: 12),
+              IpfsRepositoryPanel(
+                repositoryPath: _repositoryPath ?? '浏览器 IndexedDB',
+                contentCount: null,
+                pinCount: _pinCount,
+              ),
               const SizedBox(height: 12),
               IpfsCidFetchPanel(
                 controller: _featureController,
@@ -139,6 +195,17 @@ class _IpfsFeatureLabPageState extends State<IpfsFeatureLabPage> {
               IpfsContentAddPanel(
                 controller: _featureController,
                 initialText: documentedContent,
+              ),
+              const SizedBox(height: 12),
+              IpfsCidPublicationPanel(
+                controller: _featureController,
+                initialCid: documentedCid,
+                publicationSupported: !kIsWeb,
+              ),
+              const SizedBox(height: 12),
+              IpfsKuboVerifyPanel(
+                initialCid: documentedCid,
+                onVerify: kIsWeb ? null : _verifyWithKubo,
               ),
               const SizedBox(height: 12),
               IpfsPinPanel(

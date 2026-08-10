@@ -33,6 +33,7 @@ done
   echo '#define IPFS_NODE_ERR_INVALID_HANDLE 1'
   echo '#define IPFS_NODE_ERR_INVALID_CONFIGURATION 2'
   echo '#define IPFS_NODE_ERR_INVALID_STATE 3'
+  echo '#define IPFS_NODE_ERR_NODE_ALREADY_RUNNING 4'
   echo
   sed 's/^/ /' "$generated"
   echo

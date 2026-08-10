@@ -91,6 +91,25 @@ final class IpfsNodeFlutterWeb extends IpfsNodePlatform {
     return IpfsAddResult(cid: cid, bytes: bytes.length);
   }
 
+  @override
+  Future<bool> networkReady() async => false;
+
+  @override
+  Future<void> provide(
+    String cid, {
+    Duration timeout = const Duration(seconds: 60),
+  }) =>
+      Future.error(
+          UnsupportedCapabilityException(Capability.publicPublication));
+
+  @override
+  Future<IpfsAddResult> addAndProvide(
+    Uint8List bytes, {
+    Duration timeout = const Duration(seconds: 60),
+  }) =>
+      Future.error(
+          UnsupportedCapabilityException(Capability.publicPublication));
+
   /// Retrieves opaque bytes for a locally stored CID or one provided by a
   /// connected libp2p peer.
   Future<List<int>> getBytes(String cid) => _runtimeBridge.getBytes(cid);

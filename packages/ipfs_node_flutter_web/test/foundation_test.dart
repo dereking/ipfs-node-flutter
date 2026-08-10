@@ -110,6 +110,23 @@ void main() {
 
     expect(IpfsNodePlatform.instance, isA<IpfsNodeFlutterWeb>());
   });
+
+  test('web rejects public publication but keeps local add available',
+      () async {
+    final platform = IpfsNodeFlutterWeb(bridge: _FakeWebNodeBridge());
+    await platform.start(NodeConfig.public());
+    final added = await platform.addBytes(Uint8List.fromList([1]));
+
+    await expectLater(
+      platform.provide(added.cid),
+      throwsA(isA<UnsupportedCapabilityException>()),
+    );
+    await expectLater(
+      platform.addAndProvide(Uint8List.fromList([2])),
+      throwsA(isA<UnsupportedCapabilityException>()),
+    );
+    expect(await platform.networkReady(), isFalse);
+  });
 }
 
 final class _FakeWebNodeBridge implements WebNodeBridge {

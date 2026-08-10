@@ -12,7 +12,8 @@
 
 ## Repository
 
-`PublicNodeConfig` gains a required `repositoryPath`. The native core creates
+`PublicNodeConfig` gains a `repositoryPath` that is required by native
+backends and optional on Web. The native core creates
 an SDK-owned repository beneath that path. It persists blocks, pin records,
 and metadata for each locally added content root. Metadata includes the CID,
 pin state, creation time, and last publication result. The SDK does not claim

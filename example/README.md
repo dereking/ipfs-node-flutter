@@ -3,7 +3,8 @@
 This Flutter application exercises the common `ipfs_node_flutter` API through
 the native Go backend. On launch it:
 
-1. starts a real libp2p node with `NodeConfig.public()`;
+1. resolves an application-support directory and starts one persistent libp2p
+   node with `NodeConfig.public(repositoryPath: ...)`;
 2. connects to the default public IPFS bootstrap peers;
 3. displays its Peer ID and connected-peer count;
 4. retrieves a documented raw CID through the Amino DHT and Bitswap; and
@@ -30,5 +31,5 @@ IPFS_PUBLIC_INTEGRATION=1 flutter test test/ipfs_node_functionality_test.dart
 ```
 
 The first command covers native lifecycle, capabilities, error mapping, and
-per-node identity isolation. The second also connects to public IPFS and
+process-singleton enforcement and persistent identity. The second also connects to public IPFS and
 retrieves the fixed CID through DHT and Bitswap.

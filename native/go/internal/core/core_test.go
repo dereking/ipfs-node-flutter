@@ -12,8 +12,16 @@ import (
 
 	"github.com/ipfs/go-cid"
 	dht "github.com/libp2p/go-libp2p-kad-dht"
-	"github.com/libp2p/go-libp2p/core/peer"
+	ma "github.com/multiformats/go-multiaddr"
 )
+
+func testPublicConfig(t *testing.T, bootstrapPeers ...string) PublicConfig {
+	t.Helper()
+	return PublicConfig{
+		RepositoryPath: t.TempDir(),
+		BootstrapPeers: bootstrapPeers,
+	}
+}
 
 func TestStartStopIsIdempotent(t *testing.T) {
 	node := New()
@@ -21,10 +29,10 @@ func TestStartStopIsIdempotent(t *testing.T) {
 		t.Fatalf("initial = %s, want %s", got, Stopped)
 	}
 
-	if err := node.Start(PublicConfig{}); err != nil {
+	if err := node.Start(testPublicConfig(t)); err != nil {
 		t.Fatal(err)
 	}
-	if err := node.Start(PublicConfig{}); err != nil {
+	if err := node.Start(testPublicConfig(t)); err != nil {
 		t.Fatal(err)
 	}
 	if got := node.Status().Lifecycle; got != Running {
@@ -48,7 +56,7 @@ func TestPublicNetworkRetrievesDocumentedCID(t *testing.T) {
 	}
 
 	node := New()
-	if err := node.Start(PublicConfig{BootstrapPeers: DefaultPublicBootstrapPeers()}); err != nil {
+	if err := node.Start(testPublicConfig(t, DefaultPublicBootstrapPeers()...)); err != nil {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { _ = node.Stop() })
@@ -66,7 +74,7 @@ func TestPublicNetworkRetrievesDocumentedCID(t *testing.T) {
 
 func TestAddBytesStoresContentAndPinRoundtrip(t *testing.T) {
 	node := New()
-	if err := node.Start(PublicConfig{}); err != nil {
+	if err := node.Start(testPublicConfig(t)); err != nil {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { _ = node.Stop() })
@@ -112,9 +120,97 @@ func TestAddBytesStoresContentAndPinRoundtrip(t *testing.T) {
 	}
 }
 
+func TestRepositoryRestoresBlocksAndPins(t *testing.T) {
+	path := t.TempDir()
+	first := New()
+	if err := first.Start(PublicConfig{RepositoryPath: path}); err != nil {
+		t.Fatal(err)
+	}
+	cid, err := first.AddBytes(context.Background(), []byte("durable content"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := first.Pin(context.Background(), cid); err != nil {
+		t.Fatal(err)
+	}
+	if err := first.repo.recordPublication(cid, time.Now().UTC(), ""); err != nil {
+		t.Fatal(err)
+	}
+	if err := first.Stop(); err != nil {
+		t.Fatal(err)
+	}
+
+	second := New()
+	if err := second.Start(PublicConfig{RepositoryPath: path}); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = second.Stop() })
+	got, err := second.GetBlock(context.Background(), cid)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(got) != "durable content" {
+		t.Fatalf("block = %q", got)
+	}
+	pins, err := second.ListPins()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(pins) != 1 || pins[0].Cid != cid {
+		t.Fatalf("pins = %+v", pins)
+	}
+	if _, ok := second.provided[cid]; !ok {
+		t.Fatalf("published CID %s was not restored for periodic reprovide", cid)
+	}
+}
+
+func TestOnlyOneNativeCoreRunsPerProcess(t *testing.T) {
+	first := New()
+	if err := first.Start(PublicConfig{RepositoryPath: t.TempDir()}); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = first.Stop() })
+	second := New()
+	if err := second.Start(PublicConfig{RepositoryPath: t.TempDir()}); !errors.Is(err, ErrNodeAlreadyRunning) {
+		t.Fatalf("Start() error = %v, want ErrNodeAlreadyRunning", err)
+	}
+}
+
+func TestProvideRequiresNetworkReadiness(t *testing.T) {
+	node := New()
+	if err := node.Start(testPublicConfig(t)); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = node.Stop() })
+	cid, err := node.AddBytes(context.Background(), []byte("local only"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := node.Provide(context.Background(), cid); !errors.Is(err, ErrNetworkNotReady) {
+		t.Fatalf("Provide() error = %v, want ErrNetworkNotReady", err)
+	}
+}
+
+func TestPublicAddressMakesNetworkReadyWithoutRelay(t *testing.T) {
+	public, err := ma.NewMultiaddr("/ip4/8.8.8.8/tcp/4001")
+	if err != nil {
+		t.Fatal(err)
+	}
+	private, err := ma.NewMultiaddr("/ip4/192.168.1.10/tcp/4001")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !hasPublicAddress([]ma.Multiaddr{public}) {
+		t.Fatal("expected public address to be reachable")
+	}
+	if hasPublicAddress([]ma.Multiaddr{private}) {
+		t.Fatal("private address must not be treated as publicly reachable")
+	}
+}
+
 func TestAddBytesMatchesDocumentedCID(t *testing.T) {
 	node := New()
-	if err := node.Start(PublicConfig{}); err != nil {
+	if err := node.Start(testPublicConfig(t)); err != nil {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { _ = node.Stop() })
@@ -131,7 +227,7 @@ func TestAddBytesMatchesDocumentedCID(t *testing.T) {
 
 func TestAddBytesChunksLargeContent(t *testing.T) {
 	node := New()
-	if err := node.Start(PublicConfig{}); err != nil {
+	if err := node.Start(testPublicConfig(t)); err != nil {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { _ = node.Stop() })
@@ -157,7 +253,7 @@ func TestAddBytesChunksLargeContent(t *testing.T) {
 
 func TestPinRejectsUnknownCID(t *testing.T) {
 	node := New()
-	if err := node.Start(PublicConfig{}); err != nil {
+	if err := node.Start(testPublicConfig(t)); err != nil {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { _ = node.Stop() })
@@ -184,7 +280,7 @@ func TestOperationsRequireRunningNode(t *testing.T) {
 
 func TestSwarmAndBootstrapManagement(t *testing.T) {
 	node := New()
-	if err := node.Start(PublicConfig{}); err != nil {
+	if err := node.Start(testPublicConfig(t)); err != nil {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { _ = node.Stop() })
@@ -232,7 +328,7 @@ func TestSwarmAndBootstrapManagement(t *testing.T) {
 
 func TestBitswapStatsAndKeysOnStartedNode(t *testing.T) {
 	node := New()
-	if err := node.Start(PublicConfig{}); err != nil {
+	if err := node.Start(testPublicConfig(t)); err != nil {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { _ = node.Stop() })
@@ -260,7 +356,7 @@ func TestPublishAndResolveIPNS(t *testing.T) {
 	}
 
 	node := New()
-	if err := node.Start(PublicConfig{BootstrapPeers: DefaultPublicBootstrapPeers()}); err != nil {
+	if err := node.Start(testPublicConfig(t, DefaultPublicBootstrapPeers()...)); err != nil {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { _ = node.Stop() })
@@ -290,7 +386,7 @@ func TestPublishAndResolveIPNS(t *testing.T) {
 
 func TestFindPeerOnSelf(t *testing.T) {
 	node := New()
-	if err := node.Start(PublicConfig{}); err != nil {
+	if err := node.Start(testPublicConfig(t)); err != nil {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { _ = node.Stop() })
@@ -307,7 +403,7 @@ func TestFindPeerOnSelf(t *testing.T) {
 
 func TestPublicConfigRejectsInvalidBootstrapMultiaddr(t *testing.T) {
 	node := New()
-	err := node.Start(PublicConfig{BootstrapPeers: []string{"not-a-multiaddr"}})
+	err := node.Start(testPublicConfig(t, "not-a-multiaddr"))
 	if err == nil {
 		t.Fatal("expected invalid bootstrap error")
 	}
@@ -315,7 +411,7 @@ func TestPublicConfigRejectsInvalidBootstrapMultiaddr(t *testing.T) {
 
 func TestPublicStartCreatesLibp2pIdentity(t *testing.T) {
 	node := New()
-	if err := node.Start(PublicConfig{}); err != nil {
+	if err := node.Start(testPublicConfig(t)); err != nil {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { _ = node.Stop() })
@@ -334,7 +430,7 @@ func TestPublicStartCreatesLibp2pIdentity(t *testing.T) {
 
 func TestPublicPointerConfigCreatesLibp2pIdentity(t *testing.T) {
 	node := New()
-	if err := node.Start(&PublicConfig{}); err != nil {
+	if err := node.Start(&PublicConfig{RepositoryPath: t.TempDir()}); err != nil {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { _ = node.Stop() })
@@ -371,7 +467,7 @@ func TestStatusAndCapabilitiesAreSafeDuringConcurrentLifecycleCalls(t *testing.T
 		group.Add(1)
 		go func() {
 			defer group.Done()
-			_ = node.Start(PublicConfig{})
+			_ = node.Start(testPublicConfig(t))
 			_ = node.Stop()
 			_ = node.Status()
 			_ = node.Capabilities()
@@ -379,7 +475,7 @@ func TestStatusAndCapabilitiesAreSafeDuringConcurrentLifecycleCalls(t *testing.T
 	}
 	group.Wait()
 
-	if got := node.Capabilities(); !reflect.DeepEqual(got, []string{"inboundListen", "tcp", "quic", "dhtRouting"}) {
+	if got := node.Capabilities(); !reflect.DeepEqual(got, []string{"inboundListen", "tcp", "quic", "dhtRouting", "publicPublication"}) {
 		t.Fatalf("capabilities = %v", got)
 	}
 }
@@ -389,7 +485,7 @@ func TestDiagnosePublicReachability(t *testing.T) {
 		t.Skip("set IPFS_PUBLIC_INTEGRATION=1")
 	}
 	node := New()
-	if err := node.Start(PublicConfig{BootstrapPeers: DefaultPublicBootstrapPeers()}); err != nil {
+	if err := node.Start(testPublicConfig(t, DefaultPublicBootstrapPeers()...)); err != nil {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { _ = node.Stop() })
@@ -428,39 +524,14 @@ func TestDiagnosePublicReachability(t *testing.T) {
 	}
 }
 
-func TestTwoNodesShareContentDirectly(t *testing.T) {
+func TestSecondNodeDoesNotStartWhileFirstRuns(t *testing.T) {
 	nodeA := New()
-	if err := nodeA.Start(PublicConfig{}); err != nil {
+	if err := nodeA.Start(testPublicConfig(t)); err != nil {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { _ = nodeA.Stop() })
 	nodeB := New()
-	if err := nodeB.Start(PublicConfig{}); err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(func() { _ = nodeB.Stop() })
-	ctx := context.Background()
-
-	// Dial node A from node B over a direct TCP address.
-	info, err := peer.AddrInfoFromString(nodeA.Status().ListenAddrs[0])
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err := nodeB.host.Connect(ctx, *info); err != nil {
-		t.Fatal(err)
-	}
-
-	rawCID, err := nodeA.AddBytes(ctx, []byte("direct share"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	time.Sleep(2 * time.Second)
-
-	data, err := nodeB.GetBlock(ctx, rawCID)
-	if err != nil {
-		t.Fatalf("node B could not fetch from node A: %v", err)
-	}
-	if string(data) != "direct share" {
-		t.Fatalf("retrieved %q", data)
+	if err := nodeB.Start(testPublicConfig(t)); !errors.Is(err, ErrNodeAlreadyRunning) {
+		t.Fatalf("Start() error = %v, want ErrNodeAlreadyRunning", err)
 	}
 }

@@ -11,7 +11,10 @@ class IpfsNodeLifecyclePanel extends StatelessWidget {
 
   final IpfsNodeController controller;
 
-  /// Config used when the start button is pressed. Defaults to a public node.
+  /// Config used when the start button is pressed.
+  ///
+  /// A null value keeps Start disabled while the host resolves its persistent
+  /// repository directory.
   final NodeConfig? config;
 
   @override
@@ -40,9 +43,9 @@ class IpfsNodeLifecyclePanel extends StatelessWidget {
                     label: const Text('停止'),
                   )
                 : FilledButton.icon(
-                    onPressed: controller.loading
+                    onPressed: controller.loading || config == null
                         ? null
-                        : () => controller.start(config ?? NodeConfig.public()),
+                        : () => controller.start(config!),
                     icon: const Icon(Icons.play_arrow),
                     label: const Text('启动'),
                   ),

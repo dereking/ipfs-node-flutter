@@ -17,6 +17,7 @@ func TestPublicHeaderDeclaresStableErrorCodesAndABI(t *testing.T) {
 		"#define IPFS_NODE_ERR_INVALID_HANDLE 1",
 		"#define IPFS_NODE_ERR_INVALID_CONFIGURATION 2",
 		"#define IPFS_NODE_ERR_INVALID_STATE 3",
+		"#define IPFS_NODE_ERR_NODE_ALREADY_RUNNING 4",
 		"extern uintptr_t ipfs_node_create(void);",
 		"extern int ipfs_node_start(uintptr_t handle, char* request);",
 		"extern int ipfs_node_stop(uintptr_t handle);",

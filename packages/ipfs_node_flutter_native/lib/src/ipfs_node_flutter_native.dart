@@ -54,6 +54,12 @@ final class NativeNodeInvalidStateException
       : super(message: 'Native node lifecycle state is invalid.');
 }
 
+final class NativeNodeAlreadyRunningException
+    extends NativeNodeOperationException {
+  const NativeNodeAlreadyRunningException({required super.operation})
+      : super(message: 'Another native IPFS node is already running.');
+}
+
 final class NativeNodeProtocolException extends NativeNodeOperationException {
   const NativeNodeProtocolException(
       {required super.operation, required super.message});
@@ -149,9 +155,8 @@ final class IpfsNodeFlutterNative extends IpfsNodePlatform {
       bootstrapErrors: _decodeStringList('status', map, 'bootstrapErrors'),
       relayAddrs: _decodeStringList('status', map, 'relayAddrs'),
       relayReady: map['relayReady'] == true,
-      routingTableSize: map['routingTableSize'] is int
-          ? map['routingTableSize'] as int
-          : 0,
+      routingTableSize:
+          map['routingTableSize'] is int ? map['routingTableSize'] as int : 0,
       dhtReady: map['dhtReady'] == true,
     );
   }
@@ -239,6 +244,57 @@ final class IpfsNodeFlutterNative extends IpfsNodePlatform {
         operation: 'addBytes',
         message: 'Native node response did not contain the byte count.',
       );
+    }
+    return IpfsAddResult(cid: cid, bytes: added);
+  }
+
+  @override
+  Future<bool> networkReady() async {
+    final map = _decodeObject(
+      'networkReady',
+      _requiredResponse(
+          'networkReady', await _inIsolate((abi) => abi.networkReady())),
+    );
+    return map['ready'] == true;
+  }
+
+  @override
+  Future<void> provide(String cid,
+      {Duration timeout = const Duration(seconds: 60)}) async {
+    _throwForStringError(
+      'provide',
+      _requiredResponse('provide',
+          await _inIsolate((abi) => abi.provide(cid, timeout.inMilliseconds))),
+    );
+  }
+
+  @override
+  Future<IpfsAddResult> addAndProvide(Uint8List bytes,
+      {Duration timeout = const Duration(seconds: 60)}) async {
+    final encoded = _requiredResponse(
+        'addAndProvide',
+        await _inIsolate((abi) {
+          final pointer = calloc<Uint8>(bytes.length);
+          pointer.asTypedList(bytes.length).setAll(0, bytes);
+          try {
+            return abi.addAndProvide(
+                pointer.cast<Void>(), bytes.length, timeout.inMilliseconds);
+          } finally {
+            calloc.free(pointer);
+          }
+        }));
+    final map = _decodeObject('addAndProvide', encoded);
+    final error = map['error'];
+    if (error is String && error.isNotEmpty) {
+      throw NativeNodeRequestException(
+          operation: 'addAndProvide', message: error);
+    }
+    final cid = map['cid'];
+    final added = map['bytes'];
+    if (cid is! String || added is! int) {
+      throw const NativeNodeProtocolException(
+          operation: 'addAndProvide',
+          message: 'Native node response was invalid.');
     }
     return IpfsAddResult(cid: cid, bytes: added);
   }
@@ -474,10 +530,12 @@ final class IpfsNodeFlutterNative extends IpfsNodePlatform {
 }
 
 String _encodeStartRequest(NodeConfig config) => switch (config) {
-      PublicNodeConfig(:final bootstrapPeers) => jsonEncode({
+      PublicNodeConfig(:final bootstrapPeers, :final repositoryPath) =>
+        jsonEncode({
           'network': 'public',
           'bootstrapPeers': bootstrapPeers,
           'useDefaultBootstrap': bootstrapPeers.isEmpty,
+          'repositoryPath': repositoryPath,
         }),
       PrivateNodeConfig(:final swarmKey) => jsonEncode({
           'network': 'private',
@@ -567,6 +625,8 @@ void _throwForError(String operation, _NativeReturnCode code) {
       throw NativeNodeInvalidConfigurationException(operation: operation);
     case _NativeReturnCode.invalidState:
       throw NativeNodeInvalidStateException(operation: operation);
+    case _NativeReturnCode.nodeAlreadyRunning:
+      throw NativeNodeAlreadyRunningException(operation: operation);
     case _NativeReturnCode.unknown:
       throw NativeNodeProtocolException(
         operation: operation,
@@ -676,6 +736,7 @@ enum _NativeReturnCode {
   invalidHandle(1),
   invalidConfiguration(2),
   invalidState(3),
+  nodeAlreadyRunning(4),
   unknown(-1);
 
   const _NativeReturnCode(this.value);
@@ -710,6 +771,16 @@ final class _FfiNativeNodeAbi {
         ),
         _addBytes = library.lookupFunction<_AddBytesNative, _AddBytesDart>(
           'ipfs_node_add_bytes',
+        ),
+        _networkReady = library.lookupFunction<_StringNative, _StringDart>(
+          'ipfs_node_network_ready',
+        ),
+        _provide = library.lookupFunction<_TimeoutNative, _TimeoutDart>(
+          'ipfs_node_provide',
+        ),
+        _addAndProvide =
+            library.lookupFunction<_AddAndProvideNative, _AddAndProvideDart>(
+          'ipfs_node_add_and_provide',
         ),
         _pin = library.lookupFunction<_PinNative, _PinDart>('ipfs_node_pin'),
         _unpin =
@@ -771,6 +842,9 @@ final class _FfiNativeNodeAbi {
   final _StringDart _capabilities;
   final _GetBlockDart _getBlock;
   final _AddBytesDart _addBytes;
+  final _StringDart _networkReady;
+  final _TimeoutDart _provide;
+  final _AddAndProvideDart _addAndProvide;
   final _PinDart _pin;
   final _PinDart _unpin;
   final _StringDart _listPins;
@@ -824,6 +898,21 @@ final class _FfiNativeNodeAbi {
 
   String? addBytes(Pointer<Void> data, int length) {
     final response = _addBytes(_handle, data, length);
+    if (response == nullptr) return null;
+    try {
+      return response.cast<Utf8>().toDartString();
+    } finally {
+      _freeString(response);
+    }
+  }
+
+  String? networkReady() => _readString(_networkReady);
+
+  String? provide(String value, int timeoutMillis) =>
+      _callStringWithTimeout(_provide, value, timeoutMillis);
+
+  String? addAndProvide(Pointer<Void> data, int length, int timeoutMillis) {
+    final response = _addAndProvide(_handle, data, length, timeoutMillis);
     if (response == nullptr) return null;
     try {
       return response.cast<Utf8>().toDartString();
@@ -945,6 +1034,18 @@ typedef _AddBytesDart = Pointer<Char> Function(
   int handle,
   Pointer<Void> data,
   int length,
+);
+typedef _AddAndProvideNative = Pointer<Char> Function(
+  UintPtr handle,
+  Pointer<Void> data,
+  Size length,
+  Int32 timeoutMillis,
+);
+typedef _AddAndProvideDart = Pointer<Char> Function(
+  int handle,
+  Pointer<Void> data,
+  int length,
+  int timeoutMillis,
 );
 typedef _PinNative = Pointer<Char> Function(
   UintPtr handle,

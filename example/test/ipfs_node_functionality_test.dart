@@ -45,6 +45,7 @@ void main() {
         Capability.tcp,
         Capability.quic,
         Capability.dhtRouting,
+        Capability.publicPublication,
       }),
     );
     expect(() => node.require(Capability.inboundListen), returnsNormally);
@@ -71,21 +72,17 @@ void main() {
     );
   });
 
-  test('two public SDK nodes own different native identities', () async {
+  test('second public SDK node is rejected by the process singleton', () async {
     final first = IpfsNode();
     final second = IpfsNode();
     addTearDown(first.dispose);
     addTearDown(second.dispose);
 
     await first.start(_offlinePublicConfig());
-    await second.start(_offlinePublicConfig());
-
-    final firstStatus = await first.status();
-    final secondStatus = await second.status();
-    expect(firstStatus.peerId, isNot(secondStatus.peerId));
-
-    await first.dispose();
-    expect((await second.status()).lifecycle, NodeLifecycle.running);
+    await expectLater(
+      second.start(_offlinePublicConfig()),
+      throwsA(isA<NativeNodeAlreadyRunningException>()),
+    );
   });
 
   test(
@@ -94,7 +91,10 @@ void main() {
       final node = IpfsNode();
       addTearDown(node.dispose);
 
-      await node.start(NodeConfig.public());
+      await node.start(NodeConfig.public(
+        repositoryPath:
+            Directory.systemTemp.createTempSync('ipfs-public-test-').path,
+      ));
       final status = await node.status();
       expect(status.lifecycle, NodeLifecycle.running);
       expect(status.connectedPeers, isNotEmpty);
@@ -109,6 +109,8 @@ void main() {
 }
 
 NodeConfig _offlinePublicConfig() => NodeConfig.public(
+      repositoryPath:
+          Directory.systemTemp.createTempSync('ipfs-offline-test-').path,
       bootstrapPeers: const [_unreachableBootstrapPeer],
     );
 

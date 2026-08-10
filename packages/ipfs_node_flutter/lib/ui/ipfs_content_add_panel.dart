@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ipfs_node_flutter/ipfs_node_flutter.dart';
@@ -23,19 +25,26 @@ class _IpfsContentAddPanelState extends State<IpfsContentAddPanel> {
   bool _loading = false;
   IpfsAddResult? _result;
   Object? _error;
+  bool _published = false;
 
-  Future<void> _add() async {
+  Future<void> _add({required bool publish}) async {
     final text = _textController.text;
     if (text.isEmpty || _loading) return;
     setState(() {
       _loading = true;
       _result = null;
       _error = null;
+      _published = false;
     });
     try {
-      final result = await widget.controller.node.addText(text);
+      final result = publish
+          ? await widget.controller.node.addAndProvide(utf8.encode(text))
+          : await widget.controller.node.addText(text);
       if (!mounted) return;
-      setState(() => _result = result);
+      setState(() {
+        _result = result;
+        _published = publish;
+      });
     } catch (error) {
       if (!mounted) return;
       setState(() => _error = error);
@@ -81,13 +90,21 @@ class _IpfsContentAddPanelState extends State<IpfsContentAddPanel> {
               ),
             ),
             const SizedBox(height: 8),
-            Align(
-              alignment: Alignment.centerRight,
-              child: FilledButton.icon(
-                onPressed: _loading ? null : _add,
-                icon: const Icon(Icons.upload),
-                label: const Text('添加'),
-              ),
+            Wrap(
+              alignment: WrapAlignment.end,
+              spacing: 8,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: _loading ? null : () => _add(publish: false),
+                  icon: const Icon(Icons.save_alt),
+                  label: const Text('本地添加'),
+                ),
+                FilledButton.icon(
+                  onPressed: _loading ? null : () => _add(publish: true),
+                  icon: const Icon(Icons.public),
+                  label: const Text('添加并发布'),
+                ),
+              ],
             ),
             const SizedBox(height: 8),
             if (_loading)
@@ -95,7 +112,7 @@ class _IpfsContentAddPanelState extends State<IpfsContentAddPanel> {
             else ...[
               if (_result != null) ...[
                 SelectableText(
-                  '成功：${_result!.cid}（${_result!.bytes} 字节）',
+                  '${_published ? '已发布' : '已保存到本地'}：${_result!.cid}（${_result!.bytes} 字节）',
                 ),
                 Align(
                   alignment: Alignment.centerRight,

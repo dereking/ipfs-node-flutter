@@ -5,13 +5,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/ipfs/boxo/autoconf"
 	"github.com/ipfs/boxo/bitswap"
-	bsnet "github.com/ipfs/boxo/bitswap/network/bsnet"
 	bsnetiface "github.com/ipfs/boxo/bitswap/network"
+	bsnet "github.com/ipfs/boxo/bitswap/network/bsnet"
 	"github.com/ipfs/boxo/blockstore"
 	"github.com/ipfs/boxo/ipld/merkledag"
 	"github.com/ipfs/boxo/ipld/unixfs"
@@ -21,14 +23,12 @@ import (
 	"github.com/ipfs/boxo/path"
 	"github.com/ipfs/go-block-format"
 	"github.com/ipfs/go-cid"
-	datastore "github.com/ipfs/go-datastore"
-	dssync "github.com/ipfs/go-datastore/sync"
 	ipld "github.com/ipfs/go-ipld-format"
 	libp2p "github.com/libp2p/go-libp2p"
+	dht "github.com/libp2p/go-libp2p-kad-dht"
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/peer"
-	dht "github.com/libp2p/go-libp2p-kad-dht"
 	ma "github.com/multiformats/go-multiaddr"
 	mh "github.com/multiformats/go-multihash"
 )
@@ -48,7 +48,19 @@ var (
 	// ErrInvalidLifecycleTransition is reserved for lifecycle transitions that
 	// cannot be performed by the synchronous foundation.
 	ErrInvalidLifecycleTransition = errors.New("invalid node lifecycle transition")
+	// ErrRepositoryPathRequired is returned when a native public node has no
+	// durable local repository path.
+	ErrRepositoryPathRequired = errors.New("native repository path is required")
+	// ErrRepositoryLocked is returned when another process owns this repository.
+	ErrRepositoryLocked = errors.New("native repository is already locked")
+	// ErrNodeAlreadyRunning is returned when a second native core starts in one process.
+	ErrNodeAlreadyRunning = errors.New("a native IPFS node is already running in this process")
+	// ErrNetworkNotReady is returned until DHT routing and either a relay
+	// reservation or a public direct address exist.
+	ErrNetworkNotReady = errors.New("public IPFS network is not ready")
 )
+
+var runningNativeCore atomic.Bool
 
 // Lifecycle names are shared with the Dart public API and C ABI status JSON.
 type Lifecycle string
@@ -120,6 +132,7 @@ type KeyInfo struct {
 // PublicConfig starts a node configured for the public IPFS network.
 type PublicConfig struct {
 	BootstrapPeers []string
+	RepositoryPath string
 }
 
 // PrivateConfig starts a node intended for a private IPFS network.
@@ -137,6 +150,7 @@ type Core struct {
 	bitswap   *bitswap.Bitswap
 	network   bsnetiface.BitSwapNetwork
 	store     blockstore.Blockstore
+	repo      *repository
 	pins      map[string]PinInfo
 	provided  map[string]struct{}
 	bootstrap []string
@@ -165,6 +179,9 @@ func (core *Core) Start(config any) error {
 
 	switch core.status.Lifecycle {
 	case Stopped:
+		if !runningNativeCore.CompareAndSwap(false, true) {
+			return ErrNodeAlreadyRunning
+		}
 		core.status = Status{Lifecycle: Starting}
 		var public *PublicConfig
 		switch value := config.(type) {
@@ -175,6 +192,7 @@ func (core *Core) Start(config any) error {
 		}
 		if public != nil {
 			if err := core.startPublic(*public); err != nil {
+				runningNativeCore.Store(false)
 				core.status = Status{Lifecycle: Failed, SafeDiagnostic: err.Error()}
 				return err
 			}
@@ -222,6 +240,11 @@ func (core *Core) Stop() error {
 		core.bootstrap = nil
 		core.key = nil
 		core.namesys = nil
+		if core.repo != nil {
+			_ = core.repo.Close()
+			core.repo = nil
+		}
+		runningNativeCore.Store(false)
 		core.status = Status{Lifecycle: Stopped}
 		return nil
 	default:
@@ -268,13 +291,19 @@ func isRelayAddr(addr ma.Multiaddr) bool {
 // Capabilities returns the native transports and routing protocol initialized
 // by a public node.
 func (core *Core) Capabilities() []string {
-	return []string{"inboundListen", "tcp", "quic", "dhtRouting"}
+	return []string{"inboundListen", "tcp", "quic", "dhtRouting", "publicPublication"}
 }
 
 func (core *Core) startPublic(config PublicConfig) error {
 	ctx, cancel := context.WithCancel(context.Background())
-	key, _, err := crypto.GenerateKeyPair(crypto.Ed25519, -1)
+	repo, err := openRepository(config.RepositoryPath)
 	if err != nil {
+		cancel()
+		return err
+	}
+	key, err := repo.loadOrCreateIdentity()
+	if err != nil {
+		_ = repo.Close()
 		cancel()
 		return err
 	}
@@ -304,6 +333,7 @@ func (core *Core) startPublic(config PublicConfig) error {
 		}),
 	)
 	if err != nil {
+		_ = repo.Close()
 		cancel()
 		core.status = Status{Lifecycle: Failed, SafeDiagnostic: err.Error()}
 		return err
@@ -311,10 +341,11 @@ func (core *Core) startPublic(config PublicConfig) error {
 	kad, err := dht.New(h, dht.Mode(dht.ModeAuto))
 	if err != nil {
 		_ = h.Close()
+		_ = repo.Close()
 		cancel()
 		return err
 	}
-	store := blockstore.NewBlockstore(dssync.MutexWrap(datastore.NewMapDatastore()))
+	store := repo.store
 	network := bsnet.NewFromIpfsHost(h)
 	client := bitswap.New(ctx, network, kad, store)
 	network.Start(client)
@@ -323,6 +354,7 @@ func (core *Core) startPublic(config PublicConfig) error {
 		_ = client.Close()
 		_ = kad.Close()
 		_ = h.Close()
+		_ = repo.Close()
 		cancel()
 		return err
 	}
@@ -331,8 +363,17 @@ func (core *Core) startPublic(config PublicConfig) error {
 	core.ctx = ctx
 	core.network = network
 	core.store = store
-	core.pins = make(map[string]PinInfo)
+	core.repo = repo
+	core.pins = make(map[string]PinInfo, len(repo.metadata.Pins))
+	for rawCID, pin := range repo.metadata.Pins {
+		core.pins[rawCID] = pin
+	}
 	core.provided = make(map[string]struct{})
+	for rawCID, metadata := range repo.metadata.Roots {
+		if metadata.LastPublished != nil && metadata.PublishError == "" {
+			core.provided[rawCID] = struct{}{}
+		}
+	}
 	core.bootstrap = append([]string(nil), config.BootstrapPeers...)
 	core.key = key
 	core.namesys = ns
@@ -399,6 +440,79 @@ func (core *Core) GetBlock(ctx context.Context, rawCID string) ([]byte, error) {
 	return append([]byte(nil), block.RawData()...), nil
 }
 
+// NetworkReady reports whether the node can publish a provider record that
+// remote peers can route to through a relay or a public direct address.
+func (core *Core) NetworkReady() bool {
+	status := core.Status()
+	core.mu.Lock()
+	var addrs []ma.Multiaddr
+	if core.host != nil {
+		addrs = append(addrs, core.host.Addrs()...)
+	}
+	core.mu.Unlock()
+	return status.DhtReady && (status.RelayReady || hasPublicAddress(addrs))
+}
+
+func hasPublicAddress(addrs []ma.Multiaddr) bool {
+	for _, addr := range addrs {
+		public := false
+		ma.ForEach(addr, func(component ma.Component) bool {
+			protocol := component.Protocol().Code
+			if protocol != ma.P_IP4 && protocol != ma.P_IP6 {
+				return true
+			}
+			ip := net.ParseIP(component.Value())
+			if ip != nil && !ip.IsPrivate() && !ip.IsLoopback() && !ip.IsUnspecified() && !ip.IsLinkLocalUnicast() {
+				public = true
+			}
+			return !public
+		})
+		if public {
+			return true
+		}
+	}
+	return false
+}
+
+// Provide announces a locally stored root and persists the successful result.
+func (core *Core) Provide(ctx context.Context, rawCID string) error {
+	if !core.NetworkReady() {
+		return ErrNetworkNotReady
+	}
+	parsed, err := cid.Parse(rawCID)
+	if err != nil {
+		return err
+	}
+	core.mu.Lock()
+	kad, repo := core.dht, core.repo
+	core.mu.Unlock()
+	if kad == nil || repo == nil {
+		return errors.New("public IPFS node is not running")
+	}
+	if err := kad.Provide(ctx, parsed, true); err != nil {
+		return err
+	}
+	if err := repo.recordPublication(parsed.String(), time.Now().UTC(), ""); err != nil {
+		return err
+	}
+	core.mu.Lock()
+	core.provided[parsed.String()] = struct{}{}
+	core.mu.Unlock()
+	return nil
+}
+
+// AddAndProvide stores content durably, then waits for its public announcement.
+func (core *Core) AddAndProvide(ctx context.Context, data []byte) (string, error) {
+	rawCID, err := core.AddBytes(ctx, data)
+	if err != nil {
+		return "", err
+	}
+	if err := core.Provide(ctx, rawCID); err != nil {
+		return "", err
+	}
+	return rawCID, nil
+}
+
 // AddBytes stores content and returns its content root CID.
 //
 // Content that fits in one chunk is stored as a single raw block, so its CID
@@ -432,7 +546,9 @@ func (core *Core) AddBytes(ctx context.Context, data []byte) (string, error) {
 		if err := store.Put(ctx, block); err != nil {
 			return "", err
 		}
-		core.provide(ctx, block.Cid().String())
+		if err := core.repo.recordRoot(block.Cid().String()); err != nil {
+			return "", err
+		}
 		return block.Cid().String(), nil
 	}
 
@@ -464,7 +580,9 @@ func (core *Core) AddBytes(ctx context.Context, data []byte) (string, error) {
 	if err := store.Put(ctx, rootBlock); err != nil {
 		return "", err
 	}
-	core.provide(ctx, root.Cid().String())
+	if err := core.repo.recordRoot(root.Cid().String()); err != nil {
+		return "", err
+	}
 	return root.Cid().String(), nil
 }
 
@@ -501,7 +619,9 @@ func (core *Core) Pin(ctx context.Context, rawCID string) error {
 		PinnedAt: time.Now(),
 	}
 	core.mu.Unlock()
-	core.provide(ctx, parsed.String())
+	if err := core.repo.setPins(core.pins); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -602,7 +722,7 @@ func (core *Core) Unpin(rawCID string) error {
 		return fmt.Errorf("not pinned: %s", parsed)
 	}
 	delete(core.pins, parsed.String())
-	return nil
+	return core.repo.setPins(core.pins)
 }
 
 // ListPins returns the locally pinned content roots.
@@ -904,6 +1024,9 @@ func addrInfoToPeer(info peer.AddrInfo) PeerInfo {
 func validateConfig(config any) error {
 	switch value := config.(type) {
 	case PublicConfig:
+		if value.RepositoryPath == "" {
+			return ErrRepositoryPathRequired
+		}
 		for _, raw := range value.BootstrapPeers {
 			if _, err := ma.NewMultiaddr(raw); err != nil {
 				return err
@@ -913,6 +1036,9 @@ func validateConfig(config any) error {
 	case *PublicConfig:
 		if value == nil {
 			return ErrUnsupportedConfig
+		}
+		if value.RepositoryPath == "" {
+			return ErrRepositoryPathRequired
 		}
 		for _, raw := range value.BootstrapPeers {
 			if _, err := ma.NewMultiaddr(raw); err != nil {

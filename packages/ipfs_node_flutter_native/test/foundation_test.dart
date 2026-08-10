@@ -40,6 +40,7 @@ void main() {
           Capability.tcp,
           Capability.quic,
           Capability.dhtRouting,
+          Capability.publicPublication,
         ]),
       );
 
@@ -116,7 +117,7 @@ void main() {
     'native adapter retrieves the documented CID from public IPFS',
     () async {
       final platform = IpfsNodeFlutterNative(libraryPath: hostLibrary.path);
-      await platform.start(NodeConfig.public());
+      await platform.start(_offlinePublicConfig());
       addTearDown(platform.dispose);
 
       final status = await platform.status();
@@ -138,7 +139,7 @@ void main() {
       await platform.dispose();
 
       await expectLater(
-        platform.start(NodeConfig.public()),
+        platform.start(_offlinePublicConfig()),
         throwsA(isA<NativeNodeInvalidHandleException>()),
       );
     },
@@ -157,22 +158,24 @@ void main() {
   });
 
   test(
-    'separate native adapters own independent handles',
+    'second native adapter reports the process singleton error',
     () async {
       final first = IpfsNodeFlutterNative(libraryPath: hostLibrary.path);
       final second = IpfsNodeFlutterNative(libraryPath: hostLibrary.path);
       await first.start(_offlinePublicConfig());
-      await second.start(_offlinePublicConfig());
-
+      await expectLater(
+        second.start(_offlinePublicConfig()),
+        throwsA(isA<NativeNodeAlreadyRunningException>()),
+      );
       await first.dispose();
-
-      expect((await second.status()).lifecycle, NodeLifecycle.running);
       await second.dispose();
     },
   );
 }
 
 NodeConfig _offlinePublicConfig() => NodeConfig.public(
+      repositoryPath:
+          Directory.systemTemp.createTempSync('ipfs-node-flutter-test-').path,
       bootstrapPeers: const [
         '/ip4/127.0.0.1/tcp/1/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN',
       ],

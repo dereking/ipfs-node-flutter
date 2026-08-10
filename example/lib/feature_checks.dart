@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:convert';
 
 import 'package:ipfs_node_flutter/ipfs_node_flutter.dart';
@@ -98,7 +99,7 @@ Future<String> _checkInvalidCid(IpfsNode node) async {
 }
 
 Future<String> _checkDocumentedCid(IpfsNode node) async {
-  await node.start(NodeConfig.public());
+  await node.start(_publicConfig());
   final status = await node.status();
   final bytes = await node.getBlock(documentedCid);
   final content = utf8.decode(bytes);
@@ -109,5 +110,12 @@ Future<String> _checkDocumentedCid(IpfsNode node) async {
 }
 
 NodeConfig _offlinePublicConfig() => NodeConfig.public(
+      repositoryPath:
+          Directory.systemTemp.createTempSync('ipfs-node-feature-check-').path,
       bootstrapPeers: const [_unreachableBootstrapPeer],
+    );
+
+NodeConfig _publicConfig() => NodeConfig.public(
+      repositoryPath:
+          Directory.systemTemp.createTempSync('ipfs-node-feature-check-').path,
     );

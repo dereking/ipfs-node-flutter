@@ -169,7 +169,7 @@ import 'package:ipfs_node_flutter/ipfs_node_flutter.dart';
 final node = IpfsNode();               // 使用已注册的平台底层
 
 // 启动公网节点
-await node.start(NodeConfig.public());
+await node.start(NodeConfig.public(repositoryPath: '/app/support/ipfs-node'));
 
 // 查看状态
 final status = await node.status();
@@ -200,7 +200,7 @@ await node.dispose();
 
 ```dart
 // 公网节点（未指定 bootstrap 时使用 Boxo 官方公共 bootstrap）
-await node.start(NodeConfig.public());
+await node.start(NodeConfig.public(repositoryPath: '/app/support/ipfs-node'));
 
 // 私有网络（需提供 swarm key）
 await node.start(NodeConfig.private(
@@ -249,14 +249,29 @@ final raw = await node.addBytes(Uint8List.fromList([0, 1, 2, 255]));
 // 任意二进制（native）等价于 `ipfs add` CIDv1/raw-leaves：小内容直接得到 raw block CID
 ```
 
-> **跨节点取回**：native 会在以下"发布内容"的场景自动调用 `dht.Provide` 向公网 DHT 宣告 CID（30s 超时，失败静默；provider record 有效期约 48h，对齐 IPFS 语义）：
-> - `addBytes` / `addText`（新增内容）
-> - `pin`（固定内容）
-> - `publishName`（IPNS 发布时引用该内容）
->
-> 节点启用 **AutoRelay**（以已连接的公网 peer 为候选中继），NAT 后也能获得可被公网拨通的 `/p2p-circuit` 中继地址并写入 provider record；否则 record 只含私有地址，公网节点（含 web 经 bootstrap 中继）无法拨通。
->
-> 取回需满足：macOS 节点保持在线；web 节点已连接公共 bootstrap（用「Swarm 连接」面板确认 connected peers > 0）。浏览器无 DHT，依赖 bootstrap 节点中继。
+本地保存与公网发布是两个不同结果：
+
+```dart
+final local = await node.addText('仅保存到本机仓库');
+
+if (await node.networkReady()) {
+  final published = await node.addAndProvide(utf8.encode('保存并发布'));
+  print(published.cid);
+}
+
+// 已存在于本地仓库的 CID 可单独重新发布。
+await node.provide(local.cid);
+```
+
+Native 只有在 DHT 已就绪，且 relay reservation 或公网直连地址至少一项
+可用时，`networkReady()` 才返回 true。`addAndProvide` 在网络未就绪时失败，
+但已写入本地的内容仍然保留。Web 不支持 provider 发布；上述发布 API 会抛
+`UnsupportedCapabilityException`，本地 IndexedDB 添加与读取仍可使用。
+
+> **跨节点取回**：native 必须保持在线，并通过 `provide` 或
+> `addAndProvide` 成功写入 provider record。单独 `addBytes`、`addText` 或
+> `pin` 只保证本地持久化，不承诺公网可发现。Web 只能读取本地内容或已连接
+> peer 可提供的内容，不发布 provider record。
 
 ### 4.4 按 CID 取回 getBlock
 
@@ -424,7 +439,11 @@ import 'package:flutter/material.dart';
 import 'package:ipfs_node_flutter/ipfs_node_flutter.dart';
 
 class IpfsPage extends StatefulWidget {
-  const IpfsPage({super.key});
+  const IpfsPage({super.key, required this.repositoryPath});
+
+  /// 由宿主应用通过 path_provider 等方式取得的稳定、可写目录。
+  final String repositoryPath;
+
   @override
   State<IpfsPage> createState() => _IpfsPageState();
 }
@@ -437,7 +456,9 @@ class _IpfsPageState extends State<IpfsPage> {
   void initState() {
     super.initState();
     _controller = IpfsNodeController();
-    _controller.start(NodeConfig.public());   // 自动开始
+    _controller.start(NodeConfig.public(
+      repositoryPath: widget.repositoryPath,
+    )); // 原生端自动开始；Web 可省略 repositoryPath
   }
 
   @override

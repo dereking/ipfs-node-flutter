@@ -7,6 +7,8 @@ import 'package:ipfs_node_flutter/ipfs_node_flutter.dart';
 import 'package:ipfs_node_flutter_platform_interface/ipfs_node_platform_interface.dart';
 
 final class _FakeNodePlatform extends IpfsNodePlatform {
+  bool ready = true;
+
   @override
   Future<CapabilitySet> capabilities() async => const CapabilitySet.empty();
 
@@ -30,6 +32,23 @@ final class _FakeNodePlatform extends IpfsNodePlatform {
   @override
   Future<IpfsAddResult> addBytes(Uint8List bytes) async =>
       IpfsAddResult(cid: 'bafkrei-added-${bytes.length}', bytes: bytes.length);
+
+  @override
+  Future<bool> networkReady() async => ready;
+
+  @override
+  Future<IpfsAddResult> addAndProvide(
+    Uint8List bytes, {
+    Duration timeout = const Duration(seconds: 60),
+  }) async =>
+      IpfsAddResult(
+          cid: 'bafkrei-published-${bytes.length}', bytes: bytes.length);
+
+  @override
+  Future<void> provide(
+    String cid, {
+    Duration timeout = const Duration(seconds: 60),
+  }) async {}
 
   @override
   Future<void> pin(String cid) async {}
@@ -203,7 +222,12 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        home: Scaffold(body: IpfsNodeLifecyclePanel(controller: controller)),
+        home: Scaffold(
+          body: IpfsNodeLifecyclePanel(
+            controller: controller,
+            config: NodeConfig.public(repositoryPath: '/tmp/ui-ipfs-repo'),
+          ),
+        ),
       ),
     );
 
@@ -250,11 +274,90 @@ void main() {
     );
 
     await tester.enterText(find.byType(TextField), 'some text');
-    await tester.tap(find.text('添加'));
+    await tester.tap(find.text('本地添加'));
     await tester.pumpAndSettle();
 
     expect(find.textContaining('bafkrei-added-9'), findsOneWidget);
     expect(find.text('复制 CID'), findsOneWidget);
+  });
+
+  testWidgets('IpfsContentAddPanel adds and publishes text', (tester) async {
+    final controller = IpfsNodeController();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(body: IpfsContentAddPanel(controller: controller)),
+    ));
+
+    await tester.enterText(find.byType(TextField), 'public text');
+    await tester.tap(find.text('添加并发布'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('bafkrei-published-11'), findsOneWidget);
+    expect(find.textContaining('已发布'), findsOneWidget);
+  });
+
+  testWidgets('IpfsPublicationStatusPanel explains unavailable publication',
+      (tester) async {
+    await tester.pumpWidget(const MaterialApp(
+      home: Scaffold(
+        body: IpfsPublicationStatusPanel(
+          status: NodeStatus.running(dhtReady: true, relayReady: false),
+          networkReady: false,
+          publicAddressReady: false,
+        ),
+      ),
+    ));
+
+    expect(find.text('发布网络诊断'), findsOneWidget);
+    expect(find.textContaining('Relay 未就绪'), findsOneWidget);
+    expect(find.textContaining('公网直连不可用'), findsOneWidget);
+    expect(find.textContaining('暂不可发布'), findsOneWidget);
+  });
+
+  testWidgets('IpfsCidPublicationPanel retries and finds providers',
+      (tester) async {
+    final controller = IpfsNodeController();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: IpfsCidPublicationPanel(
+          controller: controller,
+          initialCid: 'bafkrei-target',
+        ),
+      ),
+    ));
+
+    await tester.tap(find.text('重新发布'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('发布成功'), findsOneWidget);
+    await tester.tap(find.text('查询 Provider'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('QmProvider'), findsOneWidget);
+  });
+
+  testWidgets('repository and Kubo panels render supplied native data',
+      (tester) async {
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: ListView(children: [
+          const IpfsRepositoryPanel(
+            repositoryPath: '/tmp/ipfs-repo',
+            contentCount: null,
+            pinCount: 1,
+          ),
+          IpfsKuboVerifyPanel(
+            onVerify: (cid) async => 'Kubo 已取回 $cid',
+            initialCid: 'bafkrei-check',
+          ),
+        ]),
+      ),
+    ));
+
+    expect(find.textContaining('/tmp/ipfs-repo'), findsOneWidget);
+    expect(find.textContaining('SDK 暂未暴露统计'), findsOneWidget);
+    await tester.tap(find.text('使用 Kubo 验证'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Kubo 已取回'), findsOneWidget);
   });
 
   testWidgets('IpfsPinPanel pins and unpins a CID', (tester) async {

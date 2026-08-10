@@ -1,10 +1,22 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include "libipfs_node_core.h"
 
 int main(void) {
-  char public_request[] = "{\"network\":\"public\"}";
+  char repository_path[256];
+  snprintf(repository_path, sizeof(repository_path), "/tmp/ipfs-node-abi-%d",
+           (int)getpid());
+  if (mkdir(repository_path, 0700) != 0) {
+    return 10;
+  }
+  char public_request[512];
+  snprintf(public_request, sizeof(public_request),
+           "{\"network\":\"public\",\"repositoryPath\":\"%s\"}",
+           repository_path);
   char invalid_private_request[] =
       "{\"network\":\"private\",\"swarmKey\":\"\"}";
 
