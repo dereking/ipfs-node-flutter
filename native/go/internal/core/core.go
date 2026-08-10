@@ -29,6 +29,7 @@ import (
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/peer"
+	"github.com/libp2p/go-libp2p/core/pnet"
 	ma "github.com/multiformats/go-multiaddr"
 	mh "github.com/multiformats/go-multihash"
 )
@@ -137,26 +138,47 @@ type PublicConfig struct {
 
 // PrivateConfig starts a node intended for a private IPFS network.
 type PrivateConfig struct {
-	SwarmKey []byte
+	RepositoryPath string
+	SwarmKey       []byte
+	BootstrapPeers []string
+	RelayPeers     []string
+	AllowedPeerIDs []string
+}
+
+type networkMode uint8
+
+const (
+	networkPublic networkMode = iota
+	networkPrivate
+)
+
+type networkConfig struct {
+	mode           networkMode
+	repositoryPath string
+	swarmKey       []byte
+	bootstrapPeers []string
+	relayPeers     []string
+	allowedPeerIDs []string
 }
 
 // Core owns one native node lifecycle state machine.
 type Core struct {
-	mu        sync.Mutex
-	ctx       context.Context
-	status    Status
-	host      host.Host
-	dht       *dht.IpfsDHT
-	bitswap   *bitswap.Bitswap
-	network   bsnetiface.BitSwapNetwork
-	store     blockstore.Blockstore
-	repo      *repository
-	pins      map[string]PinInfo
-	provided  map[string]struct{}
-	bootstrap []string
-	key       crypto.PrivKey
-	namesys   namesys.NameSystem
-	cancel    context.CancelFunc
+	mu          sync.Mutex
+	ctx         context.Context
+	status      Status
+	host        host.Host
+	dht         *dht.IpfsDHT
+	bitswap     *bitswap.Bitswap
+	network     bsnetiface.BitSwapNetwork
+	store       blockstore.Blockstore
+	repo        *repository
+	pins        map[string]PinInfo
+	provided    map[string]struct{}
+	bootstrap   []string
+	key         crypto.PrivKey
+	namesys     namesys.NameSystem
+	cancel      context.CancelFunc
+	networkMode networkMode
 }
 
 // New creates a stopped node.
@@ -183,19 +205,21 @@ func (core *Core) Start(config any) error {
 			return ErrNodeAlreadyRunning
 		}
 		core.status = Status{Lifecycle: Starting}
-		var public *PublicConfig
+		var network networkConfig
 		switch value := config.(type) {
 		case PublicConfig:
-			public = &value
+			network = publicNetworkConfig(value)
 		case *PublicConfig:
-			public = value
+			network = publicNetworkConfig(*value)
+		case PrivateConfig:
+			network = privateNetworkConfig(value)
+		case *PrivateConfig:
+			network = privateNetworkConfig(*value)
 		}
-		if public != nil {
-			if err := core.startPublic(*public); err != nil {
-				runningNativeCore.Store(false)
-				core.status = Status{Lifecycle: Failed, SafeDiagnostic: err.Error()}
-				return err
-			}
+		if err := core.startNetwork(network); err != nil {
+			runningNativeCore.Store(false)
+			core.status = Status{Lifecycle: Failed, SafeDiagnostic: err.Error()}
+			return err
 		}
 		core.status.Lifecycle = Running
 		return nil
@@ -262,6 +286,10 @@ func (core *Core) Status() Status {
 	status.ConnectedPeers = append([]string(nil), core.status.ConnectedPeers...)
 	status.BootstrapErrors = append([]string(nil), core.status.BootstrapErrors...)
 	if core.host != nil {
+		status.ConnectedPeers = status.ConnectedPeers[:0]
+		for _, peerID := range core.host.Network().Peers() {
+			status.ConnectedPeers = append(status.ConnectedPeers, peerID.String())
+		}
 		for _, addr := range core.host.Addrs() {
 			if isRelayAddr(addr) {
 				status.RelayAddrs = append(status.RelayAddrs, addr.String())
@@ -291,12 +319,37 @@ func isRelayAddr(addr ma.Multiaddr) bool {
 // Capabilities returns the native transports and routing protocol initialized
 // by a public node.
 func (core *Core) Capabilities() []string {
-	return []string{"inboundListen", "tcp", "quic", "dhtRouting", "publicPublication"}
+	core.mu.Lock()
+	mode := core.networkMode
+	core.mu.Unlock()
+	if mode == networkPrivate {
+		return []string{"inboundListen", "tcp", "quic", "dhtRouting", "privateSwarmKey", "providerRouting"}
+	}
+	return []string{"inboundListen", "tcp", "quic", "dhtRouting", "providerRouting", "publicPublication"}
 }
 
-func (core *Core) startPublic(config PublicConfig) error {
+func publicNetworkConfig(config PublicConfig) networkConfig {
+	return networkConfig{
+		mode:           networkPublic,
+		repositoryPath: config.RepositoryPath,
+		bootstrapPeers: append([]string(nil), config.BootstrapPeers...),
+	}
+}
+
+func privateNetworkConfig(config PrivateConfig) networkConfig {
+	return networkConfig{
+		mode:           networkPrivate,
+		repositoryPath: config.RepositoryPath,
+		swarmKey:       append([]byte(nil), config.SwarmKey...),
+		bootstrapPeers: append([]string(nil), config.BootstrapPeers...),
+		relayPeers:     append([]string(nil), config.RelayPeers...),
+		allowedPeerIDs: append([]string(nil), config.AllowedPeerIDs...),
+	}
+}
+
+func (core *Core) startNetwork(config networkConfig) error {
 	ctx, cancel := context.WithCancel(context.Background())
-	repo, err := openRepository(config.RepositoryPath)
+	repo, err := openRepository(config.repositoryPath)
 	if err != nil {
 		cancel()
 		return err
@@ -308,13 +361,33 @@ func (core *Core) startPublic(config PublicConfig) error {
 		return err
 	}
 	var h host.Host
-	h, err = libp2p.New(
-		libp2p.Identity(key),
+	options := []libp2p.Option{libp2p.Identity(key)}
+	if config.mode == networkPrivate {
+		options = append(options, libp2p.PrivateNetwork(pnet.PSK(config.swarmKey)))
+		if len(config.allowedPeerIDs) > 0 {
+			allowed, err := configuredAllowedPeers(config)
+			if err != nil {
+				_ = repo.Close()
+				cancel()
+				return err
+			}
+			options = append(options, libp2p.ConnectionGater(newPeerAllowlistGater(allowed)))
+		}
+		if len(config.relayPeers) > 0 {
+			relays, err := parseAddrInfos(config.relayPeers)
+			if err != nil {
+				_ = repo.Close()
+				cancel()
+				return err
+			}
+			options = append(options, libp2p.EnableAutoRelayWithStaticRelays(relays))
+		}
+	} else {
 		// Behind NAT the node must obtain a public circuit-relay address so
 		// remote peers can dial it; otherwise the DHT provider record only
 		// advertises unreachable private addresses. Candidate relays are the
 		// peers we are already connected to (public bootstrap peers).
-		libp2p.EnableAutoRelayWithPeerSource(func(ctx context.Context, num int) <-chan peer.AddrInfo {
+		options = append(options, libp2p.EnableAutoRelayWithPeerSource(func(ctx context.Context, num int) <-chan peer.AddrInfo {
 			out := make(chan peer.AddrInfo)
 			go func() {
 				defer close(out)
@@ -330,8 +403,9 @@ func (core *Core) startPublic(config PublicConfig) error {
 				}
 			}()
 			return out
-		}),
-	)
+		}))
+	}
+	h, err = libp2p.New(options...)
 	if err != nil {
 		_ = repo.Close()
 		cancel()
@@ -374,14 +448,15 @@ func (core *Core) startPublic(config PublicConfig) error {
 			core.provided[rawCID] = struct{}{}
 		}
 	}
-	core.bootstrap = append([]string(nil), config.BootstrapPeers...)
+	core.bootstrap = append([]string(nil), config.bootstrapPeers...)
 	core.key = key
 	core.namesys = ns
+	core.networkMode = config.mode
 	core.status.PeerID = h.ID().String()
 	for _, addr := range h.Addrs() {
 		core.status.ListenAddrs = append(core.status.ListenAddrs, addr.String()+"/p2p/"+h.ID().String())
 	}
-	for _, raw := range config.BootstrapPeers {
+	for _, raw := range config.bootstrapPeers {
 		addr, _ := ma.NewMultiaddr(raw)
 		info, err := peer.AddrInfoFromP2pAddr(addr)
 		if err != nil {
@@ -407,6 +482,22 @@ func (core *Core) startPublic(config PublicConfig) error {
 	}
 	go core.reprovideLoop(ctx)
 	return nil
+}
+
+func parseAddrInfos(values []string) ([]peer.AddrInfo, error) {
+	result := make([]peer.AddrInfo, 0, len(values))
+	for _, raw := range values {
+		addr, err := ma.NewMultiaddr(raw)
+		if err != nil {
+			return nil, err
+		}
+		info, err := peer.AddrInfoFromP2pAddr(addr)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, *info)
+	}
+	return result, nil
 }
 
 // GetBlock retrieves one raw IPFS block by CID from the local store, falling
@@ -445,11 +536,19 @@ func (core *Core) GetBlock(ctx context.Context, rawCID string) ([]byte, error) {
 func (core *Core) NetworkReady() bool {
 	status := core.Status()
 	core.mu.Lock()
+	mode := core.networkMode
 	var addrs []ma.Multiaddr
 	if core.host != nil {
 		addrs = append(addrs, core.host.Addrs()...)
 	}
 	core.mu.Unlock()
+	return networkReadyFor(mode, status, addrs)
+}
+
+func networkReadyFor(mode networkMode, status Status, addrs []ma.Multiaddr) bool {
+	if mode == networkPrivate {
+		return status.DhtReady && len(status.ConnectedPeers) > 0
+	}
 	return status.DhtReady && (status.RelayReady || hasPublicAddress(addrs))
 }
 
@@ -1047,16 +1146,36 @@ func validateConfig(config any) error {
 		}
 		return nil
 	case PrivateConfig:
-		if len(value.SwarmKey) == 0 {
+		if value.RepositoryPath == "" {
+			return ErrRepositoryPathRequired
+		}
+		if len(value.SwarmKey) != 32 {
 			return ErrInvalidPrivateSwarmKey
 		}
-		return nil
+		return validatePeerMultiaddrs(value.BootstrapPeers, value.RelayPeers)
 	case *PrivateConfig:
-		if value == nil || len(value.SwarmKey) == 0 {
+		if value == nil {
+			return ErrUnsupportedConfig
+		}
+		if value.RepositoryPath == "" {
+			return ErrRepositoryPathRequired
+		}
+		if len(value.SwarmKey) != 32 {
 			return ErrInvalidPrivateSwarmKey
 		}
-		return nil
+		return validatePeerMultiaddrs(value.BootstrapPeers, value.RelayPeers)
 	default:
 		return ErrUnsupportedConfig
 	}
+}
+
+func validatePeerMultiaddrs(groups ...[]string) error {
+	for _, values := range groups {
+		for _, raw := range values {
+			if _, err := ma.NewMultiaddr(raw); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }

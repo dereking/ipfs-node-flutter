@@ -1,10 +1,12 @@
 package core
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"os"
 	"reflect"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -12,6 +14,8 @@ import (
 
 	"github.com/ipfs/go-cid"
 	dht "github.com/libp2p/go-libp2p-kad-dht"
+	"github.com/libp2p/go-libp2p/core/network"
+	"github.com/libp2p/go-libp2p/core/peer"
 	ma "github.com/multiformats/go-multiaddr"
 )
 
@@ -20,6 +24,114 @@ func testPublicConfig(t *testing.T, bootstrapPeers ...string) PublicConfig {
 	return PublicConfig{
 		RepositoryPath: t.TempDir(),
 		BootstrapPeers: bootstrapPeers,
+	}
+}
+
+func TestPrivateStartCreatesProtectedPersistentNode(t *testing.T) {
+	node := New()
+	config := PrivateConfig{
+		RepositoryPath: t.TempDir(),
+		SwarmKey:       bytes.Repeat([]byte{7}, 32),
+	}
+	if err := node.Start(config); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = node.Stop() })
+	if node.host == nil || node.store == nil || node.dht == nil {
+		t.Fatal("private node did not initialize the shared stack")
+	}
+	if node.networkMode != networkPrivate {
+		t.Fatalf("network mode = %v, want private", node.networkMode)
+	}
+	capabilities := node.Capabilities()
+	for _, capability := range []string{"privateSwarmKey", "providerRouting"} {
+		if !slices.Contains(capabilities, capability) {
+			t.Fatalf("private capabilities %v do not contain %q", capabilities, capability)
+		}
+	}
+	if slices.Contains(capabilities, "publicPublication") {
+		t.Fatalf("private capabilities unexpectedly contain publicPublication: %v", capabilities)
+	}
+}
+
+func TestPrivateConfigRequiresRepositoryAnd32BytePSK(t *testing.T) {
+	if err := New().Start(PrivateConfig{SwarmKey: make([]byte, 32)}); !errors.Is(err, ErrRepositoryPathRequired) {
+		t.Fatalf("missing repository error = %v", err)
+	}
+	if err := New().Start(PrivateConfig{RepositoryPath: t.TempDir(), SwarmKey: []byte{1}}); !errors.Is(err, ErrInvalidPrivateSwarmKey) {
+		t.Fatalf("short PSK error = %v", err)
+	}
+}
+
+func TestNetworkReadinessDependsOnSelectedNetwork(t *testing.T) {
+	status := Status{DhtReady: true, ConnectedPeers: []string{"12D3PrivatePeer"}}
+	if !networkReadyFor(networkPrivate, status, nil) {
+		t.Fatal("private routing should be ready with a DHT peer")
+	}
+	if networkReadyFor(networkPublic, status, nil) {
+		t.Fatal("public routing must still require a relay or public address")
+	}
+}
+
+func TestPeerAllowlistGaterPermitsOnlyConfiguredPeers(t *testing.T) {
+	allowed := peer.ID("allowed-peer")
+	blocked := peer.ID("blocked-peer")
+	gater := newPeerAllowlistGater([]peer.ID{allowed})
+	if !gater.InterceptPeerDial(allowed) {
+		t.Fatal("configured peer was blocked")
+	}
+	if gater.InterceptPeerDial(blocked) {
+		t.Fatal("unconfigured peer was allowed")
+	}
+	if !gater.InterceptSecured(network.DirInbound, allowed, nil) {
+		t.Fatal("configured inbound peer was blocked")
+	}
+	if gater.InterceptSecured(network.DirInbound, blocked, nil) {
+		t.Fatal("unconfigured inbound peer was allowed")
+	}
+}
+
+func TestEmptyPeerAllowlistPermitsPSKAuthenticatedPeers(t *testing.T) {
+	gater := newPeerAllowlistGater(nil)
+	if !gater.InterceptPeerDial(peer.ID("private-peer")) {
+		t.Fatal("empty allowlist should permit PSK-authenticated peers")
+	}
+}
+
+func TestConfiguredAllowedPeersIncludesExplicitBootstrapAndRelayPeers(t *testing.T) {
+	defaults := DefaultPublicBootstrapPeers()
+	if len(defaults) < 2 {
+		t.Fatal("expected at least two fallback peers")
+	}
+	bootstrapAddr, err := ma.NewMultiaddr(defaults[0])
+	if err != nil {
+		t.Fatal(err)
+	}
+	bootstrap, err := peer.AddrInfoFromP2pAddr(bootstrapAddr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	relayAddr, err := ma.NewMultiaddr(defaults[1])
+	if err != nil {
+		t.Fatal(err)
+	}
+	relay, err := peer.AddrInfoFromP2pAddr(relayAddr)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	configured, err := configuredAllowedPeers(networkConfig{
+		allowedPeerIDs: []string{bootstrap.ID.String()},
+		bootstrapPeers: []string{defaults[0]},
+		relayPeers:     []string{defaults[1]},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, expected := range []peer.ID{bootstrap.ID, relay.ID} {
+		if !slices.Contains(configured, expected) {
+			t.Fatalf("configured peers %v do not contain %s", configured, expected)
+		}
 	}
 }
 
@@ -442,7 +554,7 @@ func TestPublicPointerConfigCreatesLibp2pIdentity(t *testing.T) {
 
 func TestStartRejectsEmptyPrivateSwarmKey(t *testing.T) {
 	node := New()
-	err := node.Start(PrivateConfig{})
+	err := node.Start(PrivateConfig{RepositoryPath: t.TempDir()})
 	if !errors.Is(err, ErrInvalidPrivateSwarmKey) {
 		t.Fatalf("Start() error = %v, want %v", err, ErrInvalidPrivateSwarmKey)
 	}
@@ -475,7 +587,7 @@ func TestStatusAndCapabilitiesAreSafeDuringConcurrentLifecycleCalls(t *testing.T
 	}
 	group.Wait()
 
-	if got := node.Capabilities(); !reflect.DeepEqual(got, []string{"inboundListen", "tcp", "quic", "dhtRouting", "publicPublication"}) {
+	if got := node.Capabilities(); !reflect.DeepEqual(got, []string{"inboundListen", "tcp", "quic", "dhtRouting", "providerRouting", "publicPublication"}) {
 		t.Fatalf("capabilities = %v", got)
 	}
 }
