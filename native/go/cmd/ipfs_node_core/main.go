@@ -42,6 +42,8 @@ type startRequest struct {
 	BootstrapPeers      []string `json:"bootstrapPeers,omitempty"`
 	UseDefaultBootstrap bool     `json:"useDefaultBootstrap,omitempty"`
 	RepositoryPath      string   `json:"repositoryPath,omitempty"`
+	RelayPeers          []string `json:"relayPeers,omitempty"`
+	AllowedPeerIDs      []string `json:"allowedPeerIds,omitempty"`
 }
 
 type blockResponse struct {
@@ -530,7 +532,13 @@ func parseStartRequest(value *C.char) (any, error) {
 			RepositoryPath: request.RepositoryPath,
 		}, nil
 	case "private":
-		return core.PrivateConfig{SwarmKey: request.SwarmKey}, nil
+		return core.PrivateConfig{
+			RepositoryPath: request.RepositoryPath,
+			SwarmKey:       request.SwarmKey,
+			BootstrapPeers: request.BootstrapPeers,
+			RelayPeers:     request.RelayPeers,
+			AllowedPeerIDs: request.AllowedPeerIDs,
+		}, nil
 	default:
 		return nil, errors.New("unsupported network")
 	}

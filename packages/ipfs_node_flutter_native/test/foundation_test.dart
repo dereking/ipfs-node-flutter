@@ -40,6 +40,7 @@ void main() {
           Capability.tcp,
           Capability.quic,
           Capability.dhtRouting,
+          Capability.providerRouting,
           Capability.publicPublication,
         ]),
       );
@@ -49,6 +50,38 @@ void main() {
           const NodeStatus(lifecycle: NodeLifecycle.stopped));
     },
   );
+
+  test('native adapter starts a persistent private node with peer controls',
+      () async {
+    final platform = IpfsNodeFlutterNative(libraryPath: hostLibrary.path);
+    const bootstrap =
+        '/ip4/127.0.0.1/tcp/1/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN';
+    await platform.start(NodeConfig.private(
+      repositoryPath:
+          Directory.systemTemp.createTempSync('ipfs-private-test-').path,
+      swarmKey: List<int>.filled(32, 9),
+      bootstrapPeers: const [bootstrap],
+      relayPeers: const [bootstrap],
+      allowedPeerIds: const {
+        'QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN',
+      },
+    ));
+    addTearDown(platform.dispose);
+
+    expect((await platform.status()).lifecycle, NodeLifecycle.running);
+    expect(await platform.bootstrapList(), const [bootstrap]);
+    expect(
+      await platform.capabilities(),
+      CapabilitySet([
+        Capability.inboundListen,
+        Capability.tcp,
+        Capability.quic,
+        Capability.dhtRouting,
+        Capability.privateSwarmKey,
+        Capability.providerRouting,
+      ]),
+    );
+  });
 
   test('getBlock maps native retrieval failures to a typed operation error',
       () async {

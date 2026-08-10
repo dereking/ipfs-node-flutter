@@ -91,6 +91,10 @@ final class IpfsNodeFlutterNative extends IpfsNodePlatform {
 
   @override
   Future<void> start(NodeConfig config) async {
+    if (config case PrivateNodeConfig(:final repositoryPath)
+        when repositoryPath == null || repositoryPath.isEmpty) {
+      throw const NativeNodeInvalidConfigurationException(operation: 'start');
+    }
     final encoded = _encodeStartRequest(config);
     final code = await _inIsolate((abi) => abi.start(encoded));
     _throwForError('start', code);
@@ -537,9 +541,20 @@ String _encodeStartRequest(NodeConfig config) => switch (config) {
           'useDefaultBootstrap': bootstrapPeers.isEmpty,
           'repositoryPath': repositoryPath,
         }),
-      PrivateNodeConfig(:final swarmKey) => jsonEncode({
+      PrivateNodeConfig(
+        :final repositoryPath,
+        :final swarmKey,
+        :final bootstrapPeers,
+        :final relayPeers,
+        :final allowedPeerIds,
+      ) =>
+        jsonEncode({
           'network': 'private',
+          'repositoryPath': repositoryPath,
           'swarmKey': base64Encode(swarmKey),
+          'bootstrapPeers': bootstrapPeers,
+          'relayPeers': relayPeers,
+          'allowedPeerIds': allowedPeerIds.toList()..sort(),
         }),
     };
 

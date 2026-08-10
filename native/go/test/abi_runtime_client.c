@@ -19,6 +19,17 @@ int main(void) {
            repository_path);
   char invalid_private_request[] =
       "{\"network\":\"private\",\"swarmKey\":\"\"}";
+  char private_repository_path[256];
+  snprintf(private_repository_path, sizeof(private_repository_path),
+           "/tmp/ipfs-node-private-abi-%d", (int)getpid());
+  if (mkdir(private_repository_path, 0700) != 0) {
+    return 11;
+  }
+  char private_request[768];
+  snprintf(private_request, sizeof(private_request),
+           "{\"network\":\"private\",\"repositoryPath\":\"%s\","
+           "\"swarmKey\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=\"}",
+           private_repository_path);
 
   if (ipfs_node_start(0, public_request) != IPFS_NODE_ERR_INVALID_HANDLE) {
     return 1;
@@ -60,6 +71,20 @@ int main(void) {
 
   if (ipfs_node_stop(handle) != IPFS_NODE_OK) {
     return 8;
+  }
+  if (ipfs_node_start(handle, private_request) != IPFS_NODE_OK) {
+    return 12;
+  }
+  capabilities = ipfs_node_capabilities(handle);
+  if (capabilities == NULL ||
+      strstr(capabilities, "\"privateSwarmKey\"") == NULL ||
+      strstr(capabilities, "\"providerRouting\"") == NULL ||
+      strstr(capabilities, "\"publicPublication\"") != NULL) {
+    return 13;
+  }
+  ipfs_node_free_string(capabilities);
+  if (ipfs_node_stop(handle) != IPFS_NODE_OK) {
+    return 14;
   }
   ipfs_node_free(handle);
   if (ipfs_node_stop(handle) != IPFS_NODE_ERR_INVALID_HANDLE) {
