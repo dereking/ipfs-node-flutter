@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:ipfs_node_flutter/ipfs_node_flutter.dart';
-import 'package:ipfs_node_flutter_native/ipfs_node_flutter_native.dart';
 
 import 'feature_checks.dart';
+import 'platform_registration.dart' as platform;
 
 void main() {
-  IpfsNodeFlutterNative.registerWith();
+  platform.registerIpfsNodePlatform();
   runApp(const IpfsNodeExampleApp());
 }
 

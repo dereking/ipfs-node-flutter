@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:ipfs_node_flutter/ipfs_node_flutter.dart';
-import 'package:ipfs_node_flutter_native/ipfs_node_flutter_native.dart';
 
 const documentedCid =
     'bafkreidfdrlkeq4m4xnxuyx6iae76fdm4wgl5d4xzsb77ixhyqwumhz244';
@@ -92,7 +91,7 @@ Future<String> _checkInvalidCid(IpfsNode node) async {
   await node.start(_offlinePublicConfig());
   try {
     await node.getBlock('not-a-cid');
-  } on NativeNodeException catch (error) {
+  } on Exception catch (error) {
     return '已按类型化错误拒绝：$error';
   }
   throw StateError('非法 CID 未报错');

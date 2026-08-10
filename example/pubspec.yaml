@@ -15,6 +15,8 @@ dependencies:
     path: ../packages/ipfs_node_flutter
   ipfs_node_flutter_native:
     path: ../packages/ipfs_node_flutter_native
+  ipfs_node_flutter_web:
+    path: ../packages/ipfs_node_flutter_web
 
 dev_dependencies:
   flutter_test:
