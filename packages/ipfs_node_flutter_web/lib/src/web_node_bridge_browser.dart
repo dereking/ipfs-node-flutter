@@ -97,7 +97,7 @@ final class _JavascriptHeliaBridge implements WebNodeBridge {
   @override
   Future<void> start({required List<String> bootstrapPeers}) async {
     if (_node != null) return;
-    await (_adapterFuture ??= _loadAdapter());
+    await _ensureAdapter();
     final node = _createHeliaNode();
     try {
       await _callback((resolve, reject) => _startHeliaNode(
@@ -315,19 +315,41 @@ Future<T> _callback<T extends JSAny?>(
   return completer.future;
 }
 
+/// Loads the Helia adapter, caching the in-flight future and resetting it on
+/// failure so a later call can retry.
+Future<void> _ensureAdapter() async {
+  if (_adapterFuture != null) {
+    await _adapterFuture;
+    return;
+  }
+  final future = _loadAdapter();
+  _adapterFuture = future;
+  try {
+    await future;
+  } catch (_) {
+    _adapterFuture = null;
+    rethrow;
+  }
+}
+
 Future<void> _loadAdapter() async {
-  final installed = _registeredAdapter;
-  if (installed != null) return;
+  if (_registeredAdapter != null) return;
 
   Object? lastError;
-  for (final asset in _adapterAssets) {
-    try {
-      await _loadScript(asset);
-      final adapter = _registeredAdapter;
-      if (adapter != null) return;
-      lastError = StateError('The Helia web adapter did not register its API.');
-    } catch (error) {
-      lastError = error;
+  for (var attempt = 0; attempt < 3 && _registeredAdapter == null; attempt++) {
+    for (final asset in _adapterAssets) {
+      try {
+        await _loadScript(asset);
+        // Give the script a moment to finish registering its API.
+        for (var i = 0; i < 20 && _registeredAdapter == null; i++) {
+          await Future<void>.delayed(const Duration(milliseconds: 100));
+        }
+        if (_registeredAdapter != null) return;
+        lastError =
+            StateError('The Helia web adapter did not register its API.');
+      } catch (error) {
+        lastError = error;
+      }
     }
   }
   throw StateError('Unable to load the Helia web adapter: $lastError');
@@ -338,7 +360,7 @@ Future<void> _loadScript(String asset) async {
     ..async = true
     ..src = asset;
   final loaded = Completer<void>();
-  final timer = Timer(const Duration(seconds: 10), () {
+  final timer = Timer(const Duration(seconds: 60), () {
     if (!loaded.isCompleted) {
       loaded.completeError(StateError('Timed out loading $asset.'));
     }

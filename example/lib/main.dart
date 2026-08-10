@@ -102,62 +102,95 @@ class _IpfsFeatureLabPageState extends State<IpfsFeatureLabPage> {
         ),
       );
 
-  Widget _buildTestTab(BuildContext context) => ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          IpfsNodeStatusPanel(
-            status: _displayStatus,
-            loading: _loading,
-            error: _displayError,
-            onRefresh: _loading ? null : _refreshDisplayNode,
+  Widget _buildTestTab(BuildContext context) => _KeepAliveTab(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              IpfsNodeStatusPanel(
+                status: _displayStatus,
+                loading: _loading,
+                error: _displayError,
+                onRefresh: _loading ? null : _refreshDisplayNode,
+              ),
+              const SizedBox(height: 24),
+              Text('常见功能测试', style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 12),
+              IpfsFeatureCheckList(checks: commonIpfsFeatureChecks),
+            ],
           ),
-          const SizedBox(height: 24),
-          Text('常见功能测试', style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 12),
-          IpfsFeatureCheckList(checks: commonIpfsFeatureChecks),
-        ],
+        ),
       );
 
-  Widget _buildFeatureTab(BuildContext context) => ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          IpfsNodeLifecyclePanel(controller: _featureController),
-          const SizedBox(height: 12),
-          IpfsCidFetchPanel(
-            controller: _featureController,
-            initialCid: documentedCid,
+  Widget _buildFeatureTab(BuildContext context) => _KeepAliveTab(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              IpfsNodeLifecyclePanel(controller: _featureController),
+              const SizedBox(height: 12),
+              IpfsCidFetchPanel(
+                controller: _featureController,
+                initialCid: documentedCid,
+              ),
+              const SizedBox(height: 12),
+              IpfsContentAddPanel(
+                controller: _featureController,
+                initialText: documentedContent,
+              ),
+              const SizedBox(height: 12),
+              IpfsPinPanel(
+                controller: _featureController,
+                onChanged: () => setState(() => _pinListVersion++),
+              ),
+              const SizedBox(height: 12),
+              IpfsPinListPanel(
+                key: ValueKey(_pinListVersion),
+                controller: _featureController,
+              ),
+              const SizedBox(height: 12),
+              IpfsSwarmPanel(controller: _featureController),
+              const SizedBox(height: 12),
+              IpfsBootstrapPanel(controller: _featureController),
+              const SizedBox(height: 12),
+              IpfsBitswapPanel(controller: _featureController),
+              const SizedBox(height: 12),
+              IpfsDhtPanel(
+                controller: _featureController,
+                initialCid: documentedCid,
+              ),
+              const SizedBox(height: 12),
+              IpfsIpnsPanel(
+                controller: _featureController,
+                initialCid: documentedCid,
+              ),
+            ],
           ),
-          const SizedBox(height: 12),
-          IpfsContentAddPanel(
-            controller: _featureController,
-            initialText: documentedContent,
-          ),
-          const SizedBox(height: 12),
-          IpfsPinPanel(
-            controller: _featureController,
-            onChanged: () => setState(() => _pinListVersion++),
-          ),
-          const SizedBox(height: 12),
-          IpfsPinListPanel(
-            key: ValueKey(_pinListVersion),
-            controller: _featureController,
-          ),
-          const SizedBox(height: 12),
-          IpfsSwarmPanel(controller: _featureController),
-          const SizedBox(height: 12),
-          IpfsBootstrapPanel(controller: _featureController),
-          const SizedBox(height: 12),
-          IpfsBitswapPanel(controller: _featureController),
-          const SizedBox(height: 12),
-          IpfsDhtPanel(
-            controller: _featureController,
-            initialCid: documentedCid,
-          ),
-          const SizedBox(height: 12),
-          IpfsIpnsPanel(
-            controller: _featureController,
-            initialCid: documentedCid,
-          ),
-        ],
+        ),
       );
+}
+
+/// Keeps a tab's subtree alive while it is not the visible TabBarView page so
+/// in-flight operations and edited text survive tab switches and scrolling.
+class _KeepAliveTab extends StatefulWidget {
+  const _KeepAliveTab({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_KeepAliveTab> createState() => _KeepAliveTabState();
+}
+
+class _KeepAliveTabState extends State<_KeepAliveTab>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return widget.child;
+  }
 }
