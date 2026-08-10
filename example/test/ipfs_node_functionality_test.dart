@@ -45,6 +45,7 @@ void main() {
         Capability.tcp,
         Capability.quic,
         Capability.dhtRouting,
+        Capability.providerRouting,
         Capability.publicPublication,
       }),
     );

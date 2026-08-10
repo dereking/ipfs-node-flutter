@@ -470,4 +470,64 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.textContaining('解析结果'), findsOneWidget);
   });
+
+  testWidgets('IpfsCapabilityPanel distinguishes supported and unavailable',
+      (tester) async {
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: IpfsCapabilityPanel(
+          capabilities: CapabilitySet([Capability.providerRouting]),
+          temporarilyUnavailable: const {Capability.providerRouting},
+        ),
+      ),
+    ));
+
+    expect(find.text('providerRouting'), findsOneWidget);
+    expect(find.text('暂不可用'), findsOneWidget);
+    expect(find.text('inboundListen'), findsOneWidget);
+    expect(find.text('不支持'), findsWidgets);
+  });
+
+  testWidgets('IpfsFindPeerPanel resolves a peer', (tester) async {
+    final controller = IpfsNodeController();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(body: IpfsFindPeerPanel(controller: controller)),
+    ));
+
+    await tester.enterText(find.byType(TextField), 'QmTarget');
+    await tester.tap(find.text('查找 Peer'));
+    await tester.pumpAndSettle();
+    expect(
+      find.byWidgetPredicate(
+        (widget) => widget is SelectableText && widget.data == 'QmTarget\n',
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('IpfsOperationLogPanel renders every operation state',
+      (tester) async {
+    await tester.pumpWidget(const MaterialApp(
+      home: Scaffold(
+        body: IpfsOperationLogPanel(items: [
+          IpfsOperationLogItem(
+            operation: 'add',
+            state: IpfsOperationLogState.passed,
+            elapsed: Duration(milliseconds: 4),
+          ),
+          IpfsOperationLogItem(
+            operation: 'provide',
+            state: IpfsOperationLogState.waiting,
+            elapsed: Duration.zero,
+            details: '等待网络',
+          ),
+        ]),
+      ),
+    ));
+
+    expect(find.textContaining('已通过'), findsOneWidget);
+    expect(find.textContaining('等待条件'), findsOneWidget);
+    expect(find.textContaining('等待网络'), findsOneWidget);
+  });
 }

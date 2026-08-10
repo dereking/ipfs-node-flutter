@@ -6,7 +6,10 @@ import 'package:ipfs_node_flutter/ipfs_node_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'feature_checks.dart';
+import 'complete_example_page.dart';
 import 'platform_registration.dart' as platform;
+
+export 'complete_example_page.dart';
 
 void main() {
   platform.registerIpfsNodePlatform();
@@ -24,7 +27,7 @@ class IpfsNodeExampleApp extends StatelessWidget {
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
           useMaterial3: true,
         ),
-        home: const IpfsFeatureLabPage(),
+        home: const CompleteIpfsExamplePage(),
       );
 }
 
