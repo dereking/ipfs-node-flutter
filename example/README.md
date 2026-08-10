@@ -1,14 +1,17 @@
-# macOS public IPFS example
+# Complete public/private IPFS example
 
-This Flutter application exercises the common `ipfs_node_flutter` API through
-the native Go backend. On launch it:
+This Flutter application demonstrates the complete implemented
+`ipfs_node_flutter` API through one process-wide SDK instance. Its four pages
+cover:
 
-1. resolves an application-support directory and starts one persistent libp2p
-   node with `NodeConfig.public(repositoryPath: ...)`;
-2. connects to the default public IPFS bootstrap peers;
-3. displays its Peer ID and connected-peer count;
-4. retrieves a documented raw CID through the Amino DHT and Bitswap; and
-5. verifies that the returned bytes are exactly `Hello IPFS\n`.
+1. public/private configuration and persistent repository selection;
+2. content add/get/provide and pin management;
+3. swarm, bootstrap, Bitswap, DHT provider and peer routing;
+4. IPNS, capability diagnostics, and an ordered run-all workflow.
+
+Private mode accepts a 32-byte PSK, private bootstrap peers, and optional relay
+and Peer-ID allowlist values. Switching mode stops the current node before
+starting the replacement, preserving the one-node-per-process invariant.
 
 The Xcode project builds `native/go`, embeds `libipfs_node_core.dylib` in the
 application Frameworks directory, and signs the library with the app build
@@ -19,9 +22,8 @@ network connections.
 flutter run -d macos
 ```
 
-The green success state and the `IPFS_PUBLIC_TEST_PASS` log line mean that the
-SDK—not a gateway or an external Kubo process—retrieved the block from public
-IPFS.
+Kubo is not bundled or controlled by the Example. It remains an optional
+external acceptance tool.
 
 Run the Dart functionality tests without building the macOS application:
 
@@ -30,6 +32,14 @@ flutter test test/ipfs_node_functionality_test.dart
 IPFS_PUBLIC_INTEGRATION=1 flutter test test/ipfs_node_functionality_test.dart
 ```
 
-The first command covers native lifecycle, capabilities, error mapping, and
-process-singleton enforcement and persistent identity. The second also connects to public IPFS and
-retrieves the fixed CID through DHT and Bitswap.
+The first command covers native lifecycle, capabilities, error mapping,
+process-singleton enforcement, persistent identity, and private configuration.
+The second also connects to public IPFS and retrieves the fixed CID through DHT
+and Bitswap.
+
+The deterministic Go integration test starts a second private SDK node in a
+child process and verifies PSK isolation plus DHT provider/Bitswap retrieval:
+
+```sh
+(cd ../native/go && go test ./internal/core -run TestPrivateNetworkAcrossProcesses -v)
+```

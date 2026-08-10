@@ -202,9 +202,10 @@ await node.dispose();
 // 公网节点（未指定 bootstrap 时使用 Boxo 官方公共 bootstrap）
 await node.start(NodeConfig.public(repositoryPath: '/app/support/ipfs-node'));
 
-// 私有网络（需提供 swarm key）
+// 私有网络：32 字节 PSK + 只属于该私网的 bootstrap 列表
 await node.start(NodeConfig.private(
-  swarmKey: [1, 2, 3, 4],               // 原始字节
+  repositoryPath: '/app/support/ipfs-node/private/team-a',
+  swarmKey: List<int>.filled(32, 7),
   bootstrapPeers: ['/dns4/.../tcp/4001/p2p/<peer>'],
 ));
 
@@ -230,7 +231,10 @@ node.require(Capability.dhtRouting);
 node.require(Capability.tcp);
 ```
 
-能力枚举见 `Capability`：`inboundListen / tcp / quic / webRtc / webTransport / dhtRouting / mdns / privateSwarmKey / unixfs / car / ipns / pubsub / remotePinning`。当前 native 底层上报 `inboundListen / tcp / quic / dhtRouting`；web 底层上报 `webRtc / webTransport`（按浏览器能力）。`unixfs`、`ipns` 等为预留能力，需先用 `contains()` 确认再 `require()`。
+能力枚举还包括 `providerRouting` 与 `publicPublication`。Native 公共节点
+同时声明两者；Native 私有节点声明 `privateSwarmKey` 和
+`providerRouting`，但不声明 `publicPublication`；Web 两者均不声明。
+调用可选功能前应先用 `contains()` 或 `require()` 检查。
 
 ### 4.3 添加内容 addBytes / addText
 
@@ -267,6 +271,10 @@ Native 只有在 DHT 已就绪，且 relay reservation 或公网直连地址至�
 可用时，`networkReady()` 才返回 true。`addAndProvide` 在网络未就绪时失败，
 但已写入本地的内容仍然保留。Web 不支持 provider 发布；上述发布 API 会抛
 `UnsupportedCapabilityException`，本地 IndexedDB 添加与读取仍可使用。
+
+私有网络的就绪条件是 DHT 已就绪且至少连接一个使用相同 PSK 的私有 Peer；
+它不要求公网地址。私有节点显式使用 DHT Server 模式，使小型私网也能完成
+provider routing。不同 PSK 的节点无法建立连接。
 
 > **跨节点取回**：native 必须保持在线，并通过 `provide` 或
 > `addAndProvide` 成功写入 provider record。单独 `addBytes`、`addText` 或
@@ -422,7 +430,10 @@ SDK 在 `ipfs_node_flutter/lib/ui` 提供可直接使用的组件（全部通过
 | `IpfsBootstrapPanel` | bootstrap 增删查 | |
 | `IpfsBitswapPanel` | bitswap 统计 | |
 | `IpfsDhtPanel` | findProviders 查询 | |
+| `IpfsFindPeerPanel` | findPeer 查询 | |
 | `IpfsIpnsPanel` | IPNS 发布/解析 | |
+| `IpfsCapabilityPanel` | 能力支持/暂不可用矩阵 | |
+| `IpfsOperationLogPanel` | 全流程状态、耗时与错误 | |
 
 ### 5.2 测试组件
 
@@ -540,7 +551,11 @@ class _IpfsPageState extends State<IpfsPage> {
 
 ## 7. 参考实现
 
-- **完整跨平台示例**：`example/`（macOS + Web 双平台跑同一份 feature-lab UI），包含 12 个常用功能面板与 5 个功能测试。运行：
+- **完整跨平台示例**：`example/` 使用一个共享 SDK 实例，提供“节点配置”、
+  “内容与仓库”、“网络与路由”、“IPNS 与诊断”四页。公共/私有模式通过
+  停止后切换，私网参数包括 PSK、bootstrap，以及可选 relay/Peer 白名单。
+  “运行全部演示”会按依赖顺序执行本地存取、Pin、provider、DHT、IPNS 和
+  Bitswap 统计。运行：
 
   ```sh
   flutter run -d macos   # native

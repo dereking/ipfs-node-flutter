@@ -427,7 +427,7 @@ abstract base class IpfsNodePlatform extends PlatformInterface {
   Future<IpfsAddResult> addBytes(Uint8List bytes) async =>
       _unimplemented('addBytes');
 
-  /// Whether this node can currently announce content to the public network.
+  /// Whether this node can announce content through its configured router.
   Future<bool> networkReady() async => _unimplemented('networkReady');
 
   /// Announces an already-local content root through the configured router.
@@ -437,7 +437,7 @@ abstract base class IpfsNodePlatform extends PlatformInterface {
   }) async =>
       _unimplemented('provide');
 
-  /// Stores bytes locally and waits for a public provider announcement.
+  /// Stores bytes locally and waits for a provider announcement.
   Future<IpfsAddResult> addAndProvide(
     Uint8List bytes, {
     Duration timeout = const Duration(seconds: 60),
