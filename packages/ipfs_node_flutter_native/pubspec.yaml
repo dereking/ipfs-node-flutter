@@ -31,5 +31,6 @@ flutter:
         dartPluginClass: IpfsNodeFlutterNative
       windows:
         dartPluginClass: IpfsNodeFlutterNative
+        ffiPlugin: true
       linux:
         dartPluginClass: IpfsNodeFlutterNative

@@ -186,6 +186,7 @@ type Core struct {
 	publicationWake chan struct{}
 	publicationWG   sync.WaitGroup
 	publicationMu   sync.Mutex
+	maintenanceWG   sync.WaitGroup
 }
 
 // New creates a stopped node.
@@ -267,6 +268,7 @@ func (core *Core) Stop() error {
 			cancel()
 		}
 		core.publicationWG.Wait()
+		core.maintenanceWG.Wait()
 		core.publicationMu.Lock()
 		defer core.publicationMu.Unlock()
 		if client != nil {
@@ -440,7 +442,14 @@ func (core *Core) startNetwork(config networkConfig) error {
 	if config.mode == networkPrivate {
 		dhtMode = dht.ModeServer
 	}
-	kad, err := dht.New(h, dht.Mode(dhtMode))
+	dhtOptions := []dht.Option{dht.Mode(dhtMode)}
+	// Register the configured bootstrap peers with the DHT so routing-table
+	// refreshes dial the same public peers the host connects to. Without this
+	// the DHT falls back to its own smaller legacy default list.
+	if config.mode == networkPublic {
+		dhtOptions = append(dhtOptions, dht.BootstrapPeers(bootstrapAddrInfos(config.bootstrapPeers)...))
+	}
+	kad, err := dht.New(h, dhtOptions...)
 	if err != nil {
 		_ = h.Close()
 		_ = repo.Close()
@@ -484,29 +493,20 @@ func (core *Core) startNetwork(config networkConfig) error {
 	for _, addr := range h.Addrs() {
 		core.status.ListenAddrs = append(core.status.ListenAddrs, addr.String()+"/p2p/"+h.ID().String())
 	}
-	for _, raw := range config.bootstrapPeers {
-		addr, _ := ma.NewMultiaddr(raw)
-		info, err := peer.AddrInfoFromP2pAddr(addr)
-		if err != nil {
-			core.status.BootstrapErrors = append(core.status.BootstrapErrors, err.Error())
-			continue
-		}
-		dialCtx, dialCancel := context.WithTimeout(ctx, 10*time.Second)
-		err = h.Connect(dialCtx, *info)
-		dialCancel()
-		if err != nil {
-			core.status.BootstrapErrors = append(core.status.BootstrapErrors, fmt.Sprintf("%s: %v", info.ID, err))
-			continue
-		}
-		core.status.ConnectedPeers = append(core.status.ConnectedPeers, info.ID.String())
-	}
-	if err := kad.Bootstrap(ctx); err != nil {
-		_ = client.Close()
-		_ = kad.Close()
-		_ = h.Close()
-		cancel()
-		core.host, core.dht, core.bitswap, core.cancel = nil, nil, nil, nil
-		return err
+	// Dial bootstrap peers in parallel so one slow or unreachable peer cannot
+	// delay startup for the whole list.
+	dialed := dialBootstrapPeers(ctx, h, config.bootstrapPeers)
+	core.status.ConnectedPeers = append(core.status.ConnectedPeers, dialed.connected...)
+	core.status.BootstrapErrors = append(core.status.BootstrapErrors, dialed.errors...)
+	// Seed the DHT routing table, but never fail Start because of transient
+	// network instability. A bounded refresh is attempted here and the
+	// background maintenance loop keeps retrying until the routing table
+	// populates.
+	bootstrapCtx, bootstrapCancel := context.WithTimeout(ctx, dhtBootstrapTimeout)
+	bootstrapErr := kad.Bootstrap(bootstrapCtx)
+	bootstrapCancel()
+	if bootstrapErr != nil {
+		core.status.BootstrapErrors = append(core.status.BootstrapErrors, fmt.Sprintf("dht bootstrap: %v", bootstrapErr))
 	}
 	core.publicationWG.Add(1)
 	go core.publicationLoop(ctx, core.publicationWake)
@@ -514,6 +514,8 @@ func (core *Core) startNetwork(config networkConfig) error {
 	case core.publicationWake <- struct{}{}:
 	default:
 	}
+	core.maintenanceWG.Add(1)
+	go core.maintenanceLoop(ctx)
 	return nil
 }
 
@@ -531,6 +533,25 @@ func parseAddrInfos(values []string) ([]peer.AddrInfo, error) {
 		result = append(result, *info)
 	}
 	return result, nil
+}
+
+// bootstrapAddrInfos converts bootstrap multiaddrs to peer infos, skipping
+// entries that cannot be parsed so one malformed address cannot disable the
+// rest of the bootstrap set.
+func bootstrapAddrInfos(values []string) []peer.AddrInfo {
+	result := make([]peer.AddrInfo, 0, len(values))
+	for _, raw := range values {
+		addr, err := ma.NewMultiaddr(raw)
+		if err != nil {
+			continue
+		}
+		info, err := peer.AddrInfoFromP2pAddr(addr)
+		if err != nil {
+			continue
+		}
+		result = append(result, *info)
+	}
+	return result
 }
 
 // GetBlock retrieves one raw IPFS block by CID from the local store, falling
@@ -922,7 +943,11 @@ func publicationIsDue(status PublicationStatus, now time.Time) bool {
 func recordProvideFailure(repo *repository, rawCID string, now time.Time, writes, confirmed, required int, cause error) {
 	status, _ := repo.publicationStatus(rawCID)
 	nextRetry := now.Add(publicationRetryDelay(status.AttemptCount))
-	_ = repo.recordPublicationFailure(rawCID, now, writes, confirmed, required, nextRetry, cause.Error())
+	message := "unknown error"
+	if cause != nil {
+		message = cause.Error()
+	}
+	_ = repo.recordPublicationFailure(rawCID, now, writes, confirmed, required, nextRetry, message)
 }
 
 func (core *Core) wakePublicationWorker() {
@@ -943,6 +968,11 @@ func (core *Core) wakePublicationWorker() {
 // unbounded number of concurrent DHT operations.
 func (core *Core) publicationLoop(ctx context.Context, wake <-chan struct{}) {
 	defer core.publicationWG.Done()
+	defer func() {
+		if recovered := recover(); recovered != nil {
+			core.recordMaintenanceDiagnostic(fmt.Sprintf("publication loop panic: %v", recovered))
+		}
+	}()
 	ticker := time.NewTicker(3 * time.Second)
 	defer ticker.Stop()
 	lastReady := false
@@ -974,7 +1004,16 @@ func (core *Core) publicationLoop(ctx context.Context, wake <-chan struct{}) {
 				continue
 			}
 			attemptCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
-			_ = core.Provide(attemptCtx, status.CID)
+			func() {
+				// A panic while publishing one root must not kill the loop or
+				// the host process; the root stays queued for a later retry.
+				defer func() {
+					if recovered := recover(); recovered != nil {
+						core.recordMaintenanceDiagnostic(fmt.Sprintf("publication panic for %s: %v", status.CID, recovered))
+					}
+				}()
+				_ = core.Provide(attemptCtx, status.CID)
+			}()
 			cancel()
 			if ctx.Err() != nil {
 				return

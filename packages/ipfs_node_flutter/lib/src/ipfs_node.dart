@@ -12,7 +12,18 @@ final class IpfsNode {
 
   Future<void> start(NodeConfig config) async {
     await _platform.start(config);
-    await capabilities();
+    await _refreshCapabilitiesAfterStart();
+  }
+
+  /// Refreshes capabilities after a successful start. A transient probe
+  /// failure must not mask the fact that the node started; callers can retry
+  /// through [capabilities] at any time.
+  Future<void> _refreshCapabilitiesAfterStart() async {
+    try {
+      _capabilities = await _platform.capabilities();
+    } catch (_) {
+      // Keep the previous capability set and continue.
+    }
   }
 
   Future<void> stop() => _platform.stop();
