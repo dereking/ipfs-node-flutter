@@ -2,6 +2,25 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ipfs_node_flutter_platform_interface/ipfs_node_platform_interface.dart';
 
 void main() {
+  test('publication status preserves strict remote confirmation evidence', () {
+    final published = DateTime.utc(2026, 8, 10, 12);
+    final status = IpfsPublicationStatus(
+      cid: 'bafk-test',
+      state: IpfsPublicationState.confirmed,
+      addedAt: DateTime.utc(2026, 8, 10, 11),
+      lastPublished: published,
+      attemptCount: 2,
+      targetPeers: 20,
+      writeSuccesses: 8,
+      confirmedPeers: 5,
+      requiredConfirmations: 4,
+    );
+
+    expect(status.lastPublished, published);
+    expect(status.confirmedPeers,
+        greaterThanOrEqualTo(status.requiredConfirmations));
+  });
+
   test('provider routing is a distinct capability', () {
     expect(Capability.values, contains(Capability.providerRouting));
   });

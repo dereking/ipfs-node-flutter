@@ -23,6 +23,16 @@ void main() {
     expect(IpfsNodePlatform.instance, isA<IpfsNodeFlutterNative>());
   });
 
+  test('native startup requires a persistent repository path', () async {
+    final node = IpfsNodeFlutterNative(libraryPath: hostLibrary.path);
+    addTearDown(node.dispose);
+
+    await expectLater(
+      node.start(NodeConfig.public()),
+      throwsA(isA<NativeNodeInvalidConfigurationException>()),
+    );
+  });
+
   test(
     'native adapter runs the packaged host ABI',
     () async {
@@ -108,6 +118,31 @@ void main() {
 
     final block = await platform.getBlock(added.cid);
     expect(utf8.decode(block), content);
+
+    await platform.startProviding(added.cid);
+    final publication = await platform.publicationStatus(added.cid);
+    expect(publication.cid, added.cid);
+    expect(
+      publication.state,
+      anyOf(IpfsPublicationState.pending, IpfsPublicationState.failed),
+    );
+    expect(
+      await platform.listPublicationStatuses(),
+      contains(predicate<IpfsPublicationStatus>(
+        (status) => status.cid == added.cid,
+      )),
+    );
+
+    await expectLater(
+      platform.addAndProvide(utf8.encode('durable publication failure')),
+      throwsA(
+        isA<IpfsPublicationException>().having(
+          (error) => error.result.cid,
+          'durable CID',
+          isNotEmpty,
+        ),
+      ),
+    );
 
     await platform.pin(added.cid);
     final pins = await platform.listPins();

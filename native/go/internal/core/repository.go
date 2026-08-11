@@ -24,9 +24,17 @@ type repositoryMetadata struct {
 }
 
 type contentMetadata struct {
-	AddedAt       time.Time  `json:"addedAt"`
-	LastPublished *time.Time `json:"lastPublished,omitempty"`
-	PublishError  string     `json:"publishError,omitempty"`
+	AddedAt               time.Time        `json:"addedAt"`
+	State                 PublicationState `json:"state,omitempty"`
+	LastAttempt           *time.Time       `json:"lastAttempt,omitempty"`
+	LastPublished         *time.Time       `json:"lastPublished,omitempty"`
+	AttemptCount          int              `json:"attemptCount,omitempty"`
+	TargetPeers           int              `json:"targetPeers,omitempty"`
+	WriteSuccesses        int              `json:"writeSuccesses,omitempty"`
+	ConfirmedPeers        int              `json:"confirmedPeers,omitempty"`
+	RequiredConfirmations int              `json:"requiredConfirmations,omitempty"`
+	PublishError          string           `json:"publishError,omitempty"`
+	NextRetry             *time.Time       `json:"nextRetry,omitempty"`
 }
 
 type repository struct {
@@ -81,6 +89,17 @@ func (repo *repository) loadMetadata() error {
 	if repo.metadata.Roots == nil {
 		repo.metadata.Roots = make(map[string]contentMetadata)
 	}
+	for rawCID, entry := range repo.metadata.Roots {
+		if entry.State == "" {
+			if entry.LastPublished != nil {
+				entry.State = PublicationPending
+				entry.LastPublished = nil
+			} else {
+				entry.State = PublicationLocal
+			}
+			repo.metadata.Roots[rawCID] = entry
+		}
+	}
 	return nil
 }
 
@@ -133,7 +152,7 @@ func (repo *repository) recordRoot(cid string) error {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 	if _, ok := repo.metadata.Roots[cid]; !ok {
-		repo.metadata.Roots[cid] = contentMetadata{AddedAt: time.Now().UTC()}
+		repo.metadata.Roots[cid] = contentMetadata{AddedAt: time.Now().UTC(), State: PublicationLocal}
 	}
 	return repo.saveMetadata()
 }
@@ -149,13 +168,102 @@ func (repo *repository) setPins(pins map[string]PinInfo) error {
 }
 
 func (repo *repository) recordPublication(cid string, publishedAt time.Time, publishError string) error {
+	if publishError != "" {
+		return repo.recordPublicationFailure(cid, publishedAt, 0, 0, 0, publishedAt, publishError)
+	}
+	return repo.recordPublicationConfirmed(cid, publishedAt, 0, 0)
+}
+
+func (repo *repository) schedulePublication(cid string, now time.Time) error {
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+	entry, ok := repo.metadata.Roots[cid]
+	if !ok {
+		return errors.New("content root is not stored locally")
+	}
+	entry.State = PublicationPending
+	entry.PublishError = ""
+	entry.NextRetry = &now
+	repo.metadata.Roots[cid] = entry
+	return repo.saveMetadata()
+}
+
+func (repo *repository) recordPublicationAttempt(cid string, now time.Time, targets, required int) error {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 	entry := repo.metadata.Roots[cid]
-	entry.LastPublished = &publishedAt
-	entry.PublishError = publishError
+	entry.LastAttempt = &now
+	entry.AttemptCount++
+	entry.TargetPeers = targets
+	entry.RequiredConfirmations = required
+	entry.WriteSuccesses = 0
+	entry.ConfirmedPeers = 0
 	repo.metadata.Roots[cid] = entry
 	return repo.saveMetadata()
+}
+
+func (repo *repository) recordPublicationConfirmed(cid string, now time.Time, writes, confirmed int) error {
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+	entry := repo.metadata.Roots[cid]
+	entry.State = PublicationConfirmed
+	entry.LastPublished = &now
+	entry.WriteSuccesses = writes
+	entry.ConfirmedPeers = confirmed
+	entry.PublishError = ""
+	entry.NextRetry = nil
+	repo.metadata.Roots[cid] = entry
+	return repo.saveMetadata()
+}
+
+func (repo *repository) recordPublicationFailure(cid string, now time.Time, writes, confirmed, required int, nextRetry time.Time, message string) error {
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+	entry := repo.metadata.Roots[cid]
+	if entry.LastPublished != nil {
+		entry.State = PublicationDegraded
+	} else {
+		entry.State = PublicationFailed
+	}
+	entry.LastAttempt = &now
+	entry.WriteSuccesses = writes
+	entry.ConfirmedPeers = confirmed
+	entry.RequiredConfirmations = required
+	entry.PublishError = message
+	entry.NextRetry = &nextRetry
+	repo.metadata.Roots[cid] = entry
+	return repo.saveMetadata()
+}
+
+func (repo *repository) publicationStatus(cid string) (PublicationStatus, bool) {
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+	entry, ok := repo.metadata.Roots[cid]
+	if !ok {
+		return PublicationStatus{}, false
+	}
+	return publicationStatusFromMetadata(cid, entry), true
+}
+
+func (repo *repository) publicationQueue() []PublicationStatus {
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+	result := make([]PublicationStatus, 0, len(repo.metadata.Roots))
+	for rawCID, entry := range repo.metadata.Roots {
+		if entry.State != PublicationLocal {
+			result = append(result, publicationStatusFromMetadata(rawCID, entry))
+		}
+	}
+	return result
+}
+
+func publicationStatusFromMetadata(cid string, entry contentMetadata) PublicationStatus {
+	return PublicationStatus{CID: cid, State: entry.State, AddedAt: entry.AddedAt,
+		LastAttempt: entry.LastAttempt, LastPublished: entry.LastPublished,
+		AttemptCount: entry.AttemptCount, TargetPeers: entry.TargetPeers,
+		WriteSuccesses: entry.WriteSuccesses, ConfirmedPeers: entry.ConfirmedPeers,
+		RequiredConfirmations: entry.RequiredConfirmations, PublishError: entry.PublishError,
+		NextRetry: entry.NextRetry}
 }
 
 func (repo *repository) Close() error {

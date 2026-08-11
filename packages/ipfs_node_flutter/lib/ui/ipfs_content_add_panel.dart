@@ -47,7 +47,12 @@ class _IpfsContentAddPanelState extends State<IpfsContentAddPanel> {
       });
     } catch (error) {
       if (!mounted) return;
-      setState(() => _error = error);
+      setState(() {
+        if (error is IpfsPublicationException) {
+          _result = error.result;
+        }
+        _error = error;
+      });
     } finally {
       if (mounted) setState(() => _loading = false);
     }

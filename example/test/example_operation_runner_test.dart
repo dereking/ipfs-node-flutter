@@ -17,6 +17,9 @@ void main() {
         'get',
         'pin',
         'listPins',
+        'startProviding',
+        'publicationStatus',
+        'listPublicationStatuses',
         'networkReady',
         'provide',
         'findProviders',
@@ -79,6 +82,32 @@ final class _RecordingOperations implements ExampleNodeOperations {
     calls.add('listPins');
     return const [];
   }
+
+  @override
+  Future<void> startProviding(String cid) async => calls.add('startProviding');
+
+  @override
+  Future<IpfsPublicationStatus> publicationStatus(String cid) async {
+    calls.add('publicationStatus');
+    return IpfsPublicationStatus(
+      cid: cid,
+      state: IpfsPublicationState.pending,
+      addedAt: DateTime.utc(2026, 8, 10),
+    );
+  }
+
+  @override
+  Future<List<IpfsPublicationStatus>> listPublicationStatuses() async {
+    calls.add('listPublicationStatuses');
+    return [await publicationStatusWithoutRecording()];
+  }
+
+  Future<IpfsPublicationStatus> publicationStatusWithoutRecording() async =>
+      IpfsPublicationStatus(
+        cid: 'bafk-private-test',
+        state: IpfsPublicationState.pending,
+        addedAt: DateTime.utc(2026, 8, 10),
+      );
 
   @override
   Future<bool> networkReady() async {

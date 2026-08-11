@@ -5,7 +5,8 @@ This Flutter application demonstrates the complete implemented
 cover:
 
 1. public/private configuration and persistent repository selection;
-2. content add/get/provide and pin management;
+2. content add/get/pin, strict provider confirmation, durable publication
+   queue, retry counters, and persisted publication status;
 3. swarm, bootstrap, Bitswap, DHT provider and peer routing;
 4. IPNS, capability diagnostics, and an ordered run-all workflow.
 
@@ -24,6 +25,10 @@ flutter run -d macos
 
 Kubo is not bundled or controlled by the Example. It remains an optional
 external acceptance tool.
+
+On web, provider publication controls are disabled because a browser node
+cannot offer the native inbound/provider guarantees. Local IndexedDB
+add/read/pin and supported routing queries remain available.
 
 Run the Dart functionality tests without building the macOS application:
 

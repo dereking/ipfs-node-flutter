@@ -8,6 +8,9 @@ Helia/js-libp2p browser node with an IndexedDB blockstore.
 The common SDK exposes a **unified `IpfsNode` API** across platforms:
 lifecycle / configuration / status / capabilities, content add (`addBytes` /
 `addText`) and retrieval (`getBlock`), pinning (`pin` / `unpin` / `listPins`),
+strict provider publication (`provide` / `addAndProvide`), durable publication
+queue/status (`startProviding` / `publicationStatus` /
+`listPublicationStatuses`),
 swarm and bootstrap management, bitswap statistics, DHT queries
 (`findProviders` / `findPeer`), and IPNS (`publishName` / `resolveName` /
 `listKeys`). A set of reusable Flutter UI components (`lib/ui`) covers both
@@ -32,6 +35,10 @@ by public Amino DHT bootstrap peers. Callers may provide browser-dialable
 does not run a DHT, provider routing, or automatic relay reservation, so public
 CID discovery is not guaranteed. Common `getBlock` can read local content or
 content available from an already connected peer.
+
+Provider publication is intentionally unsupported on web. Publication APIs
+throw `UnsupportedCapabilityException`; local IndexedDB add/read/pin remains
+available.
 
 The browser has no raw TCP/UDP listener, inbound TCP/QUIC reachability, mDNS,
 or private swarm-key support. It can use WebRTC, WebTransport, WSS, and circuit

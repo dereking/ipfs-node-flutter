@@ -127,6 +127,18 @@ void main() {
       platform.addAndProvide(Uint8List.fromList([2])),
       throwsA(isA<UnsupportedCapabilityException>()),
     );
+    await expectLater(
+      platform.startProviding(added.cid),
+      throwsA(isA<UnsupportedCapabilityException>()),
+    );
+    await expectLater(
+      platform.publicationStatus(added.cid),
+      throwsA(isA<UnsupportedCapabilityException>()),
+    );
+    await expectLater(
+      platform.listPublicationStatuses(),
+      throwsA(isA<UnsupportedCapabilityException>()),
+    );
     expect(await platform.networkReady(), isFalse);
   });
 }

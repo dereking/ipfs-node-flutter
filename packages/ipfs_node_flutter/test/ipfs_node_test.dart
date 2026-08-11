@@ -144,9 +144,15 @@ void main() {
     final node = IpfsNode(platform: platform);
 
     await node.provide('bafk-test');
+    await node.startProviding('bafk-queued');
     final result = await node.addAndProvide(Uint8List.fromList([1, 2, 3]));
 
-    expect(platform.provided, ['bafk-test', result.cid]);
+    final status = await node.publicationStatus(result.cid);
+    final statuses = await node.listPublicationStatuses();
+
+    expect(platform.provided, ['bafk-test', 'bafk-queued', result.cid]);
+    expect(status.state, IpfsPublicationState.confirmed);
+    expect(statuses, [status]);
   });
 }
 
@@ -190,6 +196,25 @@ final class _FakePlatform extends IpfsNodePlatform {
       {Duration timeout = const Duration(seconds: 60)}) async {
     provided.add(cid);
   }
+
+  @override
+  Future<void> startProviding(String cid) async {
+    provided.add(cid);
+  }
+
+  @override
+  Future<IpfsPublicationStatus> publicationStatus(String cid) async =>
+      IpfsPublicationStatus(
+        cid: cid,
+        state: IpfsPublicationState.confirmed,
+        addedAt: DateTime.utc(2026, 8, 10),
+        confirmedPeers: 4,
+        requiredConfirmations: 4,
+      );
+
+  @override
+  Future<List<IpfsPublicationStatus>> listPublicationStatuses() async =>
+      [await publicationStatus('bafk-added')];
 
   @override
   Future<IpfsAddResult> addAndProvide(

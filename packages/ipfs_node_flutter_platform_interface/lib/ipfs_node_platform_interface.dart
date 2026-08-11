@@ -199,6 +199,82 @@ final class IpfsAddResult {
   int get hashCode => Object.hash(cid, bytes);
 }
 
+enum IpfsPublicationState { local, pending, confirmed, degraded, failed }
+
+/// Durable and remotely observed provider-publication state for one CID.
+final class IpfsPublicationStatus {
+  const IpfsPublicationStatus({
+    required this.cid,
+    required this.state,
+    required this.addedAt,
+    this.lastAttempt,
+    this.lastPublished,
+    this.attemptCount = 0,
+    this.targetPeers = 0,
+    this.writeSuccesses = 0,
+    this.confirmedPeers = 0,
+    this.requiredConfirmations = 0,
+    this.publishError,
+    this.nextRetry,
+  });
+
+  final String cid;
+  final IpfsPublicationState state;
+  final DateTime addedAt;
+  final DateTime? lastAttempt;
+  final DateTime? lastPublished;
+  final int attemptCount;
+  final int targetPeers;
+  final int writeSuccesses;
+  final int confirmedPeers;
+  final int requiredConfirmations;
+  final String? publishError;
+  final DateTime? nextRetry;
+
+  @override
+  bool operator ==(Object other) =>
+      other is IpfsPublicationStatus &&
+      cid == other.cid &&
+      state == other.state &&
+      addedAt == other.addedAt &&
+      lastAttempt == other.lastAttempt &&
+      lastPublished == other.lastPublished &&
+      attemptCount == other.attemptCount &&
+      targetPeers == other.targetPeers &&
+      writeSuccesses == other.writeSuccesses &&
+      confirmedPeers == other.confirmedPeers &&
+      requiredConfirmations == other.requiredConfirmations &&
+      publishError == other.publishError &&
+      nextRetry == other.nextRetry;
+
+  @override
+  int get hashCode => Object.hash(
+        cid,
+        state,
+        addedAt,
+        lastAttempt,
+        lastPublished,
+        attemptCount,
+        targetPeers,
+        writeSuccesses,
+        confirmedPeers,
+        requiredConfirmations,
+        publishError,
+        nextRetry,
+      );
+}
+
+/// Strict publication failed after bytes were durably stored.
+final class IpfsPublicationException implements Exception {
+  const IpfsPublicationException({required this.result, required this.message});
+
+  final IpfsAddResult result;
+  final String message;
+
+  @override
+  String toString() => 'IpfsPublicationException: $message (${result.cid})';
+}
+
 /// How a content root is pinned.
 enum IpfsPinType { direct, recursive }
 
@@ -436,6 +512,18 @@ abstract base class IpfsNodePlatform extends PlatformInterface {
     Duration timeout = const Duration(seconds: 60),
   }) async =>
       _unimplemented('provide');
+
+  /// Durably queues an existing local root for eventual provider publication.
+  Future<void> startProviding(String cid) async =>
+      _unimplemented('startProviding');
+
+  /// Returns publication evidence for one local content root.
+  Future<IpfsPublicationStatus> publicationStatus(String cid) async =>
+      _unimplemented('publicationStatus');
+
+  /// Returns all roots enrolled in public provider publication.
+  Future<List<IpfsPublicationStatus>> listPublicationStatuses() async =>
+      _unimplemented('listPublicationStatuses');
 
   /// Stores bytes locally and waits for a provider announcement.
   Future<IpfsAddResult> addAndProvide(

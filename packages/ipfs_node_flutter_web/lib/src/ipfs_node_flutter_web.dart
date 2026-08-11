@@ -110,6 +110,18 @@ final class IpfsNodeFlutterWeb extends IpfsNodePlatform {
       Future.error(
           UnsupportedCapabilityException(Capability.publicPublication));
 
+  @override
+  Future<void> startProviding(String cid) => Future.error(
+      UnsupportedCapabilityException(Capability.publicPublication));
+
+  @override
+  Future<IpfsPublicationStatus> publicationStatus(String cid) => Future.error(
+      UnsupportedCapabilityException(Capability.publicPublication));
+
+  @override
+  Future<List<IpfsPublicationStatus>> listPublicationStatuses() => Future.error(
+      UnsupportedCapabilityException(Capability.publicPublication));
+
   /// Retrieves opaque bytes for a locally stored CID or one provided by a
   /// connected libp2p peer.
   Future<List<int>> getBytes(String cid) => _runtimeBridge.getBytes(cid);

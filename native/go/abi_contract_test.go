@@ -24,6 +24,9 @@ func TestPublicHeaderDeclaresStableErrorCodesAndABI(t *testing.T) {
 		"extern char* ipfs_node_status(uintptr_t handle);",
 		"extern char* ipfs_node_capabilities(uintptr_t handle);",
 		"extern char* ipfs_node_get_block(uintptr_t handle, char* cid, int timeout_millis);",
+		"extern char* ipfs_node_start_providing(uintptr_t handle, char* rawCID);",
+		"extern char* ipfs_node_publication_status(uintptr_t handle, char* rawCID);",
+		"extern char* ipfs_node_list_publication_statuses(uintptr_t handle);",
 		"extern void ipfs_node_free(uintptr_t handle);",
 		"extern void ipfs_node_free_string(char* value);",
 	} {

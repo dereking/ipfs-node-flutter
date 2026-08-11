@@ -46,6 +46,17 @@ final class IpfsNode {
   }) =>
       _platform.provide(cid, timeout: timeout);
 
+  /// Durably queues a local root for eventual provider publication.
+  Future<void> startProviding(String cid) => _platform.startProviding(cid);
+
+  /// Returns strict provider-publication evidence for [cid].
+  Future<IpfsPublicationStatus> publicationStatus(String cid) =>
+      _platform.publicationStatus(cid);
+
+  /// Returns every root enrolled in provider publication.
+  Future<List<IpfsPublicationStatus>> listPublicationStatuses() =>
+      _platform.listPublicationStatuses();
+
   /// Stores bytes locally, then waits for their provider announcement.
   Future<IpfsAddResult> addAndProvide(
     Uint8List bytes, {

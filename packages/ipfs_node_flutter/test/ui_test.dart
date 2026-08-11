@@ -51,6 +51,26 @@ final class _FakeNodePlatform extends IpfsNodePlatform {
   }) async {}
 
   @override
+  Future<void> startProviding(String cid) async {}
+
+  @override
+  Future<IpfsPublicationStatus> publicationStatus(String cid) async =>
+      IpfsPublicationStatus(
+        cid: cid,
+        state: IpfsPublicationState.confirmed,
+        addedAt: DateTime.utc(2026, 8, 10),
+        attemptCount: 1,
+        targetPeers: 5,
+        writeSuccesses: 5,
+        confirmedPeers: 1,
+        requiredConfirmations: 1,
+      );
+
+  @override
+  Future<List<IpfsPublicationStatus>> listPublicationStatuses() async =>
+      [await publicationStatus('bafkrei-target')];
+
+  @override
   Future<void> pin(String cid) async {}
 
   @override
@@ -327,12 +347,32 @@ void main() {
       ),
     ));
 
-    await tester.tap(find.text('重新发布'));
+    await tester.tap(find.text('严格发布并确认'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('发布成功'), findsOneWidget);
+    expect(find.textContaining('严格发布已确认'), findsOneWidget);
+    await tester.tap(find.text('加入后台发布队列'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('持久化发布队列'), findsOneWidget);
+    await tester.tap(find.text('查看发布队列'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('状态=confirmed'), findsOneWidget);
     await tester.tap(find.text('查询 Provider'));
     await tester.pumpAndSettle();
     expect(find.textContaining('QmProvider'), findsOneWidget);
+  });
+
+  testWidgets('IpfsCidPublicationPanel lists the queue without a CID',
+      (tester) async {
+    final controller = IpfsNodeController();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(body: IpfsCidPublicationPanel(controller: controller)),
+    ));
+
+    await tester.tap(find.text('查看发布队列'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('bafkrei-target'), findsOneWidget);
   });
 
   testWidgets('repository and Kubo panels render supplied native data',

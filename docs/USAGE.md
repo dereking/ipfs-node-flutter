@@ -258,19 +258,38 @@ final raw = await node.addBytes(Uint8List.fromList([0, 1, 2, 255]));
 ```dart
 final local = await node.addText('仅保存到本机仓库');
 
-if (await node.networkReady()) {
-  final published = await node.addAndProvide(utf8.encode('保存并发布'));
-  print(published.cid);
+try {
+  final published = await node.addAndProvide(utf8.encode('保存并严格发布'));
+  print(published.cid); // 远端 DHT quorum 已回读确认
+} on IpfsPublicationException catch (error) {
+  // 写入与发布结果不会混淆：CID 已持久化，可稍后继续发布。
+  print('本地 CID: ${error.result.cid}，发布失败: ${error.message}');
 }
 
-// 已存在于本地仓库的 CID 可单独重新发布。
+// 同步严格发布：只有远端 DHT peers 回读到本节点 provider record 才成功。
 await node.provide(local.cid);
+
+// 或持久化加入单一后台队列；重启后继续，指数退避并定期 reprovide。
+await node.startProviding(local.cid);
+final status = await node.publicationStatus(local.cid);
+final queue = await node.listPublicationStatuses();
+print('${status.state}: ${status.confirmedPeers}/${status.requiredConfirmations}');
 ```
 
 Native 只有在 DHT 已就绪，且 relay reservation 或公网直连地址至少一项
-可用时，`networkReady()` 才返回 true。`addAndProvide` 在网络未就绪时失败，
-但已写入本地的内容仍然保留。Web 不支持 provider 发布；上述发布 API 会抛
-`UnsupportedCapabilityException`，本地 IndexedDB 添加与读取仍可使用。
+可用时，`networkReady()` 才返回 true。`addAndProvide` 在网络未就绪或远端
+确认数不足时抛 `IpfsPublicationException`，其中仍携带已持久化的 CID。
+后台队列保存 `pending / confirmed / degraded / failed` 状态、尝试次数、远端
+写入/确认计数、最近错误和下次重试时间。Relay/公网地址从不可用变为可用或
+地址发生变化时会立即重试。Web 不支持 provider 发布及发布队列；相关 API
+抛 `UnsupportedCapabilityException`，IndexedDB 添加、读取和 Pin 仍可使用。
+
+`confirmed` 严格表示远端 DHT Peer 已回读到本节点的 provider record，不表示
+未来任意读取方一定完成下载；节点仍需保持在线且 Bitswap 连接可用。尤其是
+Boxo/Kubo 会把纯 circuit-relay 连接标记为 limited，通常需要公网直连或
+DCUtR hole-punch 升级后才会把该 Peer 用于 Bitswap。Relay reservation 仍是
+可发布/可拨号的必要证据之一，但 UI 分别展示 relay、DHT 发布确认和 Bitswap
+传输状态，不能把三者合并成同一个“上传成功”。
 
 私有网络的就绪条件是 DHT 已就绪且至少连接一个使用相同 PSK 的私有 Peer；
 它不要求公网地址。私有节点显式使用 DHT Server 模式，使小型私网也能完成
@@ -520,12 +539,13 @@ class _IpfsPageState extends State<IpfsPage> {
 |---|---|
 | start/stop/status/capabilities | ✅ |
 | addBytes / getBlock（含公网 Bitswap/DHT 取回） | ✅ |
+| 严格 provider 发布 / 持久化重试 / 远端确认状态 | ✅ |
 | pin/unpin/listPins | ✅（direct 类型；未实现递归 DAG pin） |
 | swarm / bootstrap / bitswap 统计 / DHT 查询 | ✅ |
 | IPNS 发布/解析 | ✅（需公网 DHT） |
 
 限制：
-- blockstore 与 pin 状态为**内存存储**，节点停止/重启后丢失。
+- blockstore、身份、Pin 与发布元数据持久化在必填 `repositoryPath`；同一仓库有进程锁。
 - IPNS 离线不可用（依赖公网 DHT）。
 - bitswap 无发送侧块级计数。
 
@@ -543,6 +563,7 @@ class _IpfsPageState extends State<IpfsPage> {
 
 其他限制：
 - 浏览器无原生 TCP/UDP 监听，入站不可达；仅 WebRTC / WebTransport / WSS / circuit relay。
+- 浏览器仅保证本地/已连接 Peer 读取，不支持 provider 发布、发布队列或远端发布确认。
 - 不支持 mDNS、私有 swarm key（`NodeConfig.private` 抛 `UnsupportedCapabilityException`）。
 - 需浏览器支持 WebRTC 或 WebTransport，并允许 IndexedDB。
 - 公共 bootstrap 需使用浏览器可拨号的 WSS 地址；不保证公网 CID 发现。
@@ -554,8 +575,8 @@ class _IpfsPageState extends State<IpfsPage> {
 - **完整跨平台示例**：`example/` 使用一个共享 SDK 实例，提供“节点配置”、
   “内容与仓库”、“网络与路由”、“IPNS 与诊断”四页。公共/私有模式通过
   停止后切换，私网参数包括 PSK、bootstrap，以及可选 relay/Peer 白名单。
-  “运行全部演示”会按依赖顺序执行本地存取、Pin、provider、DHT、IPNS 和
-  Bitswap 统计。运行：
+  “运行全部演示”会按依赖顺序执行本地存取、Pin、持久化发布队列、严格
+  provider 确认、发布状态/重试计数、DHT、IPNS 和 Bitswap 统计。运行：
 
   ```sh
   flutter run -d macos   # native

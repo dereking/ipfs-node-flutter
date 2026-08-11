@@ -28,8 +28,42 @@ class _IpfsCidPublicationPanelState extends State<IpfsCidPublicationPanel> {
     if (!widget.publicationSupported || _cid.text.isEmpty) return;
     await _run(() async {
       await widget.controller.node.provide(_cid.text);
-      return '发布成功：${_cid.text}';
+      final status = await widget.controller.node.publicationStatus(_cid.text);
+      return '严格发布已确认\n${_describe(status)}';
     });
+  }
+
+  Future<void> _schedule() async {
+    if (!widget.publicationSupported || _cid.text.isEmpty) return;
+    await _run(() async {
+      await widget.controller.node.startProviding(_cid.text);
+      final status = await widget.controller.node.publicationStatus(_cid.text);
+      return '已加入持久化发布队列\n${_describe(status)}';
+    });
+  }
+
+  Future<void> _status() => _run(() async {
+        final status =
+            await widget.controller.node.publicationStatus(_cid.text);
+        return _describe(status);
+      });
+
+  Future<void> _list() => _run(() async {
+        final statuses = await widget.controller.node.listPublicationStatuses();
+        if (statuses.isEmpty) return '发布队列为空';
+        return statuses.map(_describe).join('\n\n');
+      }, requiresCid: false);
+
+  String _describe(IpfsPublicationStatus status) {
+    final retry = status.nextRetry?.toLocal().toIso8601String();
+    final published = status.lastPublished?.toLocal().toIso8601String();
+    return '${status.cid}\n状态=${status.state.name}，确认='
+        '${status.confirmedPeers}/${status.requiredConfirmations}，写入='
+        '${status.writeSuccesses}/${status.targetPeers}，尝试='
+        '${status.attemptCount}'
+        '${published == null ? '' : '，最近成功=$published'}'
+        '${retry == null ? '' : '，下次重试=$retry'}'
+        '${status.publishError == null ? '' : '\n错误=${status.publishError}'}';
   }
 
   Future<void> _providers() => _run(() async {
@@ -39,8 +73,11 @@ class _IpfsCidPublicationPanelState extends State<IpfsCidPublicationPanel> {
             : 'Provider：${providers.map((peer) => peer.id).join(', ')}';
       });
 
-  Future<void> _run(Future<String> Function() action) async {
-    if (_loading || _cid.text.isEmpty) return;
+  Future<void> _run(
+    Future<String> Function() action, {
+    bool requiresCid = true,
+  }) async {
+    if (_loading || (requiresCid && _cid.text.isEmpty)) return;
     setState(() {
       _loading = true;
       _result = null;
@@ -79,7 +116,20 @@ class _IpfsCidPublicationPanelState extends State<IpfsCidPublicationPanel> {
                   onPressed: _loading || !widget.publicationSupported
                       ? null
                       : _provide,
-                  child: const Text('重新发布')),
+                  child: const Text('严格发布并确认')),
+              OutlinedButton(
+                  onPressed: _loading || !widget.publicationSupported
+                      ? null
+                      : _schedule,
+                  child: const Text('加入后台发布队列')),
+              OutlinedButton(
+                  onPressed:
+                      _loading || !widget.publicationSupported ? null : _status,
+                  child: const Text('查询本地发布状态')),
+              OutlinedButton(
+                  onPressed:
+                      _loading || !widget.publicationSupported ? null : _list,
+                  child: const Text('查看发布队列')),
               OutlinedButton(
                   onPressed: _loading ? null : _providers,
                   child: const Text('查询 Provider')),

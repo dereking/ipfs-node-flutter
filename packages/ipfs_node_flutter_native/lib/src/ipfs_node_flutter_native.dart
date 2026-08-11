@@ -91,8 +91,11 @@ final class IpfsNodeFlutterNative extends IpfsNodePlatform {
 
   @override
   Future<void> start(NodeConfig config) async {
-    if (config case PrivateNodeConfig(:final repositoryPath)
-        when repositoryPath == null || repositoryPath.isEmpty) {
+    final repositoryPath = switch (config) {
+      PublicNodeConfig(:final repositoryPath) => repositoryPath,
+      PrivateNodeConfig(:final repositoryPath) => repositoryPath,
+    };
+    if (repositoryPath == null || repositoryPath.isEmpty) {
       throw const NativeNodeInvalidConfigurationException(operation: 'start');
     }
     final encoded = _encodeStartRequest(config);
@@ -273,6 +276,39 @@ final class IpfsNodeFlutterNative extends IpfsNodePlatform {
   }
 
   @override
+  Future<void> startProviding(String cid) async {
+    _throwForStringError(
+      'startProviding',
+      _requiredResponse(
+        'startProviding',
+        await _inIsolate((abi) => abi.startProviding(cid)),
+      ),
+    );
+  }
+
+  @override
+  Future<IpfsPublicationStatus> publicationStatus(String cid) async {
+    final encoded = _requiredResponse(
+      'publicationStatus',
+      await _inIsolate((abi) => abi.publicationStatus(cid)),
+    );
+    return _decodePublicationStatus(
+      _decodeObjectOrThrow('publicationStatus', encoded),
+    );
+  }
+
+  @override
+  Future<List<IpfsPublicationStatus>> listPublicationStatuses() async =>
+      _decodeListOf(
+        'listPublicationStatuses',
+        _requiredResponse(
+          'listPublicationStatuses',
+          await _inIsolate((abi) => abi.listPublicationStatuses()),
+        ),
+        _decodePublicationStatus,
+      );
+
+  @override
   Future<IpfsAddResult> addAndProvide(Uint8List bytes,
       {Duration timeout = const Duration(seconds: 60)}) async {
     final encoded = _requiredResponse(
@@ -290,6 +326,14 @@ final class IpfsNodeFlutterNative extends IpfsNodePlatform {
     final map = _decodeObject('addAndProvide', encoded);
     final error = map['error'];
     if (error is String && error.isNotEmpty) {
+      final cid = map['cid'];
+      final added = map['bytes'];
+      if (cid is String && cid.isNotEmpty && added is int) {
+        throw IpfsPublicationException(
+          result: IpfsAddResult(cid: cid, bytes: added),
+          message: error,
+        );
+      }
       throw NativeNodeRequestException(
           operation: 'addAndProvide', message: error);
     }
@@ -683,6 +727,68 @@ IpfsPinInfo _decodePin(Map<dynamic, dynamic> map) {
   );
 }
 
+IpfsPublicationStatus _decodePublicationStatus(Map<dynamic, dynamic> map) {
+  final cid = map['cid'];
+  final rawState = map['state'];
+  final rawAddedAt = map['addedAt'];
+  final addedAt = rawAddedAt is String ? DateTime.tryParse(rawAddedAt) : null;
+  final states = IpfsPublicationState.values
+      .where((state) => state.name == rawState)
+      .toList(growable: false);
+  if (cid is! String || cid.isEmpty || states.length != 1 || addedAt == null) {
+    throw const NativeNodeProtocolException(
+      operation: 'publicationStatus',
+      message: 'Native node response contained invalid publication metadata.',
+    );
+  }
+
+  int counter(String key) {
+    final value = map[key];
+    if (value is! int) {
+      throw NativeNodeProtocolException(
+        operation: 'publicationStatus',
+        message: 'Native node response contained an invalid $key counter.',
+      );
+    }
+    return value;
+  }
+
+  DateTime? optionalDate(String key) {
+    final value = map[key];
+    if (value == null) return null;
+    if (value is String) {
+      final parsed = DateTime.tryParse(value);
+      if (parsed != null) return parsed;
+    }
+    throw NativeNodeProtocolException(
+      operation: 'publicationStatus',
+      message: 'Native node response contained an invalid $key timestamp.',
+    );
+  }
+
+  final publishError = map['publishError'];
+  if (publishError != null && publishError is! String) {
+    throw const NativeNodeProtocolException(
+      operation: 'publicationStatus',
+      message: 'Native node response contained an invalid publication error.',
+    );
+  }
+  return IpfsPublicationStatus(
+    cid: cid,
+    state: states.single,
+    addedAt: addedAt,
+    lastAttempt: optionalDate('lastAttempt'),
+    lastPublished: optionalDate('lastPublished'),
+    attemptCount: counter('attemptCount'),
+    targetPeers: counter('targetPeers'),
+    writeSuccesses: counter('writeSuccesses'),
+    confirmedPeers: counter('confirmedPeers'),
+    requiredConfirmations: counter('requiredConfirmations'),
+    publishError: publishError as String?,
+    nextRetry: optionalDate('nextRetry'),
+  );
+}
+
 IpfsPeerInfo _decodePeer(Map<dynamic, dynamic> map) {
   final id = map['id'];
   final rawAddrs = map['addrs'];
@@ -797,6 +903,16 @@ final class _FfiNativeNodeAbi {
             library.lookupFunction<_AddAndProvideNative, _AddAndProvideDart>(
           'ipfs_node_add_and_provide',
         ),
+        _startProviding = library.lookupFunction<_PinNative, _PinDart>(
+          'ipfs_node_start_providing',
+        ),
+        _publicationStatus = library.lookupFunction<_PinNative, _PinDart>(
+          'ipfs_node_publication_status',
+        ),
+        _listPublicationStatuses =
+            library.lookupFunction<_StringNative, _StringDart>(
+          'ipfs_node_list_publication_statuses',
+        ),
         _pin = library.lookupFunction<_PinNative, _PinDart>('ipfs_node_pin'),
         _unpin =
             library.lookupFunction<_PinNative, _PinDart>('ipfs_node_unpin'),
@@ -860,6 +976,9 @@ final class _FfiNativeNodeAbi {
   final _StringDart _networkReady;
   final _TimeoutDart _provide;
   final _AddAndProvideDart _addAndProvide;
+  final _PinDart _startProviding;
+  final _PinDart _publicationStatus;
+  final _StringDart _listPublicationStatuses;
   final _PinDart _pin;
   final _PinDart _unpin;
   final _StringDart _listPins;
@@ -935,6 +1054,13 @@ final class _FfiNativeNodeAbi {
       _freeString(response);
     }
   }
+
+  String? startProviding(String value) => _callString(_startProviding, value);
+
+  String? publicationStatus(String value) =>
+      _callString(_publicationStatus, value);
+
+  String? listPublicationStatuses() => _readString(_listPublicationStatuses);
 
   String? pin(String value) => _callString(_pin, value);
 

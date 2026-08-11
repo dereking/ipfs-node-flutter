@@ -238,9 +238,48 @@ func ipfs_node_add_and_provide(handle C.uintptr_t, data unsafe.Pointer, length C
 	defer cancel()
 	cid, err := node.AddAndProvide(ctx, C.GoBytes(data, C.int(length)))
 	if err != nil {
-		return jsonString(addResponse{Error: err.Error()})
+		return jsonString(addResponse{Cid: cid, Bytes: int(length), Error: err.Error()})
 	}
 	return jsonString(addResponse{Cid: cid, Bytes: int(length)})
+}
+
+//export ipfs_node_start_providing
+func ipfs_node_start_providing(handle C.uintptr_t, rawCID *C.char) *C.char {
+	node, ok := lookup(handle)
+	if !ok {
+		return nil
+	}
+	if rawCID == nil {
+		return jsonString(operationResponse{Error: "invalid start providing request"})
+	}
+	return stringOperation("start providing", func() error {
+		return node.StartProviding(context.Background(), C.GoString(rawCID))
+	})
+}
+
+//export ipfs_node_publication_status
+func ipfs_node_publication_status(handle C.uintptr_t, rawCID *C.char) *C.char {
+	node, ok := lookup(handle)
+	if !ok {
+		return nil
+	}
+	if rawCID == nil {
+		return jsonString(operationResponse{Error: "invalid publication status request"})
+	}
+	return stringResponse("publication status", func() (any, error) {
+		return node.PublicationStatus(C.GoString(rawCID))
+	})
+}
+
+//export ipfs_node_list_publication_statuses
+func ipfs_node_list_publication_statuses(handle C.uintptr_t) *C.char {
+	node, ok := lookup(handle)
+	if !ok {
+		return nil
+	}
+	return stringResponse("list publication statuses", func() (any, error) {
+		return node.ListPublicationStatuses()
+	})
 }
 
 // ipfs_node_pin ensures a content root is local and pinned. Returns a

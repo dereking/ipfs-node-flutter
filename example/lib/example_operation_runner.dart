@@ -8,6 +8,9 @@ abstract interface class ExampleNodeOperations {
   Future<List<int>> getBlock(String cid);
   Future<void> pin(String cid);
   Future<List<IpfsPinInfo>> listPins();
+  Future<void> startProviding(String cid);
+  Future<IpfsPublicationStatus> publicationStatus(String cid);
+  Future<List<IpfsPublicationStatus>> listPublicationStatuses();
   Future<bool> networkReady();
   Future<void> provide(String cid);
   Future<List<IpfsPeerInfo>> findProviders(String cid);
@@ -30,6 +33,14 @@ final class IpfsNodeOperations implements ExampleNodeOperations {
   Future<void> pin(String cid) => node.pin(cid);
   @override
   Future<List<IpfsPinInfo>> listPins() => node.listPins();
+  @override
+  Future<void> startProviding(String cid) => node.startProviding(cid);
+  @override
+  Future<IpfsPublicationStatus> publicationStatus(String cid) =>
+      node.publicationStatus(cid);
+  @override
+  Future<List<IpfsPublicationStatus>> listPublicationStatuses() =>
+      node.listPublicationStatuses();
   @override
   Future<bool> networkReady() => node.networkReady();
   @override
@@ -87,12 +98,31 @@ final class ExampleOperationRunner {
       _waiting('get', '本地添加失败，缺少 CID');
       _waiting('pin', '本地添加失败，缺少 CID');
       _waiting('listPins', 'Pin 步骤未完成');
+      _waiting('startProviding', '本地添加失败，缺少 CID');
+      _waiting('publicationStatus', '本地添加失败，缺少 CID');
+      _waiting('listPublicationStatuses', '本地添加失败，缺少 CID');
     } else {
       await _perform(
           'get', () => node.getBlock(cid), (bytes) => '${bytes.length} bytes');
       await _perform('pin', () => node.pin(cid), (_) => cid);
       await _perform(
           'listPins', node.listPins, (pins) => '${pins.length} pins');
+      await _perform(
+        'startProviding',
+        () => node.startProviding(cid),
+        (_) => '已加入持久化发布队列',
+      );
+      await _perform(
+        'publicationStatus',
+        () => node.publicationStatus(cid),
+        (status) =>
+            '${status.state.name}: ${status.confirmedPeers}/${status.requiredConfirmations}',
+      );
+      await _perform(
+        'listPublicationStatuses',
+        node.listPublicationStatuses,
+        (statuses) => '${statuses.length} queued roots',
+      );
     }
 
     var ready = false;

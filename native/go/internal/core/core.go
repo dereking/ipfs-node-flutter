@@ -6,6 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"sort"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -26,10 +28,12 @@ import (
 	ipld "github.com/ipfs/go-ipld-format"
 	libp2p "github.com/libp2p/go-libp2p"
 	dht "github.com/libp2p/go-libp2p-kad-dht"
+	dhtpb "github.com/libp2p/go-libp2p-kad-dht/pb"
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/core/pnet"
+	"github.com/libp2p/go-libp2p/p2p/host/autorelay"
 	ma "github.com/multiformats/go-multiaddr"
 	mh "github.com/multiformats/go-multihash"
 )
@@ -163,22 +167,25 @@ type networkConfig struct {
 
 // Core owns one native node lifecycle state machine.
 type Core struct {
-	mu          sync.Mutex
-	ctx         context.Context
-	status      Status
-	host        host.Host
-	dht         *dht.IpfsDHT
-	bitswap     *bitswap.Bitswap
-	network     bsnetiface.BitSwapNetwork
-	store       blockstore.Blockstore
-	repo        *repository
-	pins        map[string]PinInfo
-	provided    map[string]struct{}
-	bootstrap   []string
-	key         crypto.PrivKey
-	namesys     namesys.NameSystem
-	cancel      context.CancelFunc
-	networkMode networkMode
+	mu              sync.Mutex
+	ctx             context.Context
+	status          Status
+	host            host.Host
+	dht             *dht.IpfsDHT
+	bitswap         *bitswap.Bitswap
+	network         bsnetiface.BitSwapNetwork
+	store           blockstore.Blockstore
+	repo            *repository
+	pins            map[string]PinInfo
+	provided        map[string]struct{}
+	bootstrap       []string
+	key             crypto.PrivKey
+	namesys         namesys.NameSystem
+	cancel          context.CancelFunc
+	networkMode     networkMode
+	publicationWake chan struct{}
+	publicationWG   sync.WaitGroup
+	publicationMu   sync.Mutex
 }
 
 // New creates a stopped node.
@@ -233,29 +240,18 @@ func (core *Core) Start(config any) error {
 // Stop transitions a running node to stopped. Repeated stops are idempotent.
 func (core *Core) Stop() error {
 	core.mu.Lock()
-	defer core.mu.Unlock()
-
 	switch core.status.Lifecycle {
 	case Stopped:
+		core.mu.Unlock()
 		return nil
 	case Running, Degraded, Failed:
 		core.status = Status{Lifecycle: Stopping}
-		if core.host != nil {
-			if core.bitswap != nil {
-				_ = core.bitswap.Close()
-				core.bitswap = nil
-			}
-			if core.dht != nil {
-				_ = core.dht.Close()
-				core.dht = nil
-			}
-			if core.cancel != nil {
-				core.cancel()
-				core.cancel = nil
-			}
-			_ = core.host.Close()
-			core.host = nil
-		}
+		cancel, client, kad, h, repo := core.cancel, core.bitswap, core.dht, core.host, core.repo
+		core.cancel = nil
+		core.bitswap = nil
+		core.dht = nil
+		core.host = nil
+		core.repo = nil
 		core.store = nil
 		core.network = nil
 		core.ctx = nil
@@ -264,14 +260,35 @@ func (core *Core) Stop() error {
 		core.bootstrap = nil
 		core.key = nil
 		core.namesys = nil
-		if core.repo != nil {
-			_ = core.repo.Close()
-			core.repo = nil
+		core.publicationWake = nil
+		core.mu.Unlock()
+
+		if cancel != nil {
+			cancel()
 		}
+		core.publicationWG.Wait()
+		core.publicationMu.Lock()
+		defer core.publicationMu.Unlock()
+		if client != nil {
+			_ = client.Close()
+		}
+		if kad != nil {
+			_ = kad.Close()
+		}
+		if h != nil {
+			_ = h.Close()
+		}
+		if repo != nil {
+			_ = repo.Close()
+		}
+
+		core.mu.Lock()
 		runningNativeCore.Store(false)
 		core.status = Status{Lifecycle: Stopped}
+		core.mu.Unlock()
 		return nil
 	default:
+		core.mu.Unlock()
 		return ErrInvalidLifecycleTransition
 	}
 }
@@ -383,6 +400,7 @@ func (core *Core) startNetwork(config networkConfig) error {
 			options = append(options, libp2p.EnableAutoRelayWithStaticRelays(relays))
 		}
 	} else {
+		options = append(options, libp2p.NATPortMap(), libp2p.EnableHolePunching())
 		// Behind NAT the node must obtain a public circuit-relay address so
 		// remote peers can dial it; otherwise the DHT provider record only
 		// advertises unreachable private addresses. Candidate relays are the
@@ -403,7 +421,13 @@ func (core *Core) startNetwork(config networkConfig) error {
 				}
 			}()
 			return out
-		}))
+		},
+			autorelay.WithBootDelay(15*time.Second),
+			autorelay.WithMinCandidates(1),
+			autorelay.WithMinInterval(10*time.Second),
+			autorelay.WithBackoff(time.Minute),
+			autorelay.WithNumRelays(1),
+		))
 	}
 	h, err = libp2p.New(options...)
 	if err != nil {
@@ -424,9 +448,8 @@ func (core *Core) startNetwork(config networkConfig) error {
 		return err
 	}
 	store := repo.store
-	network := bsnet.NewFromIpfsHost(h)
+	network := relayBitswapNetwork{BitSwapNetwork: bsnet.NewFromIpfsHost(h)}
 	client := bitswap.New(ctx, network, kad, store)
-	network.Start(client)
 	ns, err := namesys.NewNameSystem(kad)
 	if err != nil {
 		_ = client.Close()
@@ -448,10 +471,11 @@ func (core *Core) startNetwork(config networkConfig) error {
 	}
 	core.provided = make(map[string]struct{})
 	for rawCID, metadata := range repo.metadata.Roots {
-		if metadata.LastPublished != nil && metadata.PublishError == "" {
+		if metadata.State == PublicationConfirmed {
 			core.provided[rawCID] = struct{}{}
 		}
 	}
+	core.publicationWake = make(chan struct{}, 1)
 	core.bootstrap = append([]string(nil), config.bootstrapPeers...)
 	core.key = key
 	core.namesys = ns
@@ -484,7 +508,12 @@ func (core *Core) startNetwork(config networkConfig) error {
 		core.host, core.dht, core.bitswap, core.cancel = nil, nil, nil, nil
 		return err
 	}
-	go core.reprovideLoop(ctx)
+	core.publicationWG.Add(1)
+	go core.publicationLoop(ctx, core.publicationWake)
+	select {
+	case core.publicationWake <- struct{}{}:
+	default:
+	}
 	return nil
 }
 
@@ -577,31 +606,149 @@ func hasPublicAddress(addrs []ma.Multiaddr) bool {
 	return false
 }
 
+func publicationAddresses(mode networkMode, addrs []ma.Multiaddr) []ma.Multiaddr {
+	if mode == networkPrivate {
+		return append([]ma.Multiaddr(nil), addrs...)
+	}
+	result := make([]ma.Multiaddr, 0, len(addrs))
+	for _, addr := range addrs {
+		if isRelayAddr(addr) || hasPublicAddress([]ma.Multiaddr{addr}) {
+			result = append(result, addr)
+		}
+	}
+	return result
+}
+
 // Provide announces a locally stored root and persists the successful result.
 func (core *Core) Provide(ctx context.Context, rawCID string) error {
-	if !core.NetworkReady() {
-		return ErrNetworkNotReady
-	}
 	parsed, err := cid.Parse(rawCID)
 	if err != nil {
 		return err
 	}
+	core.publicationMu.Lock()
+	defer core.publicationMu.Unlock()
 	core.mu.Lock()
-	kad, repo := core.dht, core.repo
+	kad, repo, store, h, mode := core.dht, core.repo, core.store, core.host, core.networkMode
 	core.mu.Unlock()
-	if kad == nil || repo == nil {
+	if kad == nil || repo == nil || store == nil || h == nil {
 		return errors.New("public IPFS node is not running")
 	}
-	if err := kad.Provide(ctx, parsed, true); err != nil {
+	has, err := store.Has(ctx, parsed)
+	if err != nil {
 		return err
 	}
-	if err := repo.recordPublication(parsed.String(), time.Now().UTC(), ""); err != nil {
+	if !has {
+		return fmt.Errorf("content root is not stored locally: %s", parsed)
+	}
+	now := time.Now().UTC()
+	if err := repo.schedulePublication(parsed.String(), now); err != nil {
+		return err
+	}
+	if !core.NetworkReady() {
+		if err := repo.recordPublicationAttempt(parsed.String(), now, 0, 0); err != nil {
+			return err
+		}
+		recordProvideFailure(repo, parsed.String(), now, 0, 0, 0, ErrNetworkNotReady)
+		return ErrNetworkNotReady
+	}
+	addrs := publicationAddresses(mode, kad.FilteredAddrs())
+	if len(addrs) == 0 {
+		if err := repo.recordPublicationAttempt(parsed.String(), now, 0, 0); err != nil {
+			return err
+		}
+		recordProvideFailure(repo, parsed.String(), now, 0, 0, 0, ErrNetworkNotReady)
+		return ErrNetworkNotReady
+	}
+	targets, err := kad.GetClosestPeers(ctx, string(parsed.Hash()))
+	if err != nil && len(targets) == 0 {
+		if recordErr := repo.recordPublicationAttempt(parsed.String(), now, 0, 0); recordErr != nil {
+			return recordErr
+		}
+		recordProvideFailure(repo, parsed.String(), now, 0, 0, 0, err)
+		return err
+	}
+	required := requiredProviderConfirmations(len(targets))
+	if err := repo.recordPublicationAttempt(parsed.String(), now, len(targets), required); err != nil {
+		return err
+	}
+	if err := kad.Provide(ctx, parsed, false); err != nil {
+		recordProvideFailure(repo, parsed.String(), time.Now().UTC(), 0, 0, required, err)
+		return err
+	}
+	messenger, err := dhtpb.NewProtocolMessenger(kad.MessageSender())
+	if err != nil {
+		recordProvideFailure(repo, parsed.String(), time.Now().UTC(), 0, 0, required, err)
+		return err
+	}
+	result, publishErr := publishProviderRecord(ctx, messenger, peer.AddrInfo{ID: h.ID(), Addrs: addrs}, parsed.Hash(), targets, mode == networkPublic)
+	if publishErr != nil {
+		recordProvideFailure(repo, parsed.String(), time.Now().UTC(), result.WriteSuccesses, result.ConfirmedPeers, result.RequiredConfirmations, publishErr)
+		return publishErr
+	}
+	confirmedAt := time.Now().UTC()
+	if err := repo.recordPublicationConfirmed(parsed.String(), confirmedAt, result.WriteSuccesses, result.ConfirmedPeers); err != nil {
 		return err
 	}
 	core.mu.Lock()
 	core.provided[parsed.String()] = struct{}{}
 	core.mu.Unlock()
 	return nil
+}
+
+// StartProviding durably schedules a local root for eventual publication.
+func (core *Core) StartProviding(ctx context.Context, rawCID string) error {
+	parsed, err := cid.Parse(rawCID)
+	if err != nil {
+		return err
+	}
+	core.mu.Lock()
+	store, repo := core.store, core.repo
+	core.mu.Unlock()
+	if store == nil || repo == nil {
+		return errors.New("public IPFS node is not running")
+	}
+	has, err := store.Has(ctx, parsed)
+	if err != nil {
+		return err
+	}
+	if !has {
+		return fmt.Errorf("content root is not stored locally: %s", parsed)
+	}
+	if err := repo.schedulePublication(parsed.String(), time.Now().UTC()); err != nil {
+		return err
+	}
+	core.wakePublicationWorker()
+	return nil
+}
+
+// PublicationStatus returns durable publication state for one local root.
+func (core *Core) PublicationStatus(rawCID string) (PublicationStatus, error) {
+	parsed, err := cid.Parse(rawCID)
+	if err != nil {
+		return PublicationStatus{}, err
+	}
+	core.mu.Lock()
+	repo := core.repo
+	core.mu.Unlock()
+	if repo == nil {
+		return PublicationStatus{}, errors.New("public IPFS node is not running")
+	}
+	status, ok := repo.publicationStatus(parsed.String())
+	if !ok {
+		return PublicationStatus{}, fmt.Errorf("content root is not stored locally: %s", parsed)
+	}
+	return status, nil
+}
+
+// ListPublicationStatuses returns roots enrolled in public publication.
+func (core *Core) ListPublicationStatuses() ([]PublicationStatus, error) {
+	core.mu.Lock()
+	repo := core.repo
+	core.mu.Unlock()
+	if repo == nil {
+		return nil, errors.New("public IPFS node is not running")
+	}
+	return repo.publicationQueue(), nil
 }
 
 // AddAndProvide stores content durably, then waits for its public announcement.
@@ -611,7 +758,7 @@ func (core *Core) AddAndProvide(ctx context.Context, data []byte) (string, error
 		return "", err
 	}
 	if err := core.Provide(ctx, rawCID); err != nil {
-		return "", err
+		return rawCID, err
 	}
 	return rawCID, nil
 }
@@ -624,9 +771,9 @@ func (core *Core) AddAndProvide(ctx context.Context, data []byte) (string, error
 // UnixFS file root.
 func (core *Core) AddBytes(ctx context.Context, data []byte) (string, error) {
 	core.mu.Lock()
-	store := core.store
+	store, client := core.store, core.bitswap
 	core.mu.Unlock()
-	if store == nil {
+	if store == nil || client == nil {
 		return "", errors.New("public IPFS node is not running")
 	}
 
@@ -652,11 +799,15 @@ func (core *Core) AddBytes(ctx context.Context, data []byte) (string, error) {
 		if err := core.repo.recordRoot(block.Cid().String()); err != nil {
 			return "", err
 		}
+		if err := client.NotifyNewBlocks(ctx, block); err != nil {
+			return "", err
+		}
 		return block.Cid().String(), nil
 	}
 
 	var chunkCids []cid.Cid
 	var chunkSizes []uint64
+	storedBlocks := make([]blocks.Block, 0, len(data)/defaultChunkSize+2)
 	for start := 0; start < len(data); start += defaultChunkSize {
 		end := start + defaultChunkSize
 		if end > len(data) {
@@ -671,6 +822,7 @@ func (core *Core) AddBytes(ctx context.Context, data []byte) (string, error) {
 		}
 		chunkCids = append(chunkCids, leaf.Cid())
 		chunkSizes = append(chunkSizes, uint64(end-start))
+		storedBlocks = append(storedBlocks, leaf)
 	}
 	root, err := buildFileNode(dagPrefix, linksFor(chunkCids, chunkSizes))
 	if err != nil {
@@ -684,6 +836,10 @@ func (core *Core) AddBytes(ctx context.Context, data []byte) (string, error) {
 		return "", err
 	}
 	if err := core.repo.recordRoot(root.Cid().String()); err != nil {
+		return "", err
+	}
+	storedBlocks = append(storedBlocks, rootBlock)
+	if err := client.NotifyNewBlocks(ctx, storedBlocks...); err != nil {
 		return "", err
 	}
 	return root.Cid().String(), nil
@@ -714,6 +870,9 @@ func (core *Core) Pin(ctx context.Context, rawCID string) error {
 		if err := store.Put(ctx, block); err != nil {
 			return err
 		}
+		if err := client.NotifyNewBlocks(ctx, block); err != nil {
+			return err
+		}
 	}
 	core.mu.Lock()
 	core.pins[parsed.String()] = PinInfo{
@@ -733,81 +892,118 @@ func (core *Core) Pin(ctx context.Context, rawCID string) error {
 // discoverable, matching Kubo's periodic reprovide behaviour.
 const reprovideInterval = 6 * time.Hour
 
-// provide announces content to the DHT so other nodes can discover this node
-// as a provider and fetch the block over Bitswap. The CID is tracked so it can
-// be re-announced by [Core.reprovideLoop], and the initial announcement retries
-// until the DHT is warm enough to accept it (the routing table is empty right
-// after start). The announcement runs in the background because the DHT may
-// take tens of seconds to bootstrap.
-func (core *Core) provide(ctx context.Context, rawCID string) {
-	parsed, err := cid.Parse(rawCID)
-	if err != nil {
-		return
+func publicationRetryDelay(attempt int) time.Duration {
+	if attempt < 1 {
+		attempt = 1
 	}
+	delay := 30 * time.Second
+	for current := 1; current < attempt && delay < 30*time.Minute; current++ {
+		delay *= 2
+	}
+	if delay > 30*time.Minute {
+		return 30 * time.Minute
+	}
+	return delay
+}
+
+func publicationIsDue(status PublicationStatus, now time.Time) bool {
+	switch status.State {
+	case PublicationPending:
+		return status.NextRetry == nil || !status.NextRetry.After(now)
+	case PublicationFailed, PublicationDegraded:
+		return status.NextRetry != nil && !status.NextRetry.After(now)
+	case PublicationConfirmed:
+		return status.LastPublished == nil || !status.LastPublished.Add(reprovideInterval).After(now)
+	default:
+		return false
+	}
+}
+
+func recordProvideFailure(repo *repository, rawCID string, now time.Time, writes, confirmed, required int, cause error) {
+	status, _ := repo.publicationStatus(rawCID)
+	nextRetry := now.Add(publicationRetryDelay(status.AttemptCount))
+	_ = repo.recordPublicationFailure(rawCID, now, writes, confirmed, required, nextRetry, cause.Error())
+}
+
+func (core *Core) wakePublicationWorker() {
 	core.mu.Lock()
-	if core.provided == nil {
-		core.provided = make(map[string]struct{})
-	}
-	core.provided[parsed.String()] = struct{}{}
-	kad := core.dht
-	nodeCtx := core.ctx
+	wake := core.publicationWake
 	core.mu.Unlock()
-	if kad == nil || nodeCtx == nil {
+	if wake == nil {
 		return
 	}
-	go core.provideUntil(nodeCtx, kad, parsed)
-}
-
-// provideUntil repeatedly announces one CID until the network accepts it or the
-// node stops. Provider records carry the node's current addresses, so a record
-// is only useful once auto-relay and the DHT are ready.
-func (core *Core) provideUntil(ctx context.Context, kad *dht.IpfsDHT, parsed cid.Cid) {
-	for attempt := 0; ; attempt++ {
-		pctx, cancel := context.WithTimeout(ctx, 30*time.Second)
-		err := kad.Provide(pctx, parsed, true)
-		cancel()
-		if err == nil {
-			return
-		}
-		delay := 5 * time.Second
-		if attempt > 0 {
-			delay = 30 * time.Second
-		}
-		select {
-		case <-ctx.Done():
-			return
-		case <-time.After(delay):
-		}
+	select {
+	case wake <- struct{}{}:
+	default:
 	}
 }
 
-// reprovideLoop periodically re-announces every local content root so provider
-// records do not expire while the node stays online.
-func (core *Core) reprovideLoop(ctx context.Context) {
-	ticker := time.NewTicker(reprovideInterval)
+// publicationLoop is the only background provider publisher in the process.
+// It serializes retries and periodic reprovides so roots cannot create an
+// unbounded number of concurrent DHT operations.
+func (core *Core) publicationLoop(ctx context.Context, wake <-chan struct{}) {
+	defer core.publicationWG.Done()
+	ticker := time.NewTicker(3 * time.Second)
 	defer ticker.Stop()
+	lastReady := false
+	lastAddresses := ""
 	for {
 		select {
 		case <-ctx.Done():
 			return
+		case <-wake:
 		case <-ticker.C:
-			core.mu.Lock()
-			kad := core.dht
-			roots := make([]cid.Cid, 0, len(core.provided))
-			for raw := range core.provided {
-				if parsed, err := cid.Parse(raw); err == nil {
-					roots = append(roots, parsed)
-				}
+		}
+
+		core.mu.Lock()
+		repo := core.repo
+		core.mu.Unlock()
+		if repo == nil {
+			continue
+		}
+		now := time.Now().UTC()
+		ready, addresses := core.publicationReachabilitySnapshot()
+		force := ready && (!lastReady || addresses != lastAddresses)
+		lastReady, lastAddresses = ready, addresses
+		for _, status := range repo.publicationQueue() {
+			due := publicationIsDue(status, now)
+			if force && status.State != PublicationConfirmed {
+				due = true
 			}
-			core.mu.Unlock()
-			if kad == nil {
+			if !due {
 				continue
 			}
-			for _, parsed := range roots {
-				go core.provideUntil(ctx, kad, parsed)
+			attemptCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
+			_ = core.Provide(attemptCtx, status.CID)
+			cancel()
+			if ctx.Err() != nil {
+				return
 			}
 		}
 	}
+}
+
+func (core *Core) publicationReachabilitySnapshot() (bool, string) {
+	ready := core.NetworkReady()
+	core.mu.Lock()
+	kad, mode := core.dht, core.networkMode
+	core.mu.Unlock()
+	if kad == nil {
+		return ready, ""
+	}
+	addrs := publicationAddresses(mode, kad.FilteredAddrs())
+	values := make([]string, 0, len(addrs))
+	for _, addr := range addrs {
+		values = append(values, addr.String())
+	}
+	sort.Strings(values)
+	return ready, strings.Join(values, "\n")
+}
+
+// provide keeps the existing internal call site asynchronous while enrolling
+// the root in the durable publication queue.
+func (core *Core) provide(ctx context.Context, rawCID string) {
+	_ = core.StartProviding(ctx, rawCID)
 }
 
 // Unpin removes a content root from the local pin set.
