@@ -10,10 +10,14 @@ class IpfsContentAddPanel extends StatefulWidget {
     super.key,
     required this.controller,
     this.initialText,
+    this.publicationSupported = true,
+    this.onAdded,
   });
 
   final IpfsNodeController controller;
   final String? initialText;
+  final bool publicationSupported;
+  final ValueChanged<IpfsAddResult>? onAdded;
 
   @override
   State<IpfsContentAddPanel> createState() => _IpfsContentAddPanelState();
@@ -45,14 +49,18 @@ class _IpfsContentAddPanelState extends State<IpfsContentAddPanel> {
         _result = result;
         _published = publish;
       });
+      widget.onAdded?.call(result);
     } catch (error) {
       if (!mounted) return;
+      IpfsAddResult? durableResult;
       setState(() {
         if (error is IpfsPublicationException) {
           _result = error.result;
+          durableResult = error.result;
         }
         _error = error;
       });
+      if (durableResult != null) widget.onAdded?.call(durableResult!);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -105,12 +113,16 @@ class _IpfsContentAddPanelState extends State<IpfsContentAddPanel> {
                   label: const Text('本地添加'),
                 ),
                 FilledButton.icon(
-                  onPressed: _loading ? null : () => _add(publish: true),
+                  onPressed: _loading || !widget.publicationSupported
+                      ? null
+                      : () => _add(publish: true),
                   icon: const Icon(Icons.public),
                   label: const Text('添加并发布'),
                 ),
               ],
             ),
+            if (!widget.publicationSupported)
+              const Text('当前平台不支持公网发布；仍可本地添加和读取'),
             const SizedBox(height: 8),
             if (_loading)
               const LinearProgressIndicator()

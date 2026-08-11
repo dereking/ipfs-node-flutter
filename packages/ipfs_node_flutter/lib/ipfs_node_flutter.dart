@@ -6,6 +6,7 @@ export 'package:ipfs_node_flutter_platform_interface/ipfs_node_platform_interfac
         IpfsBitswapStats,
         IpfsKeyInfo,
         IpfsNodeException,
+        IpfsNodePlatform,
         IpfsPeerInfo,
         IpfsPinInfo,
         IpfsPinType,

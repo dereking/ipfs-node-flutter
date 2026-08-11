@@ -24,6 +24,17 @@ class _IpfsCidPublicationPanelState extends State<IpfsCidPublicationPanel> {
   String? _result;
   bool _loading = false;
 
+  @override
+  void didUpdateWidget(covariant IpfsCidPublicationPanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final nextCid = widget.initialCid;
+    if (nextCid != oldWidget.initialCid &&
+        nextCid != null &&
+        nextCid.isNotEmpty) {
+      _cid.text = nextCid;
+    }
+  }
+
   Future<void> _provide() async {
     if (!widget.publicationSupported || _cid.text.isEmpty) return;
     await _run(() async {

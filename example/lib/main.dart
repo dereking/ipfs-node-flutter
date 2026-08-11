@@ -51,6 +51,7 @@ class _IpfsFeatureLabPageState extends State<IpfsFeatureLabPage> {
   int _pinCount = 0;
   late final IpfsNodeController _featureController;
   int _pinListVersion = 0;
+  String? _selectedCid;
 
   @override
   void initState() {
@@ -198,11 +199,13 @@ class _IpfsFeatureLabPageState extends State<IpfsFeatureLabPage> {
               IpfsContentAddPanel(
                 controller: _featureController,
                 initialText: documentedContent,
+                publicationSupported: !kIsWeb,
+                onAdded: (result) => setState(() => _selectedCid = result.cid),
               ),
               const SizedBox(height: 12),
               IpfsCidPublicationPanel(
                 controller: _featureController,
-                initialCid: documentedCid,
+                initialCid: _selectedCid ?? documentedCid,
                 publicationSupported: !kIsWeb,
               ),
               const SizedBox(height: 12),

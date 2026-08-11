@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ipfs_node_flutter/ipfs_node_flutter.dart';
 
-class ContentRepositoryPage extends StatelessWidget {
+class ContentRepositoryPage extends StatefulWidget {
   const ContentRepositoryPage({
     super.key,
     required this.controller,
@@ -16,22 +16,34 @@ class ContentRepositoryPage extends StatelessWidget {
   final bool publicationSupported;
 
   @override
+  State<ContentRepositoryPage> createState() => _ContentRepositoryPageState();
+}
+
+class _ContentRepositoryPageState extends State<ContentRepositoryPage> {
+  String? _selectedCid;
+
+  @override
   Widget build(BuildContext context) => ListView(
         padding: const EdgeInsets.all(16),
         children: [
           IpfsRepositoryPanel(
-            repositoryPath: repositoryPath,
+            repositoryPath: widget.repositoryPath,
             contentCount: null,
-            pinCount: pinCount,
+            pinCount: widget.pinCount,
           ),
-          IpfsContentAddPanel(controller: controller),
-          IpfsCidFetchPanel(controller: controller),
+          IpfsContentAddPanel(
+            controller: widget.controller,
+            publicationSupported: widget.publicationSupported,
+            onAdded: (result) => setState(() => _selectedCid = result.cid),
+          ),
+          IpfsCidFetchPanel(controller: widget.controller),
           IpfsCidPublicationPanel(
-            controller: controller,
-            publicationSupported: publicationSupported,
+            controller: widget.controller,
+            initialCid: _selectedCid,
+            publicationSupported: widget.publicationSupported,
           ),
-          IpfsPinPanel(controller: controller),
-          IpfsPinListPanel(controller: controller),
+          IpfsPinPanel(controller: widget.controller),
+          IpfsPinListPanel(controller: widget.controller),
         ].expand((widget) => [widget, const SizedBox(height: 12)]).toList(),
       );
 }

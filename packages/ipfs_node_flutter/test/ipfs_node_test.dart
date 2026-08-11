@@ -2,7 +2,6 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ipfs_node_flutter/ipfs_node_flutter.dart';
-import 'package:ipfs_node_flutter_platform_interface/ipfs_node_platform_interface.dart';
 
 void main() {
   test('start delegates the supplied configuration to the installed platform',

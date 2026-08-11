@@ -4,10 +4,10 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ipfs_node_flutter/ipfs_node_flutter.dart';
-import 'package:ipfs_node_flutter_platform_interface/ipfs_node_platform_interface.dart';
 
 final class _FakeNodePlatform extends IpfsNodePlatform {
   bool ready = true;
+  bool failPublication = false;
 
   @override
   Future<CapabilitySet> capabilities() async => const CapabilitySet.empty();
@@ -40,9 +40,21 @@ final class _FakeNodePlatform extends IpfsNodePlatform {
   Future<IpfsAddResult> addAndProvide(
     Uint8List bytes, {
     Duration timeout = const Duration(seconds: 60),
-  }) async =>
-      IpfsAddResult(
-          cid: 'bafkrei-published-${bytes.length}', bytes: bytes.length);
+  }) async {
+    if (failPublication) {
+      throw IpfsPublicationException(
+        result: IpfsAddResult(
+          cid: 'bafkrei-durable',
+          bytes: bytes.length,
+        ),
+        message: 'provider confirmation failed',
+      );
+    }
+    return IpfsAddResult(
+      cid: 'bafkrei-published-${bytes.length}',
+      bytes: bytes.length,
+    );
+  }
 
   @override
   Future<void> provide(
@@ -316,6 +328,70 @@ void main() {
     expect(find.textContaining('已发布'), findsOneWidget);
   });
 
+  testWidgets('IpfsContentAddPanel reports every durable CID', (tester) async {
+    final controller = IpfsNodeController();
+    addTearDown(controller.dispose);
+    IpfsAddResult? selected;
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: IpfsContentAddPanel(
+          controller: controller,
+          onAdded: (result) => selected = result,
+        ),
+      ),
+    ));
+
+    await tester.enterText(find.byType(TextField), 'some text');
+    await tester.tap(find.text('本地添加'));
+    await tester.pumpAndSettle();
+
+    expect(selected?.cid, 'bafkrei-added-9');
+  });
+
+  testWidgets('IpfsContentAddPanel reports CID after publication failure',
+      (tester) async {
+    final backend = _FakeNodePlatform()..failPublication = true;
+    IpfsNodePlatform.instance = backend;
+    final controller = IpfsNodeController();
+    addTearDown(controller.dispose);
+    IpfsAddResult? selected;
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: IpfsContentAddPanel(
+          controller: controller,
+          onAdded: (result) => selected = result,
+        ),
+      ),
+    ));
+
+    await tester.enterText(find.byType(TextField), 'public text');
+    await tester.tap(find.text('添加并发布'));
+    await tester.pumpAndSettle();
+
+    expect(selected?.cid, 'bafkrei-durable');
+    expect(find.textContaining('provider confirmation failed'), findsOneWidget);
+  });
+
+  testWidgets('IpfsContentAddPanel disables unsupported publication',
+      (tester) async {
+    final controller = IpfsNodeController();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: IpfsContentAddPanel(
+          controller: controller,
+          publicationSupported: false,
+        ),
+      ),
+    ));
+
+    final button = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, '添加并发布'),
+    );
+    expect(button.onPressed, isNull);
+    expect(find.textContaining('当前平台不支持公网发布'), findsOneWidget);
+  });
+
   testWidgets('IpfsPublicationStatusPanel explains unavailable publication',
       (tester) async {
     await tester.pumpWidget(const MaterialApp(
@@ -373,6 +449,27 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.textContaining('bafkrei-target'), findsOneWidget);
+  });
+
+  testWidgets('IpfsCidPublicationPanel follows a newly added CID',
+      (tester) async {
+    final controller = IpfsNodeController();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(MaterialApp(
+      home: IpfsCidPublicationPanel(
+        controller: controller,
+        initialCid: 'bafkrei-first',
+      ),
+    ));
+    await tester.pumpWidget(MaterialApp(
+      home: IpfsCidPublicationPanel(
+        controller: controller,
+        initialCid: 'bafkrei-second',
+      ),
+    ));
+
+    final field = tester.widget<TextField>(find.byType(TextField));
+    expect(field.controller?.text, 'bafkrei-second');
   });
 
   testWidgets('repository and Kubo panels render supplied native data',
