@@ -12,6 +12,8 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"runtime/debug"
 	"sync"
 	"time"
 	"unsafe"
@@ -67,7 +69,8 @@ type nameResponse struct {
 	Error string `json:"error,omitempty"`
 }
 
-func stringResponse(operation string, fn func() (any, error)) *C.char {
+func stringResponse(operation string, fn func() (any, error)) (result *C.char) {
+	defer recoverPanic(&result)
 	value, err := fn()
 	if err != nil {
 		return jsonString(operationResponse{Error: err.Error()})
@@ -75,11 +78,23 @@ func stringResponse(operation string, fn func() (any, error)) *C.char {
 	return jsonString(value)
 }
 
-func stringOperation(operation string, fn func() error) *C.char {
+func stringOperation(operation string, fn func() error) (result *C.char) {
+	defer recoverPanic(&result)
 	if err := fn(); err != nil {
 		return jsonString(operationResponse{Error: err.Error()})
 	}
 	return jsonString(operationResponse{})
+}
+
+// recoverPanic converts a panic raised on the calling goroutine into an error
+// response so a c-shared ABI call never aborts the host process. The recovered
+// value and stack trace are surfaced to the caller for diagnosis.
+func recoverPanic(result **C.char) {
+	if recovered := recover(); recovered != nil {
+		*result = jsonString(operationResponse{
+			Error: fmt.Sprintf("internal panic: %v\n%s", recovered, debug.Stack()),
+		})
+	}
 }
 
 // ipfs_node_create creates a stopped node and returns its opaque handle.
@@ -100,7 +115,12 @@ func ipfs_node_create() C.uintptr_t {
 // It returns zero on success; see include/ipfs_node_core.h for stable codes.
 //
 //export ipfs_node_start
-func ipfs_node_start(handle C.uintptr_t, request *C.char) C.int {
+func ipfs_node_start(handle C.uintptr_t, request *C.char) (code C.int) {
+	defer func() {
+		if recovered := recover(); recovered != nil {
+			code = errInvalidConfiguration
+		}
+	}()
 	node, ok := lookup(handle)
 	if !ok {
 		return errInvalidHandle
@@ -125,7 +145,12 @@ func ipfs_node_start(handle C.uintptr_t, request *C.char) C.int {
 // ipfs_node_stop stops a node. It returns zero on success.
 //
 //export ipfs_node_stop
-func ipfs_node_stop(handle C.uintptr_t) C.int {
+func ipfs_node_stop(handle C.uintptr_t) (code C.int) {
+	defer func() {
+		if recovered := recover(); recovered != nil {
+			code = errInvalidState
+		}
+	}()
 	node, ok := lookup(handle)
 	if !ok {
 		return errInvalidHandle
@@ -141,7 +166,8 @@ func ipfs_node_stop(handle C.uintptr_t) C.int {
 // results.
 //
 //export ipfs_node_status
-func ipfs_node_status(handle C.uintptr_t) *C.char {
+func ipfs_node_status(handle C.uintptr_t) (result *C.char) {
+	defer recoverPanic(&result)
 	node, ok := lookup(handle)
 	if !ok {
 		return nil
@@ -152,7 +178,8 @@ func ipfs_node_status(handle C.uintptr_t) *C.char {
 // ipfs_node_capabilities returns a heap-allocated JSON capability array.
 //
 //export ipfs_node_capabilities
-func ipfs_node_capabilities(handle C.uintptr_t) *C.char {
+func ipfs_node_capabilities(handle C.uintptr_t) (result *C.char) {
+	defer recoverPanic(&result)
 	node, ok := lookup(handle)
 	if !ok {
 		return nil
@@ -165,7 +192,8 @@ func ipfs_node_capabilities(handle C.uintptr_t) *C.char {
 // Call ipfs_node_free_string exactly once for non-NULL results.
 //
 //export ipfs_node_get_block
-func ipfs_node_get_block(handle C.uintptr_t, cid *C.char, timeout_millis C.int) *C.char {
+func ipfs_node_get_block(handle C.uintptr_t, cid *C.char, timeout_millis C.int) (result *C.char) {
+	defer recoverPanic(&result)
 	node, ok := lookup(handle)
 	if !ok {
 		return nil
@@ -187,7 +215,8 @@ func ipfs_node_get_block(handle C.uintptr_t, cid *C.char, timeout_millis C.int) 
 // Call ipfs_node_free_string exactly once for non-NULL results.
 //
 //export ipfs_node_add_bytes
-func ipfs_node_add_bytes(handle C.uintptr_t, data unsafe.Pointer, length C.size_t) *C.char {
+func ipfs_node_add_bytes(handle C.uintptr_t, data unsafe.Pointer, length C.size_t) (result *C.char) {
+	defer recoverPanic(&result)
 	node, ok := lookup(handle)
 	if !ok {
 		return nil
@@ -203,7 +232,8 @@ func ipfs_node_add_bytes(handle C.uintptr_t, data unsafe.Pointer, length C.size_
 }
 
 //export ipfs_node_network_ready
-func ipfs_node_network_ready(handle C.uintptr_t) *C.char {
+func ipfs_node_network_ready(handle C.uintptr_t) (result *C.char) {
+	defer recoverPanic(&result)
 	node, ok := lookup(handle)
 	if !ok {
 		return nil
@@ -212,7 +242,8 @@ func ipfs_node_network_ready(handle C.uintptr_t) *C.char {
 }
 
 //export ipfs_node_provide
-func ipfs_node_provide(handle C.uintptr_t, rawCID *C.char, timeoutMillis C.int) *C.char {
+func ipfs_node_provide(handle C.uintptr_t, rawCID *C.char, timeoutMillis C.int) (result *C.char) {
+	defer recoverPanic(&result)
 	node, ok := lookup(handle)
 	if !ok {
 		return nil
@@ -226,7 +257,8 @@ func ipfs_node_provide(handle C.uintptr_t, rawCID *C.char, timeoutMillis C.int) 
 }
 
 //export ipfs_node_add_and_provide
-func ipfs_node_add_and_provide(handle C.uintptr_t, data unsafe.Pointer, length C.size_t, timeoutMillis C.int) *C.char {
+func ipfs_node_add_and_provide(handle C.uintptr_t, data unsafe.Pointer, length C.size_t, timeoutMillis C.int) (result *C.char) {
+	defer recoverPanic(&result)
 	node, ok := lookup(handle)
 	if !ok {
 		return nil
@@ -244,7 +276,8 @@ func ipfs_node_add_and_provide(handle C.uintptr_t, data unsafe.Pointer, length C
 }
 
 //export ipfs_node_start_providing
-func ipfs_node_start_providing(handle C.uintptr_t, rawCID *C.char) *C.char {
+func ipfs_node_start_providing(handle C.uintptr_t, rawCID *C.char) (result *C.char) {
+	defer recoverPanic(&result)
 	node, ok := lookup(handle)
 	if !ok {
 		return nil
@@ -258,7 +291,8 @@ func ipfs_node_start_providing(handle C.uintptr_t, rawCID *C.char) *C.char {
 }
 
 //export ipfs_node_publication_status
-func ipfs_node_publication_status(handle C.uintptr_t, rawCID *C.char) *C.char {
+func ipfs_node_publication_status(handle C.uintptr_t, rawCID *C.char) (result *C.char) {
+	defer recoverPanic(&result)
 	node, ok := lookup(handle)
 	if !ok {
 		return nil
@@ -272,7 +306,8 @@ func ipfs_node_publication_status(handle C.uintptr_t, rawCID *C.char) *C.char {
 }
 
 //export ipfs_node_list_publication_statuses
-func ipfs_node_list_publication_statuses(handle C.uintptr_t) *C.char {
+func ipfs_node_list_publication_statuses(handle C.uintptr_t) (result *C.char) {
+	defer recoverPanic(&result)
 	node, ok := lookup(handle)
 	if !ok {
 		return nil
@@ -286,7 +321,8 @@ func ipfs_node_list_publication_statuses(handle C.uintptr_t) *C.char {
 // heap-allocated JSON object with an optional error.
 //
 //export ipfs_node_pin
-func ipfs_node_pin(handle C.uintptr_t, rawCID *C.char) *C.char {
+func ipfs_node_pin(handle C.uintptr_t, rawCID *C.char) (result *C.char) {
+	defer recoverPanic(&result)
 	node, ok := lookup(handle)
 	if !ok {
 		return nil
@@ -300,10 +336,9 @@ func ipfs_node_pin(handle C.uintptr_t, rawCID *C.char) *C.char {
 	return jsonString(operationResponse{})
 }
 
-// ipfs_node_unpin removes a content root from the local pin set.
-//
 //export ipfs_node_unpin
-func ipfs_node_unpin(handle C.uintptr_t, rawCID *C.char) *C.char {
+func ipfs_node_unpin(handle C.uintptr_t, rawCID *C.char) (result *C.char) {
+	defer recoverPanic(&result)
 	node, ok := lookup(handle)
 	if !ok {
 		return nil
@@ -321,7 +356,8 @@ func ipfs_node_unpin(handle C.uintptr_t, rawCID *C.char) *C.char {
 // roots, or an object containing an error.
 //
 //export ipfs_node_list_pins
-func ipfs_node_list_pins(handle C.uintptr_t) *C.char {
+func ipfs_node_list_pins(handle C.uintptr_t) (result *C.char) {
+	defer recoverPanic(&result)
 	node, ok := lookup(handle)
 	if !ok {
 		return nil

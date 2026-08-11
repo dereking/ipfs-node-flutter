@@ -94,6 +94,14 @@ func publishProviderRecord(ctx context.Context, messenger providerMessenger, sel
 		wg.Add(1)
 		go func(target peer.ID) {
 			defer wg.Done()
+			defer func() {
+				// A panic raised inside the DHT messenger on this goroutine
+				// would otherwise abort the entire host process because the
+				// c-shared runtime cannot unwind across the C ABI boundary.
+				if recovered := recover(); recovered != nil {
+					results <- peerResult{err: fmt.Errorf("%s panic: %v", target, recovered)}
+				}
+			}()
 			peerCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 			defer cancel()
 			if err := messenger.PutProviderAddrs(peerCtx, target, key, self); err != nil {
