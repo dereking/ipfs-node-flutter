@@ -138,6 +138,20 @@ void main() {
     );
   });
 
+  test('start stays successful when the capabilities probe fails transiently',
+      () async {
+    final platform = _FlakyCapabilitiesPlatform();
+    final node = IpfsNode(platform: platform);
+
+    await node.start(NodeConfig.public(repositoryPath: '/tmp/repo'));
+
+    expect(platform.startedWith, isNotNull);
+    // The public getter retries the probe and eventually returns a value, so
+    // a transient probe failure never masks a successful start.
+    expect(await node.capabilities(), const CapabilitySet.empty());
+    expect(platform.capabilitiesCalls, 2);
+  });
+
   test('publication delegates to the backend', () async {
     final platform = _FakePlatform();
     final node = IpfsNode(platform: platform);
@@ -223,6 +237,19 @@ final class _FakePlatform extends IpfsNodePlatform {
     const result = IpfsAddResult(cid: 'bafk-added', bytes: 3);
     await provide(result.cid, timeout: timeout);
     return result;
+  }
+}
+
+final class _FlakyCapabilitiesPlatform extends _FakePlatform {
+  int capabilitiesCalls = 0;
+
+  @override
+  Future<CapabilitySet> capabilities() async {
+    capabilitiesCalls++;
+    if (capabilitiesCalls == 1) {
+      throw StateError('transient capabilities failure');
+    }
+    return const CapabilitySet.empty();
   }
 }
 

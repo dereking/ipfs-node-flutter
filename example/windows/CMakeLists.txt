@@ -58,33 +58,6 @@ add_subdirectory("runner")
 include(flutter/generated_plugins.cmake)
 
 
-# === Native IPFS node artifact ===
-# Builds the Go native IPFS core into a Windows shared library and bundles it
-# next to the executable. This mirrors the macOS build phase in
-# example/macos/Runner.xcodeproj. Requires a Go toolchain with cgo support
-# (e.g. mingw-w64 gcc) available on PATH.
-set(IPFS_GO_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../native/go")
-set(IPFS_NODE_CORE_DLL "${CMAKE_CURRENT_BINARY_DIR}/ipfs_node_core.dll")
-file(GLOB_RECURSE IPFS_NODE_GO_SOURCES CONFIGURE_DEPENDS
-  "${IPFS_GO_DIR}/cmd/*.go"
-  "${IPFS_GO_DIR}/internal/*.go")
-
-add_custom_command(
-  OUTPUT "${IPFS_NODE_CORE_DLL}"
-  COMMAND ${CMAKE_COMMAND} -E env
-    "GOCACHE=${CMAKE_CURRENT_BINARY_DIR}/ipfs-node-go-cache"
-    "GOOS=windows"
-    "CGO_ENABLED=1"
-    go build -buildmode=c-shared -o "${IPFS_NODE_CORE_DLL}" ./cmd/ipfs_node_core
-  WORKING_DIRECTORY "${IPFS_GO_DIR}"
-  DEPENDS ${IPFS_NODE_GO_SOURCES}
-  COMMENT "Building native IPFS node core (ipfs_node_core.dll)"
-  VERBATIM
-)
-
-add_custom_target(ipfs_node_core_dll ALL DEPENDS "${IPFS_NODE_CORE_DLL}")
-
-
 # === Installation ===
 # Support files are copied into place next to the executable, so that it can
 # run in place. This is done instead of making a separate bundle (as on Linux)
@@ -106,9 +79,6 @@ install(FILES "${FLUTTER_ICU_DATA_FILE}" DESTINATION "${INSTALL_BUNDLE_DATA_DIR}
   COMPONENT Runtime)
 
 install(FILES "${FLUTTER_LIBRARY}" DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
-  COMPONENT Runtime)
-
-install(FILES "${IPFS_NODE_CORE_DLL}" DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
   COMPONENT Runtime)
 
 if(PLUGIN_BUNDLED_LIBRARIES)

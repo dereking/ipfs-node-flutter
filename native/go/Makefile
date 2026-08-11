@@ -6,6 +6,9 @@ build-host:
 	install_name_tool -id @rpath/libipfs_node_core.dylib dist/libipfs_node_core.dylib
 	./scripts/package_header.sh dist/libipfs_node_core.h
 
+# One-click Windows build: scripts/build-windows.bat (PowerShell). It detects
+# or downloads a portable mingw-w64 gcc, builds dist/ipfs_node_core.dll, and
+# packages the C ABI header. On this macOS/CI target keep the manual flow.
 build-windows:
 	mkdir -p dist
 	GOOS=windows CGO_ENABLED=1 go build -buildmode=c-shared -o dist/ipfs_node_core.dll ./cmd/ipfs_node_core

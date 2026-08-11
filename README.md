@@ -63,6 +63,35 @@ Strings returned by `ipfs_node_status`, `ipfs_node_capabilities`, and
 `ipfs_node_get_block` must be released with `ipfs_node_free_string`. Block
 responses are JSON containing either base64 `data` or an `error` message.
 
+## Windows native build
+
+On Windows the native core ships as `ipfs_node_core.dll`. It is **compiled
+automatically by the `ipfs_node_flutter_native` plugin** (`windows/CMakeLists.txt`)
+whenever an app runs `flutter build windows` — consumers who `pub add` the SDK
+need no manual step beyond having a Go toolchain. The plugin's CMake locates the
+Go module (bundled in the package or in this workspace), detects `gcc` on
+`PATH`, otherwise reuses the portable mingw-w64 toolchain, and installs the DLL
+next to the executable.
+
+To build and inspect the DLL standalone (and optionally the example app), run
+the one-click script from the repository root:
+
+```sh
+native/go/scripts/build-windows.bat                 # build dist\ipfs_node_core.dll + C ABI header
+native/go/scripts/build-windows.bat -Test          # also run the Go core tests first
+native/go/scripts/build-windows.bat -Example       # also build the example Windows app
+```
+
+The script auto-detects `gcc` on `PATH` and otherwise downloads a portable
+mingw-w64 build (no administrator rights required) into
+`%LOCALAPPDATA%\ipfs-node-flutter-tools`. Because the plugin CMake reuses the
+same location, apps build out of the box even on machines without a system
+mingw installation.
+
+> Publishing note: to let external `pub add` consumers build without this
+> workspace's `native/go` directory, bundle the Go module inside the plugin at
+> `packages/ipfs_node_flutter_native/native/go` before publishing to pub.dev.
+
 ## Cross-platform example
 
 [`example`](example) is a Flutter application that runs on macOS and web from

@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 )
@@ -24,6 +25,9 @@ type helperMessage struct {
 func TestPrivateNetworkAcrossProcesses(t *testing.T) {
 	key := bytes.Repeat([]byte{23}, 32)
 	binary := filepath.Join(t.TempDir(), "private-test-peer")
+	if runtime.GOOS == "windows" {
+		binary += ".exe"
+	}
 	build := exec.Command("go", "build", "-o", binary, "./internal/core/testhelper")
 	build.Dir = filepath.Join("..", "..")
 	if output, err := build.CombinedOutput(); err != nil {

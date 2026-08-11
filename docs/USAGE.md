@@ -136,7 +136,10 @@ void main() {
 ### 2.3 Native 底层依赖嵌入
 
 - **macOS**：example 的 Xcode 构建阶段会把 `native/go/dist/libipfs_node_core.dylib` 嵌入到 App 的 Frameworks 目录并签名。参考 `example/macos/Runner.xcodeproj`。
-- **Windows**：example 的 `example/windows/CMakeLists.txt` 会在构建时自动执行 `go build -buildmode=c-shared` 生成 `ipfs_node_core.dll` 并安装到可执行文件同目录（需要 `PATH` 上有带 cgo 的 Go 工具链，如 mingw-w64 gcc）。也可手动 `make -C native/go build-windows`。
+- **Windows**：`ipfs_node_flutter_native` 插件的 `windows/CMakeLists.txt` 会在 app 执行 `flutter build windows` 时**自动** `go build -buildmode=c-shared` 生成 `ipfs_node_core.dll` 并安装到可执行文件同目录。`pub add` 后无需任何手动步骤。
+  - 前提：机器上有 Go 工具链；cgo 需要 mingw-w64 gcc。插件 CMake 会优先用 `PATH` 上的 `gcc`，否则复用一键脚本下载的便携工具链（`%LOCALAPPDATA%\ipfs-node-flutter-tools`），开发机无系统级 mingw 也能构建。
+  - 手动构建/校验产物：`native/go/scripts/build-windows.bat`（PowerShell 脚本，自动检测/下载便携 mingw-w64 gcc 并编译 `dist/ipfs_node_core.dll` + 打包 C ABI 头文件）；加 `-Test` 先跑 Go 测试，加 `-Example` 再构建 example 的 Windows 应用。
+  - 发布到 pub.dev 前，需把 Go 模块打包进插件包 `packages/ipfs_node_flutter_native/native/go`，外部 `pub add` 用户才能脱离本仓库构建。
 - 其他平台需以相应共享库嵌入（Linux/Android `.so`），并在 `_defaultArtifactName()` 的约定路径提供。
 
 ### 2.4 Web 适配器资源（无需手动配置）
