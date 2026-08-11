@@ -19,8 +19,14 @@ application Frameworks directory, and signs the library with the app build
 identity. Debug/Profile and Release entitlements allow inbound and outbound
 network connections.
 
+The Windows CMake build (`example/windows/CMakeLists.txt`) runs
+`go build -buildmode=c-shared` for `ipfs_node_core.dll` and installs it next to
+the executable, so `flutter run -d windows` works out of the box when a Go
+toolchain with cgo support (e.g. mingw-w64 gcc) is on `PATH`.
+
 ```sh
 flutter run -d macos
+flutter run -d windows
 ```
 
 Kubo is not bundled or controlled by the Example. It remains an optional

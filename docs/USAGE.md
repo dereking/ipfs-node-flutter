@@ -136,7 +136,8 @@ void main() {
 ### 2.3 Native 底层依赖嵌入
 
 - **macOS**：example 的 Xcode 构建阶段会把 `native/go/dist/libipfs_node_core.dylib` 嵌入到 App 的 Frameworks 目录并签名。参考 `example/macos/Runner.xcodeproj`。
-- 其他平台需以相应共享库嵌入（Windows `.dll` / Linux/Android `.so`），并在 `_defaultArtifactName()` 的约定路径提供。
+- **Windows**：example 的 `example/windows/CMakeLists.txt` 会在构建时自动执行 `go build -buildmode=c-shared` 生成 `ipfs_node_core.dll` 并安装到可执行文件同目录（需要 `PATH` 上有带 cgo 的 Go 工具链，如 mingw-w64 gcc）。也可手动 `make -C native/go build-windows`。
+- 其他平台需以相应共享库嵌入（Linux/Android `.so`），并在 `_defaultArtifactName()` 的约定路径提供。
 
 ### 2.4 Web 适配器资源（无需手动配置）
 
